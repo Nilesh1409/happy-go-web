@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
       "d3vp2rl7047vsp.cloudfront.net",
       "images.unsplash.com",
       "happygorentals.com",
+      "lokeshshah.wordpress.com",
+      "imgd.aeplcdn.com",
     ],
     // alternatively, if you need pattern matching:
     // remotePatterns: [
