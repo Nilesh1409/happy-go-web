@@ -69,7 +69,9 @@ export default function LoginPage() {
         <div className="max-w-md mx-auto px-4">
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-[#F47B20] rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-white font-bold text-2xl">HG</span>
+              <span className="text-white font-bold text-2xl">
+                <img src={"/assets/happygo.jpeg"} />
+              </span>
             </div>
             <h1 className="text-3xl font-bold text-[#F47B20] mb-2">Happy Go</h1>
             <p className="text-gray-600">Anywhere Everytime</p>
