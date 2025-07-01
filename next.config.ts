@@ -15,9 +15,9 @@ const nextConfig = {
       "imgd.aeplcdn.com",
     ],
   },
-  // Add this for static exports if needed
-  output: "export",
-  trailingSlash: true,
+  // Remove these lines:
+  // output: 'export',
+  // trailingSlash: true,
 };
 
-module.exports = nextConfig; // Change from export default
+module.exports = nextConfig;
