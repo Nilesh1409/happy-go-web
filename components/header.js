@@ -66,9 +66,38 @@ export default function Header() {
             </div>
 
             <div className="text-xs hidden xl:block">
-              📍 MG Road, Chikkamagaluru&nbsp;577101
+              📍 Barlane Rd, near KSRTC Bus Stand, Chikkamagaluru&nbsp;577101
             </div>
             <div className="text-xs xl:hidden">📍 Chikkamagaluru</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ───── Mobile Top Contact Bar ───── */}
+      <div className="bg-gray-900 text-white py-1.5 lg:hidden">
+        <div className="px-4">
+          <div className="flex justify-between items-center text-xs">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center">
+                <Phone className="w-3 h-3 mr-1" />
+                <a
+                  href="tel:+919008022800"
+                  className="font-semibold hover:text-[#F47B20] transition-colors"
+                >
+                  +91&nbsp;90080-22800
+                </a>
+              </div>
+              <div className="flex items-center">
+                <Mail className="w-3 h-3 mr-1" />
+                <a
+                  href="mailto:happygobikerentals@gmail.com"
+                  className="hover:text-[#F47B20] transition-colors"
+                >
+                  Email&nbsp;Us
+                </a>
+              </div>
+            </div>
+            <div className="text-xs">📍 Chikkamagaluru</div>
           </div>
         </div>
       </div>
@@ -263,24 +292,6 @@ export default function Header() {
         {isMenuOpen && (
           <div className="lg:hidden bg-white border-t">
             <div className="px-4 py-3 space-y-3">
-              {/* contact */}
-              <div className="py-2 border-b border-gray-100">
-                <div className="flex items-center text-sm text-gray-600 mb-2">
-                  <Phone className="w-4 h-4 mr-2" />
-                  <a href="tel:+919008022800" className="font-semibold">
-                    +91&nbsp;90080-22800
-                  </a>
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <Mail className="w-4 h-4 mr-2" />
-                  <a
-                    href="mailto:happygobikerentals@gmail.com"
-                    className="text-xs"
-                  >
-                    happygobikerentals@gmail.com
-                  </a>
-                </div>
-              </div>
               {/* nav links */}
               <div className="space-y-2">
                 <Link

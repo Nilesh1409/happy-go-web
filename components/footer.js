@@ -98,7 +98,7 @@ export default function Footer() {
               <div className="flex items-start">
                 <MapPin className="w-4 h-4 mr-2 mt-1 flex-shrink-0" />
                 <div className="text-sm">
-                  <p>MG ROAD, SURYA SWEETS BUILDING,</p>
+                  <p>Barlane Rd, near KSRTC Bus Stand</p>
                   <p>CHIKKAMAGALURU 577101</p>
                 </div>
               </div>

@@ -25,29 +25,50 @@ import ModernDateTimePicker from "@/components/modern-date-time-picker";
 import { apiService } from "@/lib/api";
 import { adjustDrop } from "@/lib/date-time";
 
+// Helper function to format date consistently
+const formatDateForURL = (date) => {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export default function HomePage() {
   const tomorrow = new Date();
+  const today = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const dayAfterTomorrow = new Date();
   dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
 
+  // Fix: Initialize with tomorrow instead of today
   const [searchData, setSearchData] = useState({
-    pickupDate: tomorrow,
+    pickupDate: today,
     pickupTime: "08:00",
-    dropoffDate: dayAfterTomorrow,
+    dropoffDate: today, // Fix: Use day after tomorrow
     dropoffTime: "20:00",
     location: "Chikkamagaluru",
   });
+  console.log("🚀 ~ HomePage ~ searchData:", searchData);
 
   const [trendingBikes, setTrendingBikes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [autoOpenStates, setAutoOpenStates] = useState({
+    pickupTime: false,
+    dropoffDate: false,
+    dropoffTime: false,
+  });
 
   useEffect(() => {
     loadTrendingBikes();
   }, []);
 
+  // Fix: Add proper dependency array and prevent infinite loops
   useEffect(() => {
     const { pickupDate, pickupTime, dropoffDate, dropoffTime } = searchData;
+
+    if (!pickupDate || !pickupTime) return;
+
     const { date, time } = adjustDrop(
       pickupDate,
       pickupTime,
@@ -56,14 +77,18 @@ export default function HomePage() {
     );
 
     // Only update if anything actually changes
-    if (date.getTime() !== dropoffDate.getTime() || time !== dropoffTime) {
+    if (
+      !dropoffDate ||
+      date.getTime() !== dropoffDate.getTime() ||
+      time !== dropoffTime
+    ) {
       setSearchData((prev) => ({
         ...prev,
         dropoffDate: date,
         dropoffTime: time,
       }));
     }
-  }, [searchData.pickupDate, searchData.pickupTime]);
+  }, [searchData.pickupDate, searchData.pickupTime]); // Remove dropoffDate and dropoffTime from dependencies
 
   const loadTrendingBikes = async () => {
     try {
@@ -133,14 +158,19 @@ export default function HomePage() {
     }
   };
 
+  // Fix: Use proper date formatting function
   const handleSearch = () => {
+    console.log("Search data before URL creation:", searchData); // Debug log
+
     const params = new URLSearchParams({
-      pickupDate: searchData.pickupDate.toISOString().split("T")[0],
+      pickupDate: formatDateForURL(searchData.pickupDate),
       pickupTime: searchData.pickupTime,
-      dropoffDate: searchData.dropoffDate.toISOString().split("T")[0],
+      dropoffDate: formatDateForURL(searchData.dropoffDate),
       dropoffTime: searchData.dropoffTime,
       location: searchData.location,
     }).toString();
+
+    console.log("URL params:", params); // Debug log
     window.location.href = `/search?${params}`;
   };
 
@@ -170,13 +200,13 @@ export default function HomePage() {
         }}
       >
         <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-4 lg:py-20">
           <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
             <div className="text-center lg:text-left">
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
                 Happy Ride <span className="text-yellow-200">Happy Stay</span>
               </h2>
-              <p className="text-sm sm:text-base lg:text-lg mb-6 sm:mb-8 opacity-80">
+              <p className="text-xs sm:text-base lg:text-lg mb-6 sm:mb-4 opacity-80">
                 Best Bike Rental Service in Chikkamagaluru Since 2010
               </p>
               <div className="space-y-3 sm:space-y-4">
@@ -218,8 +248,39 @@ export default function HomePage() {
                     onTimeChange={(time) =>
                       setSearchData({ ...searchData, pickupTime: time })
                     }
-                    minDate={tomorrow}
+                    onDateSelected={() => {
+                      // Auto-open pickup time after pickup date is selected
+                      setAutoOpenStates((prev) => ({
+                        ...prev,
+                        pickupTime: true,
+                      }));
+                      setTimeout(
+                        () =>
+                          setAutoOpenStates((prev) => ({
+                            ...prev,
+                            pickupTime: false,
+                          })),
+                        200
+                      );
+                    }}
+                    onTimeSelected={() => {
+                      // Auto-open dropoff date after pickup time is selected
+                      setAutoOpenStates((prev) => ({
+                        ...prev,
+                        dropoffDate: true,
+                      }));
+                      setTimeout(
+                        () =>
+                          setAutoOpenStates((prev) => ({
+                            ...prev,
+                            dropoffDate: false,
+                          })),
+                        200
+                      );
+                    }}
+                    minDate={today}
                     showTimeAfterDate={true}
+                    autoOpenTimePicker={autoOpenStates.pickupTime}
                   />
 
                   <ModernDateTimePicker
@@ -232,23 +293,27 @@ export default function HomePage() {
                     onTimeChange={(time) =>
                       setSearchData({ ...searchData, dropoffTime: time })
                     }
+                    onDateSelected={() => {
+                      // Auto-open dropoff time after dropoff date is selected
+                      setAutoOpenStates((prev) => ({
+                        ...prev,
+                        dropoffTime: true,
+                      }));
+                      setTimeout(
+                        () =>
+                          setAutoOpenStates((prev) => ({
+                            ...prev,
+                            dropoffTime: false,
+                          })),
+                        200
+                      );
+                    }}
                     isDropOff={true}
-                    pickupDate={searchData.pickupDate || tomorrow}
+                    pickupDate={searchData.pickupDate || today}
                     pickupTime={searchData.pickupTime}
+                    autoOpenDatePicker={autoOpenStates.dropoffDate}
+                    autoOpenTimePicker={autoOpenStates.dropoffTime}
                   />
-                  {/* <ModernDateTimePicker
-                    label="Dropoff"
-                    selectedDate={searchData.dropoffDate}
-                    selectedTime={searchData.dropoffTime}
-                    onDateChange={(date) =>
-                      setSearchData({ ...searchData, dropoffDate: date })
-                    }
-                    onTimeChange={(time) =>
-                      setSearchData({ ...searchData, dropoffTime: time })
-                    }
-                    minDate={searchData.pickupDate || tomorrow}
-                    showTimeAfterDate={false}
-                  /> */}
 
                   <Button
                     className="w-full bg-[#F47B20] hover:bg-[#e56a1c] text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200"
@@ -263,6 +328,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Rest of your component remains the same... */}
       {/* Popular Bikes Section */}
       <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

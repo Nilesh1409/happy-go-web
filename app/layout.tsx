@@ -82,7 +82,7 @@ export default function RootLayout({ children }) {
               email: "happygobikerentals@gmail.com",
               address: {
                 "@type": "PostalAddress",
-                streetAddress: "MG Road, Surya Sweets Building",
+                streetAddress: "Barlane Rd, near KSRTC Bus Stand",
                 addressLocality: "Chikkamagaluru",
                 addressRegion: "Karnataka",
                 postalCode: "577101",

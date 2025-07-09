@@ -18,6 +18,10 @@ export default function ModernDateTimePicker({
   pickupDate,
   pickupTime,
   onAutoAdjust, // Callback when auto-adjustment happens
+  autoOpenDatePicker = false, // NEW
+  autoOpenTimePicker = false, // NEW
+  onTimeSelected, // NEW
+  onDateSelected, // NEW
 }) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -340,11 +344,22 @@ export default function ModernDateTimePicker({
     if (showTimeAfterDate) {
       setTimeout(() => setShowTimePicker(true), 100);
     }
+
+    if (onDateSelected) {
+      onDateSelected(date);
+    }
+
+    if (showTimeAfterDate) {
+      setTimeout(() => setShowTimePicker(true), 100);
+    }
   };
 
   const handleTimeSelect = (timeValue) => {
     onTimeChange(timeValue);
     setShowTimePicker(false);
+    if (onTimeSelected) {
+      onTimeSelected(timeValue);
+    }
   };
 
   const handleDatePickerToggle = () => {
@@ -381,6 +396,22 @@ export default function ModernDateTimePicker({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Auto-open date picker
+  useEffect(() => {
+    if (autoOpenDatePicker) {
+      setShowDatePicker(true);
+      setShowTimePicker(false);
+    }
+  }, [autoOpenDatePicker]);
+
+  // Auto-open time picker
+  useEffect(() => {
+    if (autoOpenTimePicker) {
+      setShowTimePicker(true);
+      setShowDatePicker(false);
+    }
+  }, [autoOpenTimePicker]);
 
   const timeSlots = generateTimeSlots(selectedDate);
   const daysInMonth = getDaysInMonth(currentMonth);
@@ -457,7 +488,7 @@ export default function ModernDateTimePicker({
       <div className="space-y-2 relative">
         <Label className="text-sm font-medium text-gray-700">{label}</Label>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {/* Date Picker */}
           <div className="relative">
             <div className="relative">
