@@ -69,7 +69,7 @@ const getBookingDuration = (startDate, endDate) => {
     const end = new Date(endDate);
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays === 1 ? "1 day" : `${diffDays} days`;
+    return diffDays <= 1 ? "1 day" : `${diffDays} days`;
   } catch {
     return "-";
   }
@@ -203,6 +203,8 @@ export default function PaymentPage() {
     : "-";
   const additionalKmPrice = bikeDetails?.additionalKmPrice || 0;
   const additionalCharges = bikeDetails?.additionalCharges?.amount || 0;
+  const helmetQuantity = bikeDetails?.helmetQuantity || 0;
+  const helmetCharges = priceDetails?.helmetCharges || 0;
   const bookingDuration = getBookingDuration(
     booking?.startDate,
     booking?.endDate
@@ -370,6 +372,37 @@ export default function PaymentPage() {
                     </div>
                   </div>
 
+                  {/* Helmet Information */}
+                  {helmetQuantity > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          <Shield className="w-4 h-4 mr-2 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">
+                            Helmet Rental
+                          </span>
+                        </div>
+                        <span className="text-sm font-medium text-blue-800">
+                          {helmetQuantity} helmet
+                          {helmetQuantity !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <div className="text-xs text-blue-700 space-y-1">
+                        {helmetQuantity === 1 ? (
+                          <div>1 helmet included FREE</div>
+                        ) : (
+                          <>
+                            <div>1 helmet FREE + {helmetQuantity - 1} paid</div>
+                            <div>
+                              Additional helmet charges:{" "}
+                              {formatCurrency(helmetCharges)}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {additionalKmPrice > 0 && (
                     <div className="flex items-center justify-between">
                       <span className="text-gray-600 text-sm">
@@ -497,6 +530,15 @@ export default function PaymentPage() {
                       Fuel charges are not included in the booking amount.
                     </span>
                   </div>
+                  {helmetQuantity > 0 && (
+                    <div className="flex items-start">
+                      <div className="w-2 h-2 bg-[#F47B20] rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <span>
+                        Helmets will be provided at pickup. Please check helmet
+                        condition before accepting.
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-start">
                     <div className="w-2 h-2 bg-[#F47B20] rounded-full mt-2 mr-3 flex-shrink-0"></div>
                     <span>
@@ -533,9 +575,27 @@ export default function PaymentPage() {
                     </span>
                   </div>
 
+                  {priceDetails.extraCharges > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Extra Charges</span>
+                      <span className="font-medium">
+                        {formatCurrency(priceDetails.extraCharges)}
+                      </span>
+                    </div>
+                  )}
+
+                  {helmetCharges > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-blue-600">Helmet Charges</span>
+                      <span className="font-medium text-blue-600">
+                        {formatCurrency(helmetCharges)}
+                      </span>
+                    </div>
+                  )}
+
                   {priceDetails.taxes > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Taxes & Fees</span>
+                      <span className="text-gray-600">GST (5%)</span>
                       <span className="font-medium">
                         {formatCurrency(priceDetails.taxes)}
                       </span>
@@ -568,6 +628,27 @@ export default function PaymentPage() {
                     </span>
                   </div>
                 </div>
+
+                {/* Helmet Summary */}
+                {helmetQuantity > 0 && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center">
+                        <Shield className="w-4 h-4 mr-2 text-blue-600" />
+                        <span className="text-blue-800 font-medium">
+                          Helmet Summary
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-xs text-blue-700 mt-2 space-y-1">
+                      <div>Total helmets: {helmetQuantity}</div>
+                      <div>Free helmets: 1</div>
+                      {helmetQuantity > 1 && (
+                        <div>Paid helmets: {helmetQuantity - 1} × ₹60</div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {!isPaymentCompleted && (
                   <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">

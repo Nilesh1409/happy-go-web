@@ -46,6 +46,7 @@ export default function BikeDetailsPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [helmetQuantity, setHelmetQuantity] = useState(1); // Default to 1 free helmet
 
   // Initialize selectedKmOption from URL params
   const [selectedKmOption, setSelectedKmOption] = useState(
@@ -103,6 +104,11 @@ export default function BikeDetailsPage() {
   // Debounced API call to prevent excessive requests
   const [debounceTimer, setDebounceTimer] = useState(null);
 
+  // Reset helmet quantity when dates change or bike changes
+  useEffect(() => {
+    setHelmetQuantity(1); // Reset to 1 free helmet
+  }, [bookingParams.startDate, bookingParams.endDate, params.id]);
+
   const loadBikeDetails = useCallback(
     async (immediate = false) => {
       if (!params.id) return;
@@ -132,8 +138,6 @@ export default function BikeDetailsPage() {
             queryParams.endTime = bookingParams.endTime;
             queryParams.kmOption = selectedKmOption;
           }
-
-          console.log("API Call Params:", queryParams); // Debug log
 
           const response = await apiService.getBikeDetails(
             params.id,
@@ -229,6 +233,7 @@ export default function BikeDetailsPage() {
           duration: "0 day(s)",
           basePrice: 0,
           extraCharges: 0,
+          helmetCharges: 0,
           subtotal: 0,
           gst: 0,
           total: 0,
@@ -237,8 +242,28 @@ export default function BikeDetailsPage() {
       };
     }
 
-    return bike.pricing;
-  }, [bike?.pricing]);
+    // Calculate helmet charges - 1 free, rest chargeable at ₹60 each
+    const freeHelmets = 1;
+    const helmetPrice = 60;
+    const helmetCharges =
+      helmetQuantity > freeHelmets
+        ? (helmetQuantity - freeHelmets) * helmetPrice
+        : 0;
+
+    // Add helmet charges to the existing pricing
+    const updatedPricing = {
+      ...bike.pricing,
+      breakdown: {
+        ...bike.pricing.breakdown,
+        helmetCharges,
+        subtotal: (bike.pricing.breakdown.subtotal || 0) + helmetCharges,
+        total: (bike.pricing.breakdown.total || 0) + helmetCharges,
+      },
+      totalPrice: (bike.pricing.totalPrice || 0) + helmetCharges,
+    };
+
+    return updatedPricing;
+  }, [bike?.pricing, helmetQuantity]);
 
   const validateBookingData = useCallback(() => {
     if (!agreedToTerms) {
@@ -308,6 +333,7 @@ export default function BikeDetailsPage() {
         priceDetails: {
           basePrice: pricing.breakdown.basePrice,
           extraCharges: pricing.breakdown.extraCharges,
+          helmetCharges: pricing.breakdown.helmetCharges,
           subtotal: pricing.breakdown.subtotal,
           taxes: pricing.breakdown.gst,
           totalAmount: pricing.breakdown.total,
@@ -319,6 +345,7 @@ export default function BikeDetailsPage() {
               : "Unlimited",
           isUnlimited: selectedKmOption === "unlimited",
           additionalKmPrice: bike.additionalKmPrice || 4,
+          helmetQuantity: helmetQuantity,
         },
       };
 
@@ -330,7 +357,14 @@ export default function BikeDetailsPage() {
     } finally {
       setBookingLoading(false);
     }
-  }, [bike, bookingParams, selectedKmOption, getPricingDisplay, router]);
+  }, [
+    bike,
+    bookingParams,
+    selectedKmOption,
+    helmetQuantity,
+    getPricingDisplay,
+    router,
+  ]);
 
   const handleLoginSuccess = useCallback(() => {
     setShowLoginModal(false);
@@ -428,7 +462,7 @@ export default function BikeDetailsPage() {
           </div>
 
           {/* Availability Notice */}
-          {bike.availableQuantity <= 3 && bike.availableQuantity > 0 && (
+          {/* {bike.availableQuantity <= 3 && bike.availableQuantity > 0 && (
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4">
               <div className="flex items-start">
                 <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
@@ -443,7 +477,7 @@ export default function BikeDetailsPage() {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
 
           {/* No Availability */}
           {bike.availableQuantity <= 0 && (
@@ -506,7 +540,7 @@ export default function BikeDetailsPage() {
                           <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           <span>{bike.location}</span>
                         </div>
-                        <div className="flex items-center justify-between">
+                        {/* <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-yellow-400 fill-current" />
                             <span>
@@ -519,7 +553,7 @@ export default function BikeDetailsPage() {
                               {bike.availableQuantity} Available
                             </span>
                           </div>
-                        </div>
+                        </div> */}
                       </div>
                     </div>
 
@@ -542,7 +576,7 @@ export default function BikeDetailsPage() {
                     </div>
 
                     {/* KM Limit Selection - Mobile optimized */}
-                    <div>
+                    <div className="mb-4 sm:mb-6">
                       <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
                         Choose KM Package
                       </h3>
@@ -617,13 +651,94 @@ export default function BikeDetailsPage() {
                           </div>
                         )}
                     </div>
+
+                    {/* Helmet Selection */}
+                    <div>
+                      <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">
+                        Add Helmets
+                      </h3>
+
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-3">
+                        <div className="flex items-start">
+                          <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-xs sm:text-sm text-blue-800 font-medium mb-1">
+                              Helmet Rental Available
+                            </p>
+                            <p className="text-xs sm:text-sm text-blue-700 leading-relaxed">
+                              1 helmet FREE, additional helmets at ₹60 each
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+                        <div>
+                          <span className="text-sm sm:text-base font-medium text-gray-900">
+                            Number of Helmets
+                          </span>
+                          <div className="text-xs sm:text-sm text-gray-600 mt-1">
+                            {helmetQuantity <= 1
+                              ? `${helmetQuantity} helmet - FREE`
+                              : `1 FREE + ${helmetQuantity - 1} paid`}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-8 h-8 p-0 rounded-full"
+                            onClick={() =>
+                              setHelmetQuantity(Math.max(0, helmetQuantity - 1))
+                            }
+                            disabled={
+                              helmetQuantity <= 0 || bike.availableQuantity <= 0
+                            }
+                          >
+                            -
+                          </Button>
+
+                          <span className="w-8 text-center font-medium text-sm sm:text-base">
+                            {helmetQuantity}
+                          </span>
+
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-8 h-8 p-0 rounded-full"
+                            onClick={() =>
+                              setHelmetQuantity(
+                                Math.min(10, helmetQuantity + 1)
+                              )
+                            }
+                            disabled={
+                              helmetQuantity >= 10 ||
+                              bike.availableQuantity <= 0
+                            }
+                          >
+                            +
+                          </Button>
+                        </div>
+                      </div>
+
+                      {helmetQuantity > 1 && (
+                        <div className="mt-2 sm:mt-3 p-2.5 sm:p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                          <p className="text-xs sm:text-sm text-orange-800">
+                            <Shield className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
+                            Additional helmet charges: ₹
+                            {(helmetQuantity - 1) * 60}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Booking Dates Card */}
-            <Card className="shadow-lg border-0 bg-white">
+            <Card className="shadow-lg border-0 bg-white gap-0">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base sm:text-lg text-[#F47B20] flex items-center">
                   <Calendar className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
@@ -715,6 +830,12 @@ export default function BikeDetailsPage() {
                         {pricing.breakdown.extraCharges?.toLocaleString()}
                       </div>
                     )}
+                    {pricing.breakdown.helmetCharges > 0 && (
+                      <div className="text-blue-600">
+                        Helmet: ₹
+                        {pricing.breakdown.helmetCharges?.toLocaleString()}
+                      </div>
+                    )}
                     <div className="text-gray-600">
                       GST: ₹{pricing.breakdown.gst?.toLocaleString() || 0}
                     </div>
@@ -735,6 +856,15 @@ export default function BikeDetailsPage() {
                       <span>Extra Charges:</span>
                       <span>
                         ₹{pricing.breakdown.extraCharges?.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+
+                  {pricing.breakdown.helmetCharges > 0 && (
+                    <div className="text-sm text-blue-600 flex justify-between">
+                      <span>Helmet Charges:</span>
+                      <span>
+                        ₹{pricing.breakdown.helmetCharges?.toLocaleString()}
                       </span>
                     </div>
                   )}
@@ -807,6 +937,32 @@ export default function BikeDetailsPage() {
                       {pricing.breakdown.duration}
                     </span>
                   </div>
+
+                  <div className="sm:flex sm:justify-between">
+                    <span className="text-gray-600 block sm:inline font-medium">
+                      Helmets:
+                    </span>
+                    <span className="font-semibold text-right sm:text-left">
+                      {helmetQuantity > 0
+                        ? `${helmetQuantity} helmet${
+                            helmetQuantity !== 1 ? "s" : ""
+                          }`
+                        : "None"}
+                    </span>
+                  </div>
+
+                  {helmetQuantity > 0 && (
+                    <div className="sm:flex sm:justify-between">
+                      <span className="text-gray-600 block sm:inline font-medium">
+                        Helmet Charges:
+                      </span>
+                      <span className="font-semibold text-right sm:text-left">
+                        {helmetQuantity <= 1
+                          ? "FREE"
+                          : `₹${((helmetQuantity - 1) * 60).toLocaleString()}`}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="col-span-2 sm:col-span-1 sm:flex sm:justify-between">
                     <span className="text-gray-600 block sm:inline font-medium">

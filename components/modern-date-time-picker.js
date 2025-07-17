@@ -433,6 +433,7 @@ export default function ModernDateTimePicker({
   // Dropdown component that uses getBoundingClientRect for positioning
   const DropdownPortal = ({ isOpen, buttonRef, children, className = "" }) => {
     const [position, setPosition] = useState({ top: 0, left: 0, width: 0 });
+    const [shouldRender, setShouldRender] = useState(false);
 
     useEffect(() => {
       const updatePosition = () => {
@@ -443,16 +444,21 @@ export default function ModernDateTimePicker({
             left: rect.left + window.scrollX,
             width: rect.width,
           });
+
+          // Use requestAnimationFrame to ensure DOM is ready
+          requestAnimationFrame(() => {
+            setShouldRender(true);
+          });
         }
       };
 
       if (isOpen) {
+        setShouldRender(false);
         updatePosition();
 
         const handleScroll = () => updatePosition();
         const handleResize = () => updatePosition();
 
-        // Add event listeners
         window.addEventListener("scroll", handleScroll, true);
         window.addEventListener("resize", handleResize);
         document.addEventListener("scroll", handleScroll, true);
@@ -462,10 +468,12 @@ export default function ModernDateTimePicker({
           window.removeEventListener("resize", handleResize);
           document.removeEventListener("scroll", handleScroll, true);
         };
+      } else {
+        setShouldRender(false);
       }
     }, [isOpen, buttonRef]);
 
-    if (!isOpen || !mounted) return null;
+    if (!isOpen || !mounted || !shouldRender) return null;
 
     return createPortal(
       <div

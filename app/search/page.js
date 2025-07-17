@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,11 +14,12 @@ import {
 import {
   Filter,
   Calendar,
-  Star,
   ArrowLeft,
   X,
   MapPin,
   Clock,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -28,29 +29,136 @@ import Footer from "@/components/footer";
 import { apiService } from "@/lib/api";
 import ModernDateTimePicker from "../../components/modern-date-time-picker";
 
+// Utility functions
+const formatDateIST = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Kolkata",
+  });
+};
+
+const formatTimeIST = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleTimeString("en-IN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  });
+};
+
+const formatDateTimeIST = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  });
+};
+
+const formatCompactDateTime = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  });
+};
+
+const parseDate = (dateStr) => {
+  if (!dateStr) return null;
+  try {
+    return new Date(dateStr);
+  } catch {
+    return null;
+  }
+};
+
+const formatTime = (timeStr) => {
+  if (!timeStr) return "";
+  const [hour, minute] = timeStr.split(":");
+  const hourNum = parseInt(hour);
+  const ampm = hourNum >= 12 ? "PM" : "AM";
+  const displayHour =
+    hourNum > 12 ? hourNum - 12 : hourNum === 0 ? 12 : hourNum;
+  return `${displayHour}:${minute} ${ampm}`;
+};
+
+const formatDate = (date) => {
+  if (!date) return "";
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
+
+// Pricing logic utility
+const getPricingOptions = (pricePerDay) => {
+  const options = [];
+
+  if (pricePerDay?.limitedKm?.isActive) {
+    options.push({
+      type: "limited",
+      price: pricePerDay.limitedKm.price,
+      kmLimit: pricePerDay.limitedKm.kmLimit,
+      label: `${pricePerDay.limitedKm.kmLimit} km`,
+    });
+  }
+
+  if (pricePerDay?.unlimited?.isActive) {
+    options.push({
+      type: "unlimited",
+      price: pricePerDay.unlimited.price,
+      kmLimit: "Unlimited",
+      label: "Unlimited km",
+    });
+  }
+
+  // If both are false, show unlimited as fallback
+  if (options.length === 0 && pricePerDay?.unlimited) {
+    options.push({
+      type: "unlimited",
+      price: pricePerDay.unlimited.price,
+      kmLimit: "Unlimited",
+      label: "Unlimited km",
+    });
+  }
+
+  return options;
+};
+
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // State management
   const [bikes, setBikes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [bikeSelections, setBikeSelections] = useState({});
+
   const [filters, setFilters] = useState({
     sortBy: "relevance",
     priceRange: "all",
     brand: "all",
   });
-  const [showFilters, setShowFilters] = useState(false);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-
-  // Parse dates from URL params
-  const parseDate = (dateStr) => {
-    if (!dateStr) return null;
-    try {
-      return new Date(dateStr);
-    } catch {
-      return null;
-    }
-  };
 
   const [searchData, setSearchData] = useState({
     startDate: parseDate(searchParams.get("pickupDate")),
@@ -60,67 +168,8 @@ export default function SearchPage() {
     location: searchParams.get("location") || "Chikkamagaluru",
   });
 
-  // State to manage selected price and km for each bike
-  const [bikeSelections, setBikeSelections] = useState({});
-
-  useEffect(() => {
-    loadAvailableBikes();
-  }, [searchParams]);
-
-  const handleBackClick = () => {
-    router.back();
-  };
-
-  const loadAvailableBikes = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const params = {
-        startDate: searchData.startDate
-          ? searchData.startDate.toISOString().split("T")[0]
-          : "",
-        endDate: searchData.endDate
-          ? searchData.endDate.toISOString().split("T")[0]
-          : "",
-        startTime: searchData.startTime,
-        endTime: searchData.endTime,
-        location: searchData.location,
-      };
-
-      console.log("🚀 ~ loadAvailableBikes ~ params:", params);
-
-      const response = await apiService.searchBikes(params);
-      console.log("🚀 ~ loadAvailableBikes ~ response:", response);
-
-      const bikesData = response.data || [];
-      setBikes(bikesData);
-
-      // Initialize selections for new bikes
-      const initialSelections = bikesData.reduce((acc, bike) => {
-        acc[bike._id] = {
-          price: bike.pricePerDay?.limitedKm?.isActive
-            ? bike.pricePerDay.limitedKm.price
-            : bike.pricePerDay?.unlimited?.price || 0,
-          km: bike.pricePerDay?.limitedKm?.isActive
-            ? bike.pricePerDay.limitedKm.kmLimit
-            : "Unlimited",
-          type: bike.pricePerDay?.limitedKm?.isActive ? "limited" : "unlimited",
-          extraAmount: 0,
-        };
-        return acc;
-      }, {});
-      setBikeSelections(initialSelections);
-    } catch (error) {
-      console.error("Failed to load bikes:", error);
-      setError("Failed to load bikes. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Calculate extra charges based on time
-  const calculateExtraCharges = (time, type) => {
+  const calculateExtraCharges = useCallback((time, type) => {
     if (!time) return 0;
 
     let extraAmount = 0;
@@ -146,107 +195,144 @@ export default function SearchPage() {
     }
 
     return extraAmount;
-  };
+  }, []);
+
+  // Memoized extra charges calculation
+  const extraCharges = useMemo(() => {
+    const pickupExtra = calculateExtraCharges(searchData.startTime, "pickup");
+    const dropoffExtra = calculateExtraCharges(searchData.endTime, "dropoff");
+    return pickupExtra + dropoffExtra;
+  }, [searchData.startTime, searchData.endTime, calculateExtraCharges]);
+
+  // Load available bikes
+  const loadAvailableBikes = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const params = {
+        startDate: searchData.startDate?.toISOString().split("T")[0] || "",
+        endDate: searchData.endDate?.toISOString().split("T")[0] || "",
+        startTime: searchData.startTime,
+        endTime: searchData.endTime,
+        location: searchData.location,
+      };
+
+      const response = await apiService.searchBikes(params);
+      const bikesData = response.data || [];
+      setBikes(bikesData);
+
+      // Initialize selections for bikes
+      const initialSelections = bikesData.reduce((acc, bike) => {
+        const pricingOptions = getPricingOptions(bike.pricePerDay);
+        const defaultOption = pricingOptions[0]; // Use first available option
+
+        if (defaultOption) {
+          acc[bike._id] = {
+            price: defaultOption.price,
+            km: defaultOption.kmLimit,
+            type: defaultOption.type,
+            extraAmount: extraCharges,
+          };
+        }
+        return acc;
+      }, {});
+
+      setBikeSelections(initialSelections);
+    } catch (error) {
+      console.error("Failed to load bikes:", error);
+      setError("Failed to load bikes. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }, [searchData, extraCharges]);
 
   // Update extra charges when times change
   useEffect(() => {
-    const pickupExtra = calculateExtraCharges(searchData.startTime, "pickup");
-    const dropoffExtra = calculateExtraCharges(searchData.endTime, "dropoff");
-    const totalExtra = pickupExtra + dropoffExtra;
-
     setBikeSelections((prev) => {
       const updated = { ...prev };
       Object.keys(updated).forEach((bikeId) => {
         updated[bikeId] = {
           ...updated[bikeId],
-          extraAmount: totalExtra,
+          extraAmount: extraCharges,
         };
       });
       return updated;
     });
-  }, [searchData.startTime, searchData.endTime]);
+  }, [extraCharges]);
 
-  const formatDate = (date) => {
-    if (!date) return "";
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  };
+  // Load bikes on mount and search params change
+  useEffect(() => {
+    loadAvailableBikes();
+  }, [loadAvailableBikes]);
 
-  const formatTime = (timeStr) => {
-    if (!timeStr) return "";
-    const [hour, minute] = timeStr.split(":");
-    const hourNum = parseInt(hour);
-    const ampm = hourNum >= 12 ? "PM" : "AM";
-    const displayHour =
-      hourNum > 12 ? hourNum - 12 : hourNum === 0 ? 12 : hourNum;
-    return `${displayHour}:${minute} ${ampm}`;
-  };
+  // Filter and sort bikes
+  const { filteredBikes, sortedBikes } = useMemo(() => {
+    const filtered = bikes.filter((bike) => {
+      // Price range filter
+      if (filters.priceRange !== "all") {
+        const currentSelection = bikeSelections[bike._id];
+        const totalPrice = currentSelection
+          ? currentSelection.price + currentSelection.extraAmount
+          : 0;
 
-  // Apply filters to bikes
-  const filteredBikes = bikes.filter((bike) => {
-    // Price range filter
-    if (filters.priceRange !== "all") {
-      const currentSelection = bikeSelections[bike._id];
-      const totalPrice = currentSelection
-        ? currentSelection.price + currentSelection.extraAmount
-        : 0;
-
-      switch (filters.priceRange) {
-        case "0-500":
-          if (totalPrice > 500) return false;
-          break;
-        case "500-1000":
-          if (totalPrice < 500 || totalPrice > 1000) return false;
-          break;
-        case "1000-2000":
-          if (totalPrice < 1000 || totalPrice > 2000) return false;
-          break;
-        case "2000+":
-          if (totalPrice < 2000) return false;
-          break;
+        switch (filters.priceRange) {
+          case "0-500":
+            if (totalPrice > 500) return false;
+            break;
+          case "500-1000":
+            if (totalPrice < 500 || totalPrice > 1000) return false;
+            break;
+          case "1000-2000":
+            if (totalPrice < 1000 || totalPrice > 2000) return false;
+            break;
+          case "2000+":
+            if (totalPrice < 2000) return false;
+            break;
+        }
       }
-    }
 
-    // Brand filter
-    if (filters.brand !== "all") {
-      if (bike.brand?.toLowerCase() !== filters.brand.toLowerCase())
-        return false;
-    }
+      // Brand filter
+      if (filters.brand !== "all") {
+        if (bike.brand?.toLowerCase() !== filters.brand.toLowerCase())
+          return false;
+      }
 
-    return true;
-  });
+      return true;
+    });
 
-  // Sort filtered bikes
-  const sortedBikes = [...filteredBikes].sort((a, b) => {
-    const aSelection = bikeSelections[a._id];
-    const bSelection = bikeSelections[b._id];
+    // Sort filtered bikes
+    const sorted = [...filtered].sort((a, b) => {
+      const aSelection = bikeSelections[a._id];
+      const bSelection = bikeSelections[b._id];
 
-    switch (filters.sortBy) {
-      case "price-low":
-        const aTotalPrice = aSelection
-          ? aSelection.price + aSelection.extraAmount
-          : 0;
-        const bTotalPrice = bSelection
-          ? bSelection.price + bSelection.extraAmount
-          : 0;
-        return aTotalPrice - bTotalPrice;
-      case "price-high":
-        const aTotalPriceHigh = aSelection
-          ? aSelection.price + aSelection.extraAmount
-          : 0;
-        const bTotalPriceHigh = bSelection
-          ? bSelection.price + bSelection.extraAmount
-          : 0;
-        return bTotalPriceHigh - aTotalPriceHigh;
-      case "rating":
-        return (b.rating || 0) - (a.rating || 0);
-      default:
-        return 0;
-    }
-  });
+      switch (filters.sortBy) {
+        case "price-low":
+          const aTotalPrice = aSelection
+            ? aSelection.price + aSelection.extraAmount
+            : 0;
+          const bTotalPrice = bSelection
+            ? bSelection.price + bSelection.extraAmount
+            : 0;
+          return aTotalPrice - bTotalPrice;
+        case "price-high":
+          const aTotalPriceHigh = aSelection
+            ? aSelection.price + aSelection.extraAmount
+            : 0;
+          const bTotalPriceHigh = bSelection
+            ? bSelection.price + bSelection.extraAmount
+            : 0;
+          return bTotalPriceHigh - aTotalPriceHigh;
+        default:
+          return 0;
+      }
+    });
+
+    return { filteredBikes: filtered, sortedBikes: sorted };
+  }, [bikes, bikeSelections, filters]);
+
+  // Event handlers
+  const handleBackClick = () => router.back();
 
   const applyFilters = () => {
     setMobileFiltersOpen(false);
@@ -260,6 +346,32 @@ export default function SearchPage() {
       brand: "all",
     });
   };
+
+  const handlePriceChange = useCallback(
+    (bikeId, price, kmType, kmLimit) => {
+      setBikeSelections((prev) => ({
+        ...prev,
+        [bikeId]: {
+          price,
+          km: kmLimit,
+          type: kmType,
+          extraAmount: prev[bikeId]?.extraAmount || extraCharges,
+        },
+      }));
+    },
+    [extraCharges]
+  );
+
+  // Get unique brands for filter
+  const availableBrands = useMemo(() => {
+    const brands = [
+      ...new Set(bikes.map((bike) => bike.brand).filter(Boolean)),
+    ];
+    return brands.map((brand) => ({
+      value: brand.toLowerCase().replace(/\s+/g, "-"),
+      label: brand,
+    }));
+  }, [bikes]);
 
   // Filter Component
   const FilterContent = ({ isMobile = false }) => (
@@ -302,7 +414,6 @@ export default function SearchPage() {
               <SelectItem value="relevance">Relevance</SelectItem>
               <SelectItem value="price-low">Price - Low to High</SelectItem>
               <SelectItem value="price-high">Price - High to Low</SelectItem>
-              <SelectItem value="rating">Highest Rated</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -344,6 +455,9 @@ export default function SearchPage() {
             }
             minDate={searchData.startDate || new Date()}
             showTimeAfterDate={true}
+            isDropOff={true}
+            pickupDate={searchData.startDate}
+            pickupTime={searchData.startTime}
           />
         </div>
 
@@ -356,10 +470,7 @@ export default function SearchPage() {
             placeholder="Enter location"
             value={searchData.location}
             onChange={(e) =>
-              setSearchData({
-                ...searchData,
-                location: e.target.value,
-              })
+              setSearchData({ ...searchData, location: e.target.value })
             }
             className="border-gray-300 focus:border-orange-500 focus:ring-orange-500/20"
           />
@@ -401,10 +512,11 @@ export default function SearchPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Brands</SelectItem>
-              <SelectItem value="honda">Honda</SelectItem>
-              <SelectItem value="royal-enfield">Royal Enfield</SelectItem>
-              <SelectItem value="tvs">TVS</SelectItem>
-              <SelectItem value="aprilia">Aprilia</SelectItem>
+              {availableBrands.map((brand) => (
+                <SelectItem key={brand.value} value={brand.value}>
+                  {brand.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -413,8 +525,16 @@ export default function SearchPage() {
           <Button
             className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold py-3 rounded-lg shadow-lg transform transition-all duration-200 hover:scale-105"
             onClick={isMobile ? applyFilters : loadAvailableBikes}
+            disabled={loading}
           >
-            Apply Filters
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              "Apply Filters"
+            )}
           </Button>
           <Button
             variant="outline"
@@ -460,11 +580,11 @@ export default function SearchPage() {
                   Pickup
                 </div>
                 <div className="font-semibold text-sm">
-                  {formatDate(searchData.startDate) || "22 Jun 2025"}
+                  {formatDate(searchData.startDate) || "Select Date"}
                 </div>
                 <div className="text-xs text-gray-600 flex items-center">
                   <Clock className="w-3 h-3 mr-1" />
-                  {formatTime(searchData.startTime) || "07:00AM"}
+                  {formatTime(searchData.startTime) || "Select Time"}
                 </div>
               </div>
 
@@ -476,11 +596,11 @@ export default function SearchPage() {
                   Dropoff
                 </div>
                 <div className="font-semibold text-sm">
-                  {formatDate(searchData.endDate) || "23 Jun 2025"}
+                  {formatDate(searchData.endDate) || "Select Date"}
                 </div>
                 <div className="text-xs text-gray-600 flex items-center">
                   <Clock className="w-3 h-3 mr-1" />
-                  {formatTime(searchData.endTime) || "06:00PM"}
+                  {formatTime(searchData.endTime) || "Select Time"}
                 </div>
               </div>
 
@@ -541,15 +661,17 @@ export default function SearchPage() {
           </Button>
         </div>
 
+        {/* Error Display */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center">
+            <AlertCircle className="w-5 h-5 text-red-500 mr-3" />
             <p className="text-red-600">{error}</p>
           </div>
         )}
 
         {/* Fixed Desktop Layout */}
         <div className="flex gap-8">
-          {/* Desktop Filter Sidebar - Fixed Position */}
+          {/* Desktop Filter Sidebar */}
           <div
             className={`hidden lg:block transition-all duration-300 ${
               showFilters ? "w-80" : "w-0 overflow-hidden"
@@ -564,8 +686,9 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* Bikes Grid - Responsive Width */}
-          <div className={`flex-1 transition-all duration-300`}>
+          {/* Bikes Grid */}
+          <div className="flex-1 transition-all duration-300">
+            {/* Disclaimer */}
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
               <p className="text-sm text-blue-700">
                 *All prices are exclusive of taxes and fuel. Images used for
@@ -573,6 +696,7 @@ export default function SearchPage() {
               </p>
             </div>
 
+            {/* Loading State */}
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -589,48 +713,26 @@ export default function SearchPage() {
                 ))}
               </div>
             ) : (
+              /* Enhanced Bikes Grid */
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {sortedBikes.map((bike) => {
-                  const initialSelection = bike.pricePerDay?.limitedKm?.isActive
-                    ? {
-                        price: bike.pricePerDay.limitedKm.price,
-                        km: bike.pricePerDay.limitedKm.kmLimit,
-                        type: "limited",
-                        extraAmount: bikeSelections[bike._id]?.extraAmount || 0,
-                      }
-                    : {
-                        price: bike.pricePerDay?.unlimited?.price || 0,
-                        km: "Unlimited",
-                        type: "unlimited",
-                        extraAmount: bikeSelections[bike._id]?.extraAmount || 0,
-                      };
-
+                  const pricingOptions = getPricingOptions(bike.pricePerDay);
                   const selection =
-                    bikeSelections[bike._id] || initialSelection;
-                  const totalPrice = selection.price + selection.extraAmount;
-
-                  const handlePriceChange = (price, kmType) => {
-                    setBikeSelections((prev) => ({
-                      ...prev,
-                      [bike._id]: {
-                        price,
-                        km:
-                          kmType === "limited"
-                            ? bike.pricePerDay?.limitedKm?.kmLimit || 0
-                            : "Unlimited",
-                        type: kmType,
-                        extraAmount: prev[bike._id]?.extraAmount || 0,
-                      },
-                    }));
-                  };
+                    bikeSelections[bike._id] || pricingOptions[0];
+                  const totalPrice = selection
+                    ? selection.price + selection.extraAmount
+                    : 0;
 
                   return (
                     <Card
                       key={bike._id}
-                      className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white/90 backdrop-blur-sm border-0 shadow-lg"
+                      className={`group relative overflow-hidden transition-all duration-300 transform hover:-translate-y-2 bg-white border-0 shadow-lg hover:shadow-2xl ${
+                        !bike.isAvailable ? "opacity-90" : "hover:scale-[1.02]"
+                      }`}
                     >
                       <CardContent className="p-0">
-                        <div className="relative overflow-hidden">
+                        {/* Image Section */}
+                        <div className="relative overflow-hidden h-48">
                           <Image
                             src={
                               bike.images?.[0] ||
@@ -639,133 +741,173 @@ export default function SearchPage() {
                             alt={bike.title}
                             width={300}
                             height={200}
-                            className="w-full h-48 object-cover rounded-t-lg transition-transform duration-300 hover:scale-105"
+                            className="w-full h-full object-cover transition-transform duration-500 "
+                            onError={(e) => {
+                              e.target.src =
+                                "/placeholder.svg?height=200&width=300";
+                            }}
                           />
+
+                          {/* Next Available Strip - Black overlay at bottom */}
+                          {/* Next Available Strip - Black overlay vertically centered */}
+                          {/* Next Available Strip - Small black strip vertically centered */}
                           {!bike.isAvailable && bike.nextAvailable && (
-                            <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 bg-gray-900/80 backdrop-blur-sm text-white text-center py-3">
-                              <span className="text-sm font-medium">
-                                Next Available:{" "}
-                                {new Date(
-                                  bike.nextAvailable
-                                ).toLocaleDateString()}
-                              </span>
-                            </div>
-                          )}
-                          {bike.isTrending && (
-                            <Badge className="absolute top-3 right-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
-                              🔥 Trending
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="p-5">
-                          <h3 className="font-bold text-lg mb-3 text-gray-800">
-                            {bike.title}
-                          </h3>
-
-                          <div className="text-center text-gray-500 text-sm mb-3 font-medium">
-                            Choose km limit
-                          </div>
-
-                          <div className="flex flex-wrap gap-2 mb-4 justify-center">
-                            {bike.pricePerDay?.limitedKm?.isActive && (
-                              <Button
-                                size="sm"
-                                className={`px-4 py-2 rounded-full font-medium transition-all duration-200 text-sm transform hover:scale-105
-                                  ${
-                                    selection.type === "limited"
-                                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
-                                      : "bg-white text-orange-600 border-2 border-orange-300 hover:bg-orange-50"
-                                  }`}
-                                onClick={() =>
-                                  handlePriceChange(
-                                    bike.pricePerDay.limitedKm.price,
-                                    "limited"
-                                  )
-                                }
-                              >
-                                {bike.pricePerDay.limitedKm.kmLimit} km
-                              </Button>
-                            )}
-
-                            {bike.pricePerDay?.unlimited?.isActive && (
-                              <Button
-                                size="sm"
-                                className={`px-4 py-2 rounded-full font-medium transition-all duration-200 text-sm transform hover:scale-105
-                                  ${
-                                    selection.type === "unlimited"
-                                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
-                                      : "bg-white text-orange-600 border-2 border-orange-300 hover:bg-orange-50"
-                                  }`}
-                                onClick={() =>
-                                  handlePriceChange(
-                                    bike.pricePerDay.unlimited.price,
-                                    "unlimited"
-                                  )
-                                }
-                              >
-                                Unlimited km
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="border-t border-gray-100 mx-5"></div>
-
-                        <div className="flex items-center justify-between p-5 pt-4">
-                          <div>
-                            <div className="text-2xl font-bold text-gray-900">
-                              ₹{totalPrice}.00
-                            </div>
-                            {selection.extraAmount > 0 && (
-                              <div className="text-xs text-gray-500 mt-1">
-                                Base: ₹{selection.price} + Extra: ₹
-                                {selection.extraAmount}
+                            <div className="absolute top-1/2 left-0 right-0 transform -translate-y-1/2 bg-black/90 backdrop-blur-sm text-white py-2 px-3">
+                              <div className="flex items-center justify-center text-center">
+                                <Calendar className="w-3 h-3 mr-2 flex-shrink-0" />
+                                <div className="min-w-0">
+                                  <div className="text-xs font-medium leading-tight">
+                                    Next Available
+                                  </div>
+                                  <div className="text-xs font-bold leading-tight truncate">
+                                    {formatCompactDateTime(bike.nextAvailable)}
+                                  </div>
+                                </div>
                               </div>
+                            </div>
+                          )}
+
+                          {/* Status Badges - Top corners */}
+                          <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+                            {bike.isTrending && (
+                              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg border-0 text-xs font-medium px-2 py-1">
+                                🔥 Trending
+                              </Badge>
+                            )}
+
+                            {!bike.isAvailable && (
+                              <Badge className="bg-red-500/90 text-white shadow-lg border-0 text-xs font-medium px-2 py-1 ml-auto">
+                                Unavailable
+                              </Badge>
                             )}
                           </div>
+                        </div>
 
-                          <Button
-                            size="lg"
-                            className={`px-6 py-3 rounded-lg font-bold transition-all duration-200 transform hover:scale-105 text-sm
-                              ${
+                        {/* Content Section */}
+                        <div className="p-5">
+                          {/* Title and Brand */}
+                          <div className="mb-4">
+                            <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-1">
+                              {bike.title}
+                            </h3>
+                            <p className="text-sm text-gray-500 font-medium">
+                              {bike.brand} • {bike.model} • {bike.year}
+                            </p>
+                          </div>
+
+                          {/* Pricing Options - Show for all bikes */}
+                          {pricingOptions.length > 0 && (
+                            <>
+                              <div className="text-center text-gray-500 text-sm mb-3 font-medium">
+                                Choose km limit
+                              </div>
+
+                              <div className="flex flex-wrap gap-2 mb-4 justify-center">
+                                {pricingOptions.map((option) => (
+                                  <Button
+                                    key={option.type}
+                                    size="sm"
+                                    variant={
+                                      selection?.type === option.type
+                                        ? "default"
+                                        : "outline"
+                                    }
+                                    className={`px-4 py-2 rounded-full font-medium transition-all duration-200 text-sm transform hover:scale-105 ${
+                                      selection?.type === option.type
+                                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg border-0"
+                                        : "bg-white text-orange-600 border-2 border-orange-300 hover:bg-orange-50 hover:border-orange-400"
+                                    } ${!bike.isAvailable ? "opacity-75" : ""}`}
+                                    onClick={() =>
+                                      handlePriceChange(
+                                        bike._id,
+                                        option.price,
+                                        option.type,
+                                        option.kmLimit
+                                      )
+                                    }
+                                    disabled={!bike.isAvailable}
+                                  >
+                                    {option.label}
+                                  </Button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          {/* Divider */}
+                          <div className="border-t border-gray-100 my-4"></div>
+
+                          {/* Price and Action - Always show price */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div
+                                className={`text-2xl font-bold ${
+                                  bike.isAvailable
+                                    ? "text-gray-900"
+                                    : "text-gray-600"
+                                }`}
+                              >
+                                ₹{totalPrice.toLocaleString()}
+                              </div>
+                              {selection?.extraAmount > 0 && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Base: ₹{selection.price.toLocaleString()} +
+                                  Extra: ₹
+                                  {selection.extraAmount.toLocaleString()}
+                                </div>
+                              )}
+                              <div className="text-xs text-gray-500 font-medium">
+                                per day
+                              </div>
+                            </div>
+
+                            <Button
+                              size="lg"
+                              className={`px-6 py-3 rounded-xl font-bold transition-all duration-300 transform text-sm shadow-lg ${
                                 bike.isAvailable
-                                  ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg"
+                                  ? "bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white hover:scale-105 hover:shadow-xl"
                                   : "bg-gray-400 text-gray-600 cursor-not-allowed"
                               }`}
-                            disabled={!bike.isAvailable}
-                            asChild={bike.isAvailable}
-                          >
-                            {bike.isAvailable ? (
-                              <Link
-                                href={`/bike/${bike._id}?${new URLSearchParams({
-                                  ...Object.fromEntries(
-                                    Object.entries({
-                                      startDate:
-                                        searchData.startDate
-                                          ?.toISOString()
-                                          .split("T")[0] || "",
-                                      endDate:
-                                        searchData.endDate
-                                          ?.toISOString()
-                                          .split("T")[0] || "",
-                                      startTime: searchData.startTime || "",
-                                      endTime: searchData.endTime || "",
-                                      location: searchData.location || "",
-                                      kmOption: selection.type,
-                                      basePrice: selection.price.toString(),
-                                    }).filter(([_, value]) => value)
-                                  ),
-                                  price: totalPrice.toString(),
-                                  km: selection.km.toString(),
-                                }).toString()}`}
-                              >
-                                BOOK NOW
-                              </Link>
-                            ) : (
-                              <span>BOOK NOW</span>
-                            )}
-                          </Button>
+                              disabled={!bike.isAvailable}
+                              asChild={bike.isAvailable}
+                            >
+                              {bike.isAvailable ? (
+                                <Link
+                                  href={`/bike/${
+                                    bike._id
+                                  }?${new URLSearchParams({
+                                    ...Object.fromEntries(
+                                      Object.entries({
+                                        startDate:
+                                          searchData.startDate
+                                            ?.toISOString()
+                                            .split("T")[0] || "",
+                                        endDate:
+                                          searchData.endDate
+                                            ?.toISOString()
+                                            .split("T")[0] || "",
+                                        startTime: searchData.startTime || "",
+                                        endTime: searchData.endTime || "",
+                                        location: searchData.location || "",
+                                        kmOption:
+                                          selection?.type || "unlimited",
+                                        basePrice:
+                                          selection?.price?.toString() || "0",
+                                      }).filter(([_, value]) => value)
+                                    ),
+                                    price: totalPrice.toString(),
+                                    km:
+                                      selection?.km?.toString() || "Unlimited",
+                                  }).toString()}`}
+                                  className="flex items-center justify-center"
+                                >
+                                  BOOK NOW
+                                </Link>
+                              ) : (
+                                <span>UNAVAILABLE</span>
+                              )}
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -774,6 +916,7 @@ export default function SearchPage() {
               </div>
             )}
 
+            {/* No Results State */}
             {!loading && sortedBikes.length === 0 && (
               <Card className="shadow-xl bg-white/90 backdrop-blur-sm border-0">
                 <CardContent className="p-12 text-center">
