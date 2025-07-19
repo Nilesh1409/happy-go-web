@@ -16,10 +16,11 @@ import {
   Timer,
   Shield,
   ArrowRight,
+  X,
 } from "lucide-react";
 import { apiService } from "@/lib/api";
 
-export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
+export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWithBooking }) {
   const [step, setStep] = useState("mobile"); // 'mobile', 'login-otp', 'register', 'register-otp', 'success'
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
@@ -175,7 +176,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
       }
 
       onClose();
-      window.location.reload(); // Refresh to update header
+      
+      // If proceedWithBooking is provided, call it instead of reloading
+      if (proceedWithBooking) {
+        proceedWithBooking();
+      } else {
+        window.location.reload(); // Refresh to update header
+      }
     } catch (error) {
       setError(error.message || "Invalid OTP. Please try again.");
     } finally {
@@ -283,7 +290,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
       onLoginSuccess();
     }
     onClose();
-    window.location.reload();
+    
+    // If proceedWithBooking is provided, call it instead of reloading
+    if (proceedWithBooking) {
+      proceedWithBooking();
+    } else {
+      window.location.reload();
+    }
   };
 
   const resetModal = () => {
@@ -313,41 +326,48 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
           onClose();
         }
       }}
+      className="py-0 border-1 h-[100px]"
+      // style={{
+      //   border: "1px solid red",
+      // }}
     >
-      <DialogContent className="max-w-md mx-auto p-0 overflow-hidden">
+      <DialogContent 
+       style={{
+        border: "1px solid red",
+      }} className="w-[95vw] max-w-md mx-auto p-0  overflow-hidden rounded-xl sm:rounded-lg max-h-[95vh] overflow-y-auto">
         {/* Mobile Number Step */}
         {step === "mobile" && (
-          <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-4 bg-gradient-to-br from-[#F47B20] to-orange-600 text-white rounded-t-lg">
-              <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 flex items-center justify-center">
+          <Card className="border-0 py-0 shadow-none">
+            <CardHeader className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-[#F47B20] to-orange-600 text-white rounded-t-xl sm:rounded-t-lg">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden mx-auto mb-3 sm:mb-4 flex items-center justify-center bg-white/10">
                 <img
                   src="/assets/happygo.jpeg"
                   alt="Happy Go Logo"
-                  className="w-4/5 h-4/5 object-cover rounded-2xl"
+                  className="w-3/4 h-3/4 object-cover rounded-xl"
                 />
               </div>
 
-              <DialogTitle className="text-2xl font-bold">
+              <DialogTitle className="text-xl sm:text-2xl font-bold">
                 Welcome to Happy Go!
               </DialogTitle>
-              <p className="text-orange-100">
+              <p className="text-orange-100 text-sm sm:text-base">
                 Enter your mobile number to continue
               </p>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                  {error}
+                <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg text-sm flex items-start">
+                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{error}</span>
                 </div>
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-700 block">
                   Mobile Number
                 </label>
                 <div className="flex">
-                  <div className="flex items-center px-4 py-3 border border-r-0 rounded-l-lg bg-gray-50 text-gray-600 font-medium h-12">
+                  <div className="flex items-center px-3 sm:px-4 py-3 border border-r-0 rounded-l-lg bg-gray-50 text-gray-600 font-medium h-11 sm:h-12 text-sm sm:text-base">
                     +91
                   </div>
                   <Input
@@ -357,20 +377,24 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     onChange={(e) =>
                       setMobile(e.target.value.replace(/\D/g, "").slice(0, 10))
                     }
-                    className="rounded-l-none border-l-0 focus:border-l focus:border-[#F47B20] h-12"
+                    className="rounded-l-none border-l-0 focus:border-l focus:border-[#F47B20] h-11 sm:h-12 text-base"
                     maxLength={10}
+                    autoFocus
                   />
                 </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  We'll send you an OTP to verify your number
+                </p>
               </div>
 
               <Button
-                className="w-full h-12 text-lg font-semibold bg-[#F47B20] hover:bg-[#E06A0F]"
+                className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold bg-[#F47B20] hover:bg-[#E06A0F] transition-all duration-200"
                 onClick={handleSendOTP}
                 disabled={loading || mobile.length !== 10}
               >
                 {loading ? (
                   <div className="flex items-center">
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
                     Checking...
                   </div>
                 ) : (
@@ -378,9 +402,9 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                 )}
               </Button>
 
-              <div className="text-center pt-4 border-t">
-                <div className="flex items-center justify-center text-sm text-gray-600">
-                  <Phone className="w-4 h-4 mr-2" />
+              <div className="text-center pt-3 sm:pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-center text-xs sm:text-sm text-gray-600">
+                  <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                   <span>Need help? Call </span>
                   <a
                     href="tel:+919008022800"
@@ -396,28 +420,31 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
         {/* Login OTP Step */}
         {step === "login-otp" && (
-          <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-4 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-t-lg">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-white" />
+          <Card className="border-0 shadow-none py-0">
+            <CardHeader className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-t-xl sm:rounded-t-lg">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <DialogTitle className="text-xl font-bold">
+              <DialogTitle className="text-lg sm:text-xl font-bold">
                 Verify OTP
               </DialogTitle>
-              <p className="text-green-100">
-                Enter the 6-digit code sent to +91 {mobile}
+              <p className="text-green-100 text-sm sm:text-base">
+                Enter the 6-digit code sent to
+              </p>
+              <p className="text-white font-semibold text-sm sm:text-base">
+                +91 {mobile}
               </p>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                  {error}
+                <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg text-sm flex items-start">
+                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{error}</span>
                 </div>
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-700 block">
                   OTP Code
                 </label>
                 <Input
@@ -427,14 +454,15 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                   onChange={(e) =>
                     setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
                   }
-                  className="text-center text-xl tracking-widest font-mono h-12"
+                  className="text-center text-lg sm:text-xl tracking-widest font-mono h-11 sm:h-12"
                   maxLength={6}
+                  autoFocus
                 />
               </div>
 
               <div className="text-center">
                 {otpData.timeLeft > 0 ? (
-                  <div className="flex items-center justify-center text-sm text-gray-600">
+                  <div className="flex items-center justify-center text-sm text-gray-600 bg-gray-50 rounded-lg py-2 px-3">
                     <Timer className="w-4 h-4 mr-2" />
                     <span>OTP expires in {formatTime(otpData.timeLeft)}</span>
                   </div>
@@ -443,7 +471,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     variant="outline"
                     onClick={handleResendOTP}
                     disabled={loading}
-                    className="text-[#F47B20] border-[#F47B20]"
+                    className="text-[#F47B20] border-[#F47B20] hover:bg-orange-50"
                   >
                     {loading ? (
                       <>
@@ -458,13 +486,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               </div>
 
               <Button
-                className="w-full h-12 text-lg font-semibold bg-green-600 hover:bg-green-700"
+                className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold bg-green-600 hover:bg-green-700 transition-all duration-200"
                 onClick={handleVerifyLoginOTP}
                 disabled={loading || otp.length !== 6}
               >
                 {loading ? (
                   <div className="flex items-center">
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
                     Verifying...
                   </div>
                 ) : (
@@ -483,7 +511,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     setOtp("");
                     setError("");
                   }}
-                  className="text-gray-600 flex items-center mx-auto"
+                  className="text-gray-600 flex items-center mx-auto text-sm hover:text-gray-800"
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   Change Mobile Number
@@ -495,33 +523,35 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
         {/* Registration Step */}
         {step === "register" && (
-          <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-4 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-t-lg">
-              <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 flex items-center justify-center">
+          <Card className="border-0 py-0 shadow-none">
+            <CardHeader className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-t-xl sm:rounded-t-lg">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden mx-auto mb-3 sm:mb-4 flex items-center justify-center bg-white/10">
                 <img
                   src="/assets/happygo.jpeg"
                   alt="Happy Go Logo"
-                  className="w-4/5 h-4/5 object-cover rounded-2xl"
+                  className="w-3/4 h-3/4 object-cover rounded-xl"
                 />
               </div>
 
-              <DialogTitle className="text-xl font-bold">
+              <DialogTitle className="text-lg sm:text-xl font-bold">
                 Create Account
               </DialogTitle>
-              <p className="text-blue-100">Join thousands of happy travelers</p>
+              <p className="text-blue-100 text-sm sm:text-base">
+                Join thousands of happy travelers
+              </p>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                  {error}
+                <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg text-sm flex items-start">
+                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{error}</span>
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Full Name
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    Full Name *
                   </label>
                   <Input
                     type="text"
@@ -530,13 +560,14 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     onChange={(e) =>
                       setRegisterData({ ...registerData, name: e.target.value })
                     }
-                    className="h-12"
+                    className="h-11 sm:h-12 text-base"
+                    autoFocus
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Email Address
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    Email Address *
                   </label>
                   <Input
                     type="email"
@@ -548,16 +579,16 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                         email: e.target.value,
                       })
                     }
-                    className="h-12"
+                    className="h-11 sm:h-12 text-base"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Mobile Number
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    Mobile Number *
                   </label>
                   <div className="flex">
-                    <div className="flex items-center px-4 py-3 border border-r-0 rounded-l-lg bg-gray-50 text-gray-600 font-medium h-12">
+                    <div className="flex items-center px-3 sm:px-4 py-3 border border-r-0 rounded-l-lg bg-gray-50 text-gray-600 font-medium h-11 sm:h-12 text-sm sm:text-base">
                       +91
                     </div>
                     <Input
@@ -572,14 +603,14 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                             .slice(0, 10),
                         })
                       }
-                      className="rounded-l-none border-l-0 focus:border-l focus:border-[#F47B20] h-12"
+                      className="rounded-l-none border-l-0 focus:border-l focus:border-[#F47B20] h-11 sm:h-12 text-base"
                       maxLength={10}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
                     Referral Code (Optional)
                   </label>
                   <div className="relative">
@@ -593,7 +624,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                           referralCode: e.target.value.toUpperCase(),
                         })
                       }
-                      className="h-12 pr-10"
+                      className="h-11 sm:h-12 pr-10 text-base"
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                       {referralValidation.isValidating ? (
@@ -609,15 +640,15 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                   </div>
 
                   {referralValidation.isValid === true && (
-                    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-md">
-                      <div className="flex items-center text-green-700 text-sm">
+                    <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center text-green-700 text-sm mb-1">
                         <Users className="w-4 h-4 mr-2" />
                         <span>
                           Referred by{" "}
                           <strong>{referralValidation.referrerName}</strong>
                         </span>
                       </div>
-                      <p className="text-green-600 text-xs mt-1">
+                      <p className="text-green-600 text-xs">
                         🎉 You'll get ₹{referralValidation.reward} off on your
                         first booking!
                       </p>
@@ -626,7 +657,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
                   {referralValidation.isValid === false &&
                     registerData.referralCode && (
-                      <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                      <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
                         <p className="text-red-600 text-sm">
                           {referralValidation.message}
                         </p>
@@ -643,13 +674,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               </div>
 
               <Button
-                className="w-full h-12 text-lg font-semibold bg-blue-600 hover:bg-blue-700"
+                className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold bg-blue-600 hover:bg-blue-700 transition-all duration-200"
                 onClick={handleRegister}
                 disabled={loading || referralValidation.isValidating}
               >
                 {loading ? (
                   <div className="flex items-center">
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
                     Creating Account...
                   </div>
                 ) : (
@@ -664,7 +695,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     setStep("mobile");
                     setError("");
                   }}
-                  className="text-gray-600 flex items-center mx-auto"
+                  className="text-gray-600 flex items-center mx-auto text-sm hover:text-gray-800"
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   Back to Login
@@ -676,28 +707,31 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
         {/* Registration OTP Step */}
         {step === "register-otp" && (
-          <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-4 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-t-lg">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-white" />
+          <Card className="border-0 shadow-none py-0">
+            <CardHeader className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-t-xl sm:rounded-t-lg">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <DialogTitle className="text-xl font-bold">
+              <DialogTitle className="text-lg sm:text-xl font-bold">
                 Verify Mobile Number
               </DialogTitle>
-              <p className="text-purple-100">
-                Enter the OTP sent to +91 {registrationResponse?.mobile}
+              <p className="text-purple-100 text-sm sm:text-base">
+                Enter the OTP sent to
+              </p>
+              <p className="text-white font-semibold text-sm sm:text-base">
+                +91 {registrationResponse?.mobile}
               </p>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
-                  {error}
+                <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg text-sm flex items-start">
+                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{error}</span>
                 </div>
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-gray-700 block">
                   OTP Code
                 </label>
                 <Input
@@ -707,14 +741,15 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                   onChange={(e) =>
                     setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
                   }
-                  className="text-center text-xl tracking-widest font-mono h-12"
+                  className="text-center text-lg sm:text-xl tracking-widest font-mono h-11 sm:h-12"
                   maxLength={6}
+                  autoFocus
                 />
               </div>
 
               <div className="text-center">
                 {otpData.timeLeft > 0 ? (
-                  <div className="flex items-center justify-center text-sm text-gray-600">
+                  <div className="flex items-center justify-center text-sm text-gray-600 bg-gray-50 rounded-lg py-2 px-3">
                     <Timer className="w-4 h-4 mr-2" />
                     <span>OTP expires in {formatTime(otpData.timeLeft)}</span>
                   </div>
@@ -723,7 +758,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     variant="outline"
                     onClick={handleResendOTP}
                     disabled={loading}
-                    className="text-[#F47B20] border-[#F47B20]"
+                    className="text-[#F47B20] border-[#F47B20] hover:bg-orange-50"
                   >
                     {loading ? (
                       <>
@@ -738,13 +773,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
               </div>
 
               <Button
-                className="w-full h-12 text-lg font-semibold bg-purple-600 hover:bg-purple-700"
+                className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold bg-purple-600 hover:bg-purple-700 transition-all duration-200"
                 onClick={handleVerifyRegisterOTP}
                 disabled={loading || otp.length !== 6}
               >
                 {loading ? (
                   <div className="flex items-center">
-                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
                     Verifying...
                   </div>
                 ) : (
@@ -767,22 +802,24 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
         {/* Success Step */}
         {step === "success" && (
-          <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-4 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-t-lg">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-10 h-10 text-white" />
+          <Card className="border-0 shadow-none py-0">
+            <CardHeader className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-t-xl sm:rounded-t-lg">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <CheckCircle className="w-6 h-6 sm:w-10 sm:h-10 text-white" />
               </div>
-              <DialogTitle className="text-2xl font-bold">
+              <DialogTitle className="text-lg sm:text-2xl font-bold">
                 Welcome to Happy Go! 🎉
               </DialogTitle>
-              <p className="text-green-100">Your account is ready to use</p>
+              <p className="text-green-100 text-sm sm:text-base">
+                Your account is ready to use
+              </p>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {registrationResponse?.referralApplied && (
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4">
                   <div className="flex items-center justify-center mb-2">
-                    <Gift className="w-5 h-5 text-orange-600 mr-2" />
-                    <span className="font-semibold text-orange-800">
+                    <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 mr-2" />
+                    <span className="font-semibold text-orange-800 text-sm sm:text-base">
                       Referral Bonus Active!
                     </span>
                   </div>
@@ -791,7 +828,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                     <strong>{registrationResponse.referrerName}</strong>
                   </p>
                   <div className="bg-orange-100 rounded-md p-2 text-center">
-                    <p className="text-orange-800 font-bold">
+                    <p className="text-orange-800 font-bold text-sm sm:text-base">
                       🎁 ₹{registrationResponse.referralReward} off your first
                       booking!
                     </p>
@@ -799,12 +836,12 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
                 </div>
               )}
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-800 mb-2 text-center">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                <h3 className="font-semibold text-blue-800 mb-2 text-center text-sm sm:text-base">
                   Your Referral Code
                 </h3>
                 <div className="bg-white border-2 border-dashed border-blue-300 rounded-lg p-3 text-center">
-                  <code className="text-lg font-bold text-blue-600 tracking-wider">
+                  <code className="text-base sm:text-lg font-bold text-blue-600 tracking-wider">
                     {registrationResponse?.referralCode}
                   </code>
                 </div>
@@ -815,7 +852,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
               <Button
                 onClick={handleContinue}
-                className="w-full h-12 text-lg font-semibold bg-[#F47B20] hover:bg-[#E06A0F]"
+                className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold bg-[#F47B20] hover:bg-[#E06A0F] transition-all duration-200"
               >
                 Start Booking Now
                 <ArrowRight className="w-4 h-4 ml-2" />

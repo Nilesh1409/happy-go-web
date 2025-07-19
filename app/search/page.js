@@ -108,38 +108,83 @@ const formatDate = (date) => {
 };
 
 // Pricing logic utility
-const getPricingOptions = (pricePerDay) => {
+const getPricingOptions = (bike) => {
   const options = [];
 
-  if (pricePerDay?.limitedKm?.isActive) {
+  // Limited km option - only if priceLimited exists
+  if (bike?.priceLimited?.breakdown) {
+    const limitedKm = bike.pricePerDay?.limitedKm?.kmLimit || 60; // fallback to 60
     options.push({
       type: "limited",
-      price: pricePerDay.limitedKm.price,
-      kmLimit: pricePerDay.limitedKm.kmLimit,
-      label: `${pricePerDay.limitedKm.kmLimit} km`,
+      price: bike.priceLimited.breakdown.basePrice,
+      kmLimit: limitedKm,
+      label: `${limitedKm} km`,
+      duration: bike.priceLimited.breakdown.duration,
     });
   }
 
-  if (pricePerDay?.unlimited?.isActive) {
+  // Unlimited km option - only if priceUnlimited exists
+  if (bike?.priceUnlimited?.breakdown) {
     options.push({
       type: "unlimited",
-      price: pricePerDay.unlimited.price,
+      price: bike.priceUnlimited.breakdown.basePrice,
       kmLimit: "Unlimited",
       label: "Unlimited km",
-    });
-  }
-
-  // If both are false, show unlimited as fallback
-  if (options.length === 0 && pricePerDay?.unlimited) {
-    options.push({
-      type: "unlimited",
-      price: pricePerDay.unlimited.price,
-      kmLimit: "Unlimited",
-      label: "Unlimited km",
+      duration: bike.priceUnlimited.breakdown.duration,
     });
   }
 
   return options;
+};
+
+// Utility function to get next 30-minute time slot
+const getNext30MinBlock = () => {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  let startHour, startMinute;
+  
+  if (currentHour < 5) {
+    startHour = 5;
+    startMinute = 0;
+  } else {
+    // Round up to next 30-minute slot
+    if (currentMinute < 30) {
+      startHour = currentHour;
+      startMinute = 30;
+    } else {
+      startHour = currentHour + 1;
+      startMinute = 0;
+    }
+  }
+  
+  // If beyond operating hours, start next day at 5:00
+  if (startHour > 22 || (startHour === 22 && startMinute > 30)) {
+    return "05:00";
+  }
+  
+  return `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
+};
+
+// Utility function to add 30 minutes to a time string
+const add30Minutes = (timeStr) => {
+  if (!timeStr) return "08:30";
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  let newMinutes = minutes + 30;
+  let newHours = hours;
+  
+  if (newMinutes >= 60) {
+    newMinutes -= 60;
+    newHours += 1;
+  }
+  
+  // If beyond 22:30, set to 22:30
+  if (newHours > 22 || (newHours === 22 && newMinutes > 30)) {
+    return "22:30";
+  }
+  
+  return `${newHours.toString().padStart(2, "0")}:${newMinutes.toString().padStart(2, "0")}`;
 };
 
 export default function SearchPage() {
@@ -160,11 +205,29 @@ export default function SearchPage() {
     brand: "all",
   });
 
+  // Calculate initial times
+  const initialPickupDate = parseDate(searchParams.get("pickupDate"));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const isPickupToday = initialPickupDate && 
+    initialPickupDate.toDateString() === today.toDateString();
+  
+  const initialPickupTime = searchParams.get("pickupTime") || 
+    (isPickupToday ? getNext30MinBlock() : "08:00");
+  
+  const initialDropoffDate = parseDate(searchParams.get("dropoffDate")) || initialPickupDate;
+  const isSameDay = initialPickupDate && initialDropoffDate && 
+    initialPickupDate.toDateString() === initialDropoffDate.toDateString();
+  
+  const initialDropoffTime = searchParams.get("dropoffTime") || 
+    (isSameDay ? add30Minutes(initialPickupTime) : "20:00");
+
   const [searchData, setSearchData] = useState({
-    startDate: parseDate(searchParams.get("pickupDate")),
-    endDate: parseDate(searchParams.get("dropoffDate")),
-    startTime: searchParams.get("pickupTime") || "",
-    endTime: searchParams.get("dropoffTime") || "",
+    startDate: initialPickupDate,
+    endDate: initialDropoffDate,
+    startTime: initialPickupTime,
+    endTime: initialDropoffTime,
     location: searchParams.get("location") || "Chikkamagaluru",
   });
 
@@ -224,7 +287,7 @@ export default function SearchPage() {
 
       // Initialize selections for bikes
       const initialSelections = bikesData.reduce((acc, bike) => {
-        const pricingOptions = getPricingOptions(bike.pricePerDay);
+        const pricingOptions = getPricingOptions(bike);
         const defaultOption = pricingOptions[0]; // Use first available option
 
         if (defaultOption) {
@@ -232,6 +295,7 @@ export default function SearchPage() {
             price: defaultOption.price,
             km: defaultOption.kmLimit,
             type: defaultOption.type,
+            duration: defaultOption.duration,
             extraAmount: extraCharges,
           };
         }
@@ -260,6 +324,110 @@ export default function SearchPage() {
       return updated;
     });
   }, [extraCharges]);
+
+  // Handle pickup date changes to update time if needed
+  useEffect(() => {
+    if (!searchData.startDate) return;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isToday = searchData.startDate.toDateString() === today.toDateString();
+    
+    // If pickup date is today, validate pickup time against current time
+    if (isToday) {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+      
+      // Convert current time and selected time to minutes for comparison
+      const currentTimeMinutes = currentHour * 60 + currentMinute;
+      const selectedTimeMinutes = searchData.startTime ? 
+        parseInt(searchData.startTime.split(':')[0]) * 60 + parseInt(searchData.startTime.split(':')[1]) : 
+        0;
+      
+      // If selected time is in the past or too close, update to next available slot
+      if (selectedTimeMinutes <= currentTimeMinutes + 30) {
+        const nextTime = getNext30MinBlock();
+        setSearchData(prev => ({
+          ...prev,
+          startTime: nextTime,
+          endTime: prev.endDate && prev.startDate.toDateString() === prev.endDate.toDateString() 
+            ? add30Minutes(nextTime) 
+            : prev.endTime
+        }));
+      }
+    }
+  }, [searchData.startDate]);
+
+  // Handle pickup time changes to update drop-off time if same day
+  useEffect(() => {
+    if (!searchData.startDate || !searchData.endDate || !searchData.startTime || !searchData.endTime) return;
+    
+    const isSameDay = searchData.startDate.toDateString() === searchData.endDate.toDateString();
+    
+    if (isSameDay) {
+      const timeToMinutes = (timeStr) => {
+        const [hour, minute] = timeStr.split(":").map(Number);
+        return hour * 60 + minute;
+      };
+      
+      const pickupMinutes = timeToMinutes(searchData.startTime);
+      const currentDropoffMinutes = timeToMinutes(searchData.endTime);
+      
+      // Only adjust if drop-off time is equal to or less than pickup time
+      if (currentDropoffMinutes <= pickupMinutes) {
+        const newDropoffTime = add30Minutes(searchData.startTime);
+        setSearchData(prev => ({
+          ...prev,
+          endTime: newDropoffTime
+        }));
+      }
+    }
+  }, [searchData.startTime, searchData.startDate, searchData.endDate]);
+
+  // Handle drop-off date changes to validate time restrictions
+  useEffect(() => {
+    if (!searchData.startDate || !searchData.endDate || !searchData.startTime || !searchData.endTime) return;
+    
+    const isSameDay = searchData.startDate.toDateString() === searchData.endDate.toDateString();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isDropoffToday = searchData.endDate.toDateString() === today.toDateString();
+    
+    if (isSameDay) {
+      const timeToMinutes = (timeStr) => {
+        const [hour, minute] = timeStr.split(":").map(Number);
+        return hour * 60 + minute;
+      };
+      
+      const pickupMinutes = timeToMinutes(searchData.startTime);
+      const dropoffMinutes = timeToMinutes(searchData.endTime);
+      
+      // Only adjust if drop-off time is equal to or less than pickup time
+      if (dropoffMinutes <= pickupMinutes) {
+        const newDropoffTime = add30Minutes(searchData.startTime);
+        setSearchData(prev => ({
+          ...prev,
+          endTime: newDropoffTime
+        }));
+      }
+    }
+    
+    // If drop-off is today and time is in the past, update to next available time
+    if (isDropoffToday && !isSameDay) {
+      const now = new Date();
+      const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+      const dropoffTimeMinutes = parseInt(searchData.endTime.split(':')[0]) * 60 + parseInt(searchData.endTime.split(':')[1]);
+      
+      if (dropoffTimeMinutes <= currentTimeMinutes + 30) {
+        const nextTime = getNext30MinBlock();
+        setSearchData(prev => ({
+          ...prev,
+          endTime: nextTime
+        }));
+      }
+    }
+  }, [searchData.endDate]);
 
   // Load bikes on mount and search params change
   useEffect(() => {
@@ -348,13 +516,14 @@ export default function SearchPage() {
   };
 
   const handlePriceChange = useCallback(
-    (bikeId, price, kmType, kmLimit) => {
+    (bikeId, price, kmType, kmLimit, duration) => {
       setBikeSelections((prev) => ({
         ...prev,
         [bikeId]: {
           price,
           km: kmLimit,
           type: kmType,
+          duration,
           extraAmount: prev[bikeId]?.extraAmount || extraCharges,
         },
       }));
@@ -427,14 +596,42 @@ export default function SearchPage() {
             label=""
             selectedDate={searchData.startDate}
             selectedTime={searchData.startTime}
-            onDateChange={(date) =>
-              setSearchData({ ...searchData, startDate: date })
-            }
-            onTimeChange={(time) =>
-              setSearchData({ ...searchData, startTime: time })
-            }
+            onDateChange={(date) => {
+              const newSearchData = { ...searchData, startDate: date };
+              
+              // If drop-off date is before new pickup date, update it
+              if (searchData.endDate && date > searchData.endDate) {
+                newSearchData.endDate = date;
+              }
+              
+              setSearchData(newSearchData);
+            }}
+            onTimeChange={(time) => {
+              const newSearchData = { ...searchData, startTime: time };
+              
+              // If same day, only adjust drop-off time if it's equal to or less than new pickup time
+              if (searchData.endDate && searchData.startDate && searchData.endTime &&
+                  searchData.endDate.toDateString() === searchData.startDate.toDateString()) {
+                
+                const timeToMinutes = (timeStr) => {
+                  const [hour, minute] = timeStr.split(":").map(Number);
+                  return hour * 60 + minute;
+                };
+                
+                const newPickupMinutes = timeToMinutes(time);
+                const currentDropoffMinutes = timeToMinutes(searchData.endTime);
+                
+                // Only adjust if drop-off time is equal to or less than new pickup time
+                if (currentDropoffMinutes <= newPickupMinutes) {
+                  newSearchData.endTime = add30Minutes(time);
+                }
+              }
+              
+              setSearchData(newSearchData);
+            }}
             minDate={new Date()}
             showTimeAfterDate={true}
+            restrictCurrentTime={true}
           />
         </div>
 
@@ -447,21 +644,61 @@ export default function SearchPage() {
             label=""
             selectedDate={searchData.endDate}
             selectedTime={searchData.endTime}
-            onDateChange={(date) =>
-              setSearchData({ ...searchData, endDate: date })
-            }
-            onTimeChange={(time) =>
-              setSearchData({ ...searchData, endTime: time })
-            }
+            onDateChange={(date) => {
+              const newSearchData = { ...searchData, endDate: date };
+              
+              // If same day as pickup, only adjust drop-off time if it's equal to or less than pickup time
+              if (searchData.startDate && searchData.startTime && searchData.endTime &&
+                  date.toDateString() === searchData.startDate.toDateString()) {
+                
+                const timeToMinutes = (timeStr) => {
+                  const [hour, minute] = timeStr.split(":").map(Number);
+                  return hour * 60 + minute;
+                };
+                
+                const pickupMinutes = timeToMinutes(searchData.startTime);
+                const dropoffMinutes = timeToMinutes(searchData.endTime);
+                
+                // Only adjust if drop-off time is equal to or less than pickup time
+                if (dropoffMinutes <= pickupMinutes) {
+                  newSearchData.endTime = add30Minutes(searchData.startTime);
+                }
+              }
+              
+              setSearchData(newSearchData);
+            }}
+            onTimeChange={(time) => {
+              // Validate that drop-off time is at least 30 min after pickup if same day
+              const isSameDay = searchData.startDate && searchData.endDate && 
+                searchData.startDate.toDateString() === searchData.endDate.toDateString();
+              
+              if (isSameDay && searchData.startTime) {
+                const timeToMinutes = (timeStr) => {
+                  const [hour, minute] = timeStr.split(":").map(Number);
+                  return hour * 60 + minute;
+                };
+                
+                const pickupMinutes = timeToMinutes(searchData.startTime);
+                const dropoffMinutes = timeToMinutes(time);
+                
+                // Only prevent if drop-off is less than pickup + 30 minutes (not equal)
+                if (dropoffMinutes < pickupMinutes + 30) {
+                  return; // Don't update if invalid time selected
+                }
+              }
+              
+              setSearchData({ ...searchData, endTime: time });
+            }}
             minDate={searchData.startDate || new Date()}
             showTimeAfterDate={true}
             isDropOff={true}
             pickupDate={searchData.startDate}
             pickupTime={searchData.startTime}
+            restrictCurrentTime={true}
           />
         </div>
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-semibold mb-3 text-gray-700 flex items-center">
             <MapPin className="w-4 h-4 mr-2" />
             Search by location
@@ -474,7 +711,7 @@ export default function SearchPage() {
             }
             className="border-gray-300 focus:border-orange-500 focus:ring-orange-500/20"
           />
-        </div>
+        </div> */}
 
         <div>
           <label className="block text-sm font-semibold mb-3 text-gray-700">
@@ -499,7 +736,7 @@ export default function SearchPage() {
           </Select>
         </div>
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-semibold mb-3 text-gray-700">
             Brand
           </label>
@@ -519,7 +756,7 @@ export default function SearchPage() {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
         <div className="flex gap-3 pt-4">
           <Button
@@ -716,11 +953,11 @@ export default function SearchPage() {
               /* Enhanced Bikes Grid */
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {sortedBikes.map((bike) => {
-                  const pricingOptions = getPricingOptions(bike.pricePerDay);
+                  const pricingOptions = getPricingOptions(bike);
                   const selection =
                     bikeSelections[bike._id] || pricingOptions[0];
                   const totalPrice = selection
-                    ? selection.price + selection.extraAmount
+                    ? selection.price
                     : 0;
 
                   return (
@@ -769,14 +1006,21 @@ export default function SearchPage() {
 
                           {/* Status Badges - Top corners */}
                           <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
-                            {bike.isTrending && (
-                              <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg border-0 text-xs font-medium px-2 py-1">
-                                🔥 Trending
+                            <div className="flex flex-col gap-2">
+                              {/* {bike.isTrending && (
+                                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg border-0 text-xs font-medium px-2 py-1">
+                                  🔥 Trending
+                                </Badge>
+                              )} */}
+                              
+                              {/* Zero deposit badge - always show */}
+                              <Badge className="bg-[#F47B20] text-white shadow-lg border-0 text-xs font-medium px-2 py-1">
+                                Zero deposit
                               </Badge>
-                            )}
+                            </div>
 
                             {!bike.isAvailable && (
-                              <Badge className="bg-red-500/90 text-white shadow-lg border-0 text-xs font-medium px-2 py-1 ml-auto">
+                              <Badge className="bg-red-500/90 text-white shadow-lg border-0 text-xs font-medium px-2 py-1">
                                 Unavailable
                               </Badge>
                             )}
@@ -822,7 +1066,8 @@ export default function SearchPage() {
                                         bike._id,
                                         option.price,
                                         option.type,
-                                        option.kmLimit
+                                        option.kmLimit,
+                                        option.duration
                                       )
                                     }
                                     disabled={!bike.isAvailable}
@@ -849,15 +1094,8 @@ export default function SearchPage() {
                               >
                                 ₹{totalPrice.toLocaleString()}
                               </div>
-                              {selection?.extraAmount > 0 && (
-                                <div className="text-xs text-gray-500 mt-1">
-                                  Base: ₹{selection.price.toLocaleString()} +
-                                  Extra: ₹
-                                  {selection.extraAmount.toLocaleString()}
-                                </div>
-                              )}
                               <div className="text-xs text-gray-500 font-medium">
-                                per day
+                                {selection?.duration || "per day"}
                               </div>
                             </div>
 
@@ -893,6 +1131,8 @@ export default function SearchPage() {
                                           selection?.type || "unlimited",
                                         basePrice:
                                           selection?.price?.toString() || "0",
+                                        duration:
+                                          selection?.duration || "",
                                       }).filter(([_, value]) => value)
                                     ),
                                     price: totalPrice.toString(),

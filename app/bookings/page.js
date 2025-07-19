@@ -454,7 +454,7 @@ export default function BookingsPage() {
                             asChild
                             className="text-xs"
                           >
-                            <Link href={`/booking/summary/${booking._id}`}>
+                            <Link href={`/booking/confirmed/${booking._id}`}>
                               View Details
                             </Link>
                           </Button>
@@ -603,7 +603,7 @@ export default function BookingsPage() {
                         {/* Action Buttons */}
                         <div className="flex flex-wrap gap-2 sm:gap-3">
                           <Button variant="outline" size="sm" asChild>
-                            <Link href={`/booking/summary/${booking._id}`}>
+                            <Link href={`/booking/confirmed/${booking._id}`}>
                               View Details
                               <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
                             </Link>

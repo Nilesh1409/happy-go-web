@@ -229,50 +229,50 @@ export default function AadhaarVerificationModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto">
+      <DialogContent className="w-[95vw] max-w-md mx-auto p-0 gap-0 max-h-[90vh] overflow-y-auto">
         {step === "intro" && (
           <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-[#F47B20] to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-white" />
+            <CardHeader className="text-center pb-3 px-4 pt-6">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-[#F47B20] to-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <DialogTitle className="text-xl font-bold text-gray-900">
+              <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900">
                 Verify Your Identity
               </DialogTitle>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-xs sm:text-sm">
                 Complete verification for faster bike pickup on arrival
               </p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-800 mb-2">
+            <CardContent className="space-y-4 px-4 pb-6">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <h4 className="font-semibold text-green-800 mb-2 text-sm">
                   Benefits of Verification:
                 </h4>
-                <ul className="text-sm text-green-700 space-y-1">
+                <ul className="text-xs sm:text-sm text-green-700 space-y-1">
                   <li>• Skip document verification at pickup</li>
                   <li>• Faster bike handover process</li>
                   <li>• Enhanced security for your booking</li>
                 </ul>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2">
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-bold text-sm">1</span>
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-600 font-bold text-xs sm:text-sm">1</span>
                   </div>
-                  <div>
-                    <div className="font-medium text-sm">
+                  <div className="min-w-0">
+                    <div className="font-medium text-xs sm:text-sm">
                       Aadhaar Verification
                     </div>
                     <div className="text-xs text-gray-600">Verify with OTP</div>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-bold text-sm">2</span>
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-blue-600 font-bold text-xs sm:text-sm">2</span>
                   </div>
-                  <div>
-                    <div className="font-medium text-sm">Driving License</div>
+                  <div className="min-w-0">
+                    <div className="font-medium text-xs sm:text-sm">Driving License</div>
                     <div className="text-xs text-gray-600">
                       Upload clear photo
                     </div>
@@ -280,12 +280,16 @@ export default function AadhaarVerificationModal({
                 </div>
               </div>
 
-              <div className="flex space-x-3">
-                <Button variant="outline" className="flex-1" onClick={onClose}>
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 text-sm h-10" 
+                  onClick={onClose}
+                >
                   Skip for Now
                 </Button>
                 <Button
-                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white"
+                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white text-sm h-10"
                   onClick={() => setStep("aadhaar")}
                 >
                   Start Verification
@@ -297,22 +301,22 @@ export default function AadhaarVerificationModal({
 
         {step === "aadhaar" && (
           <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-4">
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FileText className="w-6 h-6 text-blue-600" />
+            <CardHeader className="text-center pb-3 px-4 pt-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
               </div>
               <DialogTitle className="text-lg font-bold">
                 Enter Aadhaar Number
               </DialogTitle>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-xs sm:text-sm">
                 We'll send an OTP to your registered mobile number
               </p>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 px-4 pb-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  {error}
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs sm:text-sm flex items-start">
+                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
                 </div>
               )}
 
@@ -330,7 +334,7 @@ export default function AadhaarVerificationModal({
                       setAadhaarNumber(cleaned);
                     }
                   }}
-                  className="text-center text-lg tracking-widest font-mono"
+                  className="text-center text-base sm:text-lg tracking-widest font-mono h-12"
                   maxLength={14}
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -340,7 +344,7 @@ export default function AadhaarVerificationModal({
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <div className="flex items-start space-x-2">
-                  <Shield className="w-4 h-4 text-yellow-600 mt-0.5" />
+                  <Shield className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
                   <div className="text-xs text-yellow-800">
                     <p className="font-medium mb-1">Your data is secure</p>
                     <p>
@@ -351,24 +355,24 @@ export default function AadhaarVerificationModal({
                 </div>
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 text-sm h-10"
                   onClick={() => setStep("intro")}
                   disabled={loading}
                 >
                   Back
                 </Button>
                 <Button
-                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white"
+                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white text-sm h-10"
                   onClick={handleAadhaarSubmit}
                   disabled={loading || aadhaarNumber.length !== 12}
                 >
                   {loading ? (
                     <div className="flex items-center">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Sending OTP...
+                      <span className="text-xs sm:text-sm">Sending OTP...</span>
                     </div>
                   ) : (
                     "Send OTP"
@@ -381,20 +385,20 @@ export default function AadhaarVerificationModal({
 
         {step === "otp" && (
           <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-4">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Clock className="w-6 h-6 text-green-600" />
+            <CardHeader className="text-center pb-3 px-4 pt-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
               <DialogTitle className="text-lg font-bold">Enter OTP</DialogTitle>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-xs sm:text-sm">
                 Enter the 6-digit OTP sent to your registered mobile number
               </p>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 px-4 pb-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  {error}
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs sm:text-sm flex items-start">
+                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
                 </div>
               )}
 
@@ -410,36 +414,36 @@ export default function AadhaarVerificationModal({
                       setOtp(cleaned);
                     }
                   }}
-                  className="text-center text-xl tracking-widest font-mono"
+                  className="text-center text-lg sm:text-xl tracking-widest font-mono h-12"
                   maxLength={6}
                 />
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center text-sm text-blue-800">
-                  <Clock className="w-4 h-4 mr-2" />
+                <div className="flex items-center text-xs sm:text-sm text-blue-800">
+                  <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span>OTP is valid for 10 minutes</span>
                 </div>
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 text-sm h-10"
                   onClick={() => setStep("aadhaar")}
                   disabled={loading}
                 >
                   Back
                 </Button>
                 <Button
-                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white"
+                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white text-sm h-10"
                   onClick={handleOTPVerification}
                   disabled={loading || otp.length !== 6}
                 >
                   {loading ? (
                     <div className="flex items-center">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Verifying...
+                      <span className="text-xs sm:text-sm">Verifying...</span>
                     </div>
                   ) : (
                     "Verify OTP"
@@ -452,23 +456,23 @@ export default function AadhaarVerificationModal({
 
         {step === "dl" && (
           <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-4">
-              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Camera className="w-6 h-6 text-purple-600" />
+            <CardHeader className="text-center pb-3 px-4 pt-6">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
               </div>
               <DialogTitle className="text-lg font-bold">
                 Upload Driving License
               </DialogTitle>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 text-xs sm:text-sm">
                 Upload a clear photo of your driving license
               </p>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 px-4 pb-6">
               {aadhaarData && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                   <div className="flex items-center mb-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 mr-2" />
-                    <span className="text-sm font-medium text-green-800">
+                    <CheckCircle className="w-4 h-4 text-green-600 mr-2 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium text-green-800">
                       Aadhaar Verified Successfully
                     </span>
                   </div>
@@ -479,9 +483,9 @@ export default function AadhaarVerificationModal({
               )}
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-2" />
-                  {error}
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs sm:text-sm flex items-start">
+                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
                 </div>
               )}
 
@@ -489,11 +493,11 @@ export default function AadhaarVerificationModal({
                 <label className="block text-sm font-medium mb-2">
                   Driving License Photo
                 </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#F47B20] transition-colors relative">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center hover:border-[#F47B20] transition-colors relative">
                   {dlFile ? (
                     <div className="space-y-2">
-                      <CheckCircle className="w-8 h-8 text-green-500 mx-auto" />
-                      <p className="text-sm font-medium">{dlFile.name}</p>
+                      <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mx-auto" />
+                      <p className="text-xs sm:text-sm font-medium break-all">{dlFile.name}</p>
                       <p className="text-xs text-gray-500">
                         {(dlFile.size / 1024 / 1024).toFixed(2)} MB
                       </p>
@@ -501,14 +505,15 @@ export default function AadhaarVerificationModal({
                         variant="outline"
                         size="sm"
                         onClick={() => setDlFile(null)}
+                        className="text-xs h-8"
                       >
                         Remove
                       </Button>
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <Upload className="w-8 h-8 text-gray-400 mx-auto" />
-                      <p className="text-sm text-gray-600">
+                      <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto" />
+                      <p className="text-xs sm:text-sm text-gray-600">
                         Click to upload or drag and drop
                       </p>
                       <p className="text-xs text-gray-500">
@@ -526,7 +531,7 @@ export default function AadhaarVerificationModal({
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <h4 className="text-sm font-medium text-yellow-800 mb-1">
+                <h4 className="text-xs sm:text-sm font-medium text-yellow-800 mb-1">
                   Photo Guidelines:
                 </h4>
                 <ul className="text-xs text-yellow-700 space-y-1">
@@ -536,24 +541,24 @@ export default function AadhaarVerificationModal({
                 </ul>
               </div>
 
-              <div className="flex space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
                 <Button
                   variant="outline"
-                  className="flex-1"
+                  className="flex-1 text-sm h-10"
                   onClick={() => setStep("otp")}
                   disabled={loading}
                 >
                   Back
                 </Button>
                 <Button
-                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white"
+                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white text-sm h-10"
                   onClick={handleDLUpload}
                   disabled={loading || !dlFile}
                 >
                   {loading ? (
                     <div className="flex items-center">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      Uploading...
+                      <span className="text-xs sm:text-sm">Uploading...</span>
                     </div>
                   ) : (
                     "Upload License"
@@ -566,23 +571,23 @@ export default function AadhaarVerificationModal({
 
         {step === "completed" && (
           <Card className="border-0 shadow-none">
-            <CardContent className="p-8 text-center">
-              <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-10 h-10 text-white" />
+            <CardContent className="p-4 sm:p-8 text-center">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-green-600 mb-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-green-600 mb-2">
                 Verification Complete!
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 mb-6 text-sm sm:text-base">
                 Your documents have been verified successfully. You can now
                 enjoy faster pickup at our location!
               </p>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-                <h4 className="font-semibold text-green-800 mb-2">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-6">
+                <h4 className="font-semibold text-green-800 mb-2 text-sm sm:text-base">
                   What's Next?
                 </h4>
-                <ul className="text-sm text-green-700 space-y-1 text-left">
+                <ul className="text-xs sm:text-sm text-green-700 space-y-1 text-left">
                   <li>• Arrive at pickup location at scheduled time</li>
                   <li>• Show booking confirmation</li>
                   <li>• Quick verification and bike handover</li>
@@ -590,7 +595,7 @@ export default function AadhaarVerificationModal({
               </div>
 
               <Button
-                className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white"
+                className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white h-10 sm:h-11"
                 onClick={onClose}
               >
                 Continue to Booking

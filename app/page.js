@@ -361,9 +361,9 @@ export default function HomePage() {
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </div>
-              <Button variant="outline" asChild>
+              {/* <Button variant="outline" asChild>
                 <Link href="/search">View All Bikes</Link>
-              </Button>
+              </Button> */}
             </div>
           </div>
 
@@ -425,12 +425,32 @@ export default function HomePage() {
                       <div className="flex justify-between items-center">
                         <div>
                           <span className="text-xl sm:text-2xl font-bold text-gray-900">
-                            ₹{bike.pricePerDay?.limitedKm?.price || 500}
+                            ₹{
+                              bike.priceLimited?.breakdown?.basePrice || 
+                              bike.priceUnlimited?.breakdown?.basePrice || 
+                              bike.pricePerDay?.limitedKm?.price || 
+                              bike.pricePerDay?.unlimited?.price || 
+                              500
+                            }
                           </span>
-                          <span className="text-sm text-gray-600">/day</span>
+                          <span className="text-sm text-gray-600">
+                            /{bike.priceLimited?.breakdown?.duration || 
+                             bike.priceUnlimited?.breakdown?.duration || 
+                             "day"}
+                          </span>
                         </div>
                         <Button className="btn-primary text-sm" asChild>
-                          <Link href={`/bike/${bike._id}`}>Book Now</Link>
+                          <Link 
+                            href={`/bike/${bike._id}${bike.defaultSearchPeriod ? `?${new URLSearchParams({
+                              startDate: bike.defaultSearchPeriod.startDate,
+                              endDate: bike.defaultSearchPeriod.endDate,
+                              startTime: bike.defaultSearchPeriod.startTime,
+                              endTime: bike.defaultSearchPeriod.endTime,
+                              location: "Chikkamagaluru"
+                            }).toString()}` : ''}`}
+                          >
+                            Book Now
+                          </Link>
                         </Button>
                       </div>
                     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,10 +34,66 @@ const formatDateForAPI = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+// Utility function to get next 30-minute time slot
+const getNext30MinBlock = () => {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  let startHour, startMinute;
+  
+  if (currentHour < 5) {
+    startHour = 5;
+    startMinute = 0;
+  } else {
+    // Round up to next 30-minute slot
+    if (currentMinute < 30) {
+      startHour = currentHour;
+      startMinute = 30;
+    } else {
+      startHour = currentHour + 1;
+      startMinute = 0;
+    }
+  }
+  
+  // If beyond operating hours, start next day at 5:00
+  if (startHour > 22 || (startHour === 22 && startMinute > 30)) {
+    return "05:00";
+  }
+  
+  return `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`;
+};
+
+// Utility function to add 30 minutes to a time string
+const add30Minutes = (timeStr) => {
+  if (!timeStr) return "08:30";
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  let newMinutes = minutes + 30;
+  let newHours = hours;
+  
+  if (newMinutes >= 60) {
+    newMinutes -= 60;
+    newHours += 1;
+  }
+  
+  // If beyond 22:30, set to 22:30
+  if (newHours > 22 || (newHours === 22 && newMinutes > 30)) {
+    return "22:30";
+  }
+  
+  return `${newHours.toString().padStart(2, "0")}:${newMinutes.toString().padStart(2, "0")}`;
+};
+
 export default function BikeDetailsPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  // NEW: Ref to track if we're in the middle of a login process
+  const isLoginInProgress = useRef(false);
+  
+  // NEW: State to preserve user data during login
+  const [preservedBookingData, setPreservedBookingData] = useState(null);
 
   const [bike, setBike] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,7 +102,7 @@ export default function BikeDetailsPage() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [helmetQuantity, setHelmetQuantity] = useState(1); // Default to 1 free helmet
+  const [helmetQuantity, setHelmetQuantity] = useState(1);
 
   // Initialize selectedKmOption from URL params
   const [selectedKmOption, setSelectedKmOption] = useState(
@@ -57,9 +113,8 @@ export default function BikeDetailsPage() {
   const parseDate = (dateStr) => {
     if (!dateStr) return null;
     try {
-      // Create date in local timezone to avoid UTC conversion issues
       const [year, month, day] = dateStr.split("-").map(Number);
-      const date = new Date(year, month - 1, day); // month is 0-indexed
+      const date = new Date(year, month - 1, day);
       return isNaN(date.getTime()) ? null : date;
     } catch {
       return null;
@@ -68,7 +123,6 @@ export default function BikeDetailsPage() {
 
   const parseTime = (timeStr) => {
     if (!timeStr) return "07:00";
-    // Validate time format HH:MM
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     return timeRegex.test(timeStr) ? timeStr : "07:00";
   };
@@ -79,6 +133,32 @@ export default function BikeDetailsPage() {
     startTime: parseTime(searchParams.get("startTime")),
     endTime: parseTime(searchParams.get("endTime")) || "18:00",
   });
+
+  // NEW: Function to preserve current user selections
+  const preserveCurrentBookingData = useCallback(() => {
+    const currentData = {
+      bookingParams: { ...bookingParams },
+      selectedKmOption,
+      helmetQuantity,
+      agreedToTerms,
+    };
+    setPreservedBookingData(currentData);
+    console.log("Preserved booking data:", currentData);
+    return currentData;
+  }, [bookingParams, selectedKmOption, helmetQuantity, agreedToTerms]);
+
+  // NEW: Function to restore preserved data
+  const restorePreservedData = useCallback(() => {
+    if (preservedBookingData) {
+      console.log("Restoring preserved data:", preservedBookingData);
+      setBookingParams(preservedBookingData.bookingParams);
+      setSelectedKmOption(preservedBookingData.selectedKmOption);
+      setHelmetQuantity(preservedBookingData.helmetQuantity);
+      setAgreedToTerms(preservedBookingData.agreedToTerms);
+      // Clear preserved data after restoration
+      setPreservedBookingData(null);
+    }
+  }, [preservedBookingData]);
 
   // Build back to search URL
   const buildBackToSearchUrl = useCallback(() => {
@@ -101,19 +181,117 @@ export default function BikeDetailsPage() {
     return `/search${queryString ? `?${queryString}` : ""}`;
   }, []);
 
-  // Debounced API call to prevent excessive requests
   const [debounceTimer, setDebounceTimer] = useState(null);
 
-  // Reset helmet quantity when dates change or bike changes
+  // MODIFIED: Reset helmet quantity when dates change or bike changes, but not during login
   useEffect(() => {
-    setHelmetQuantity(1); // Reset to 1 free helmet
+    if (!isLoginInProgress.current) {
+      setHelmetQuantity(1);
+    }
   }, [bookingParams.startDate, bookingParams.endDate, params.id]);
+
+  // Handle pickup date changes to update time if needed
+  useEffect(() => {
+    if (!bookingParams.startDate || isLoginInProgress.current) return;
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isToday = bookingParams.startDate.toDateString() === today.toDateString();
+    
+    // If pickup date is today, validate pickup time against current time
+    if (isToday && bookingParams.startTime) {
+      const now = new Date();
+      const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+      const selectedTimeMinutes = parseInt(bookingParams.startTime.split(':')[0]) * 60 + parseInt(bookingParams.startTime.split(':')[1]);
+      
+      // If selected time is in the past or too close, update to next available slot
+      if (selectedTimeMinutes <= currentTimeMinutes + 30) {
+        const nextTime = getNext30MinBlock();
+        setBookingParams(prev => ({
+          ...prev,
+          startTime: nextTime,
+          endTime: prev.endDate && prev.startDate.toDateString() === prev.endDate.toDateString() 
+            ? add30Minutes(nextTime) 
+            : prev.endTime
+        }));
+      }
+    }
+  }, [bookingParams.startDate]);
+
+  // Handle pickup time changes to update drop-off time if same day
+  useEffect(() => {
+    if (!bookingParams.startDate || !bookingParams.endDate || !bookingParams.startTime || !bookingParams.endTime || isLoginInProgress.current) return;
+    
+    const isSameDay = bookingParams.startDate.toDateString() === bookingParams.endDate.toDateString();
+    
+    if (isSameDay) {
+      const timeToMinutes = (timeStr) => {
+        const [hour, minute] = timeStr.split(":").map(Number);
+        return hour * 60 + minute;
+      };
+      
+      const pickupMinutes = timeToMinutes(bookingParams.startTime);
+      const currentDropoffMinutes = timeToMinutes(bookingParams.endTime);
+      
+      // Only adjust if drop-off time is equal to or less than pickup time
+      if (currentDropoffMinutes <= pickupMinutes) {
+        const newDropoffTime = add30Minutes(bookingParams.startTime);
+        setBookingParams(prev => ({
+          ...prev,
+          endTime: newDropoffTime
+        }));
+      }
+    }
+  }, [bookingParams.startTime, bookingParams.startDate, bookingParams.endDate]);
+
+  // Handle drop-off date changes to validate time restrictions
+  useEffect(() => {
+    if (!bookingParams.startDate || !bookingParams.endDate || !bookingParams.startTime || !bookingParams.endTime || isLoginInProgress.current) return;
+    
+    const isSameDay = bookingParams.startDate.toDateString() === bookingParams.endDate.toDateString();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isDropoffToday = bookingParams.endDate.toDateString() === today.toDateString();
+    
+    if (isSameDay) {
+      const timeToMinutes = (timeStr) => {
+        const [hour, minute] = timeStr.split(":").map(Number);
+        return hour * 60 + minute;
+      };
+      
+      const pickupMinutes = timeToMinutes(bookingParams.startTime);
+      const dropoffMinutes = timeToMinutes(bookingParams.endTime);
+      
+      // Only adjust if drop-off time is equal to or less than pickup time
+      if (dropoffMinutes <= pickupMinutes) {
+        const newDropoffTime = add30Minutes(bookingParams.startTime);
+        setBookingParams(prev => ({
+          ...prev,
+          endTime: newDropoffTime
+        }));
+      }
+    }
+    
+    // If drop-off is today and time is in the past, update to next available time
+    if (isDropoffToday && !isSameDay) {
+      const now = new Date();
+      const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+      const dropoffTimeMinutes = parseInt(bookingParams.endTime.split(':')[0]) * 60 + parseInt(bookingParams.endTime.split(':')[1]);
+      
+      if (dropoffTimeMinutes <= currentTimeMinutes + 30) {
+        const nextTime = getNext30MinBlock();
+        setBookingParams(prev => ({
+          ...prev,
+          endTime: nextTime
+        }));
+      }
+    }
+  }, [bookingParams.endDate]);
 
   const loadBikeDetails = useCallback(
     async (immediate = false) => {
       if (!params.id) return;
 
-      // Clear existing timer
       if (debounceTimer) {
         clearTimeout(debounceTimer);
       }
@@ -125,7 +303,6 @@ export default function BikeDetailsPage() {
 
           const queryParams = {};
 
-          // Only add date/time params if all required fields are present
           if (
             bookingParams.startDate &&
             bookingParams.endDate &&
@@ -145,10 +322,11 @@ export default function BikeDetailsPage() {
           );
           setBike(response.data);
 
-          // Auto-select unlimited for weekend bookings if limited is currently selected
+          // MODIFIED: Auto-select unlimited for weekend bookings if limited is currently selected, but not during login
           if (
             response.data.pricing?.isWeekendBooking &&
-            selectedKmOption === "limited"
+            selectedKmOption === "limited" &&
+            !isLoginInProgress.current
           ) {
             setSelectedKmOption("unlimited");
           }
@@ -164,7 +342,6 @@ export default function BikeDetailsPage() {
       if (immediate) {
         await makeApiCall();
       } else {
-        // Debounce API calls by 500ms
         const timer = setTimeout(makeApiCall, 500);
         setDebounceTimer(timer);
       }
@@ -177,19 +354,26 @@ export default function BikeDetailsPage() {
     loadBikeDetails(true);
   }, []);
 
-  // Load bike details when booking params change (debounced)
+  // MODIFIED: Load bike details when booking params change (debounced), but not during login
   useEffect(() => {
     if (
       bookingParams.startDate &&
       bookingParams.endDate &&
       bookingParams.startTime &&
-      bookingParams.endTime
+      bookingParams.endTime &&
+      !isLoginInProgress.current
     ) {
       loadBikeDetails(false);
     }
   }, [bookingParams, selectedKmOption]);
 
-  // Cleanup debounce timer
+  // NEW: Effect to restore data after login
+  useEffect(() => {
+    if (preservedBookingData && !isLoginInProgress.current) {
+      restorePreservedData();
+    }
+  }, [preservedBookingData, restorePreservedData]);
+
   useEffect(() => {
     return () => {
       if (debounceTimer) {
@@ -199,10 +383,13 @@ export default function BikeDetailsPage() {
   }, [debounceTimer]);
 
   const handleBookingParamChange = useCallback((key, value) => {
+    // NEW: Don't update if login is in progress
+    if (isLoginInProgress.current) return;
+    
     setBookingParams((prev) => {
       const newParams = { ...prev, [key]: value };
 
-      // Auto-adjust end date if start date is after end date
+      // Date validation
       if (
         key === "startDate" &&
         value &&
@@ -214,12 +401,100 @@ export default function BikeDetailsPage() {
         newParams.endDate = nextDay;
       }
 
+      // Time validation for pickup time changes
+      if (key === "startTime" && value && prev.endDate && prev.startDate && prev.endTime) {
+        const isSameDay = prev.startDate.toDateString() === prev.endDate.toDateString();
+        
+        if (isSameDay) {
+          const timeToMinutes = (timeStr) => {
+            const [hour, minute] = timeStr.split(":").map(Number);
+            return hour * 60 + minute;
+          };
+          
+          const newPickupMinutes = timeToMinutes(value);
+          const currentDropoffMinutes = timeToMinutes(prev.endTime);
+          
+          // Only adjust if drop-off time is equal to or less than new pickup time
+          if (currentDropoffMinutes <= newPickupMinutes) {
+            newParams.endTime = add30Minutes(value);
+          }
+        }
+      }
+
+      // Time validation for pickup date changes
+      if (key === "startDate" && value && prev.endDate && prev.startTime && prev.endTime) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const isToday = value.toDateString() === today.toDateString();
+        
+        // If pickup date is today, validate pickup time against current time
+        if (isToday) {
+          const now = new Date();
+          const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+          const selectedTimeMinutes = parseInt(prev.startTime.split(':')[0]) * 60 + parseInt(prev.startTime.split(':')[1]);
+          
+          // If selected time is in the past or too close, update to next available slot
+          if (selectedTimeMinutes <= currentTimeMinutes + 30) {
+            const nextTime = getNext30MinBlock();
+            newParams.startTime = nextTime;
+            
+            // If same day, also update drop-off time
+            if (prev.endDate && value.toDateString() === prev.endDate.toDateString()) {
+              newParams.endTime = add30Minutes(nextTime);
+            }
+          }
+        }
+      }
+
+      // Time validation for drop-off date changes
+      if (key === "endDate" && value && prev.startDate && prev.startTime && prev.endTime) {
+        const isSameDay = prev.startDate.toDateString() === value.toDateString();
+        
+        if (isSameDay) {
+          const timeToMinutes = (timeStr) => {
+            const [hour, minute] = timeStr.split(":").map(Number);
+            return hour * 60 + minute;
+          };
+          
+          const pickupMinutes = timeToMinutes(prev.startTime);
+          const dropoffMinutes = timeToMinutes(prev.endTime);
+          
+          // Only adjust if drop-off time is equal to or less than pickup time
+          if (dropoffMinutes <= pickupMinutes) {
+            newParams.endTime = add30Minutes(prev.startTime);
+          }
+        }
+      }
+
+      // Time validation for drop-off time changes
+      if (key === "endTime" && value && prev.startDate && prev.endDate && prev.startTime) {
+        const isSameDay = prev.startDate.toDateString() === prev.endDate.toDateString();
+        
+        if (isSameDay) {
+          const timeToMinutes = (timeStr) => {
+            const [hour, minute] = timeStr.split(":").map(Number);
+            return hour * 60 + minute;
+          };
+          
+          const pickupMinutes = timeToMinutes(prev.startTime);
+          const dropoffMinutes = timeToMinutes(value);
+          
+          // Only allow if drop-off is at least 30 minutes after pickup
+          if (dropoffMinutes < pickupMinutes + 30) {
+            return prev; // Don't update if invalid time selected
+          }
+        }
+      }
+
       return newParams;
     });
-    setError(""); // Clear any existing errors
+    setError("");
   }, []);
 
   const handleKmOptionChange = useCallback((option) => {
+    // NEW: Don't update if login is in progress
+    if (isLoginInProgress.current) return;
+    
     setSelectedKmOption(option);
     setError("");
   }, []);
@@ -242,15 +517,13 @@ export default function BikeDetailsPage() {
       };
     }
 
-    // Calculate helmet charges - 1 free, rest chargeable at ₹60 each
-    const freeHelmets = 1;
-    const helmetPrice = 60;
+    const freeHelmets = bike?.helmetInfo?.freeHelmetPerBooking || 1;
+    const helmetPrice = bike?.helmetInfo?.pricePerHelmet || 60;
     const helmetCharges =
       helmetQuantity > freeHelmets
         ? (helmetQuantity - freeHelmets) * helmetPrice
         : 0;
 
-    // Add helmet charges to the existing pricing
     const updatedPricing = {
       ...bike.pricing,
       breakdown: {
@@ -283,7 +556,6 @@ export default function BikeDetailsPage() {
         bookingParams.startDate.toDateString() ===
         bookingParams.endDate.toDateString()
       ) {
-        // Same day booking - check times
         if (bookingParams.startTime >= bookingParams.endTime) {
           return "End time must be after start time for same-day bookings";
         }
@@ -299,6 +571,7 @@ export default function BikeDetailsPage() {
     return null;
   }, [agreedToTerms, bookingParams, bike?.availableQuantity]);
 
+  // MODIFIED: Handle proceed to pay with data preservation
   const handleProceedToPay = useCallback(async () => {
     const validationError = validateBookingData();
     if (validationError) {
@@ -308,12 +581,15 @@ export default function BikeDetailsPage() {
 
     const token = localStorage.getItem("token");
     if (!token) {
+      // NEW: Preserve current data before showing login modal
+      preserveCurrentBookingData();
+      isLoginInProgress.current = true;
       setShowLoginModal(true);
       return;
     }
 
     await proceedWithBooking();
-  }, [validateBookingData]);
+  }, [validateBookingData, preserveCurrentBookingData]);
 
   const proceedWithBooking = useCallback(async () => {
     setBookingLoading(true);
@@ -366,10 +642,35 @@ export default function BikeDetailsPage() {
     router,
   ]);
 
+  // MODIFIED: Handle login success with data restoration
   const handleLoginSuccess = useCallback(() => {
+    console.log("Login successful, restoring data...");
     setShowLoginModal(false);
-    proceedWithBooking();
-  }, [proceedWithBooking]);
+    
+    // NEW: Small delay to ensure login state is properly set
+    setTimeout(() => {
+      isLoginInProgress.current = false;
+      restorePreservedData();
+      
+      // NEW: Small delay before proceeding with booking to ensure data is restored
+      setTimeout(() => {
+        proceedWithBooking();
+      }, 100);
+    }, 100);
+  }, [restorePreservedData, proceedWithBooking]);
+
+  // NEW: Handle login modal close (user cancels login)
+  const handleLoginModalClose = useCallback(() => {
+    setShowLoginModal(false);
+    isLoginInProgress.current = false;
+    // Keep preserved data in case user tries to login again
+  }, []);
+
+  // NEW: Modified helmet quantity handler to prevent updates during login
+  const handleHelmetQuantityChange = useCallback((newQuantity) => {
+    if (isLoginInProgress.current) return;
+    setHelmetQuantity(newQuantity);
+  }, []);
 
   // Loading state
   if (loading) {
@@ -427,7 +728,6 @@ export default function BikeDetailsPage() {
       <div className="bg-white border-b shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-10 sm:h-16">
-            {/* Mobile: Floating back button */}
             <Link
               href={buildBackToSearchUrl()}
               className="flex items-center justify-center w-8 h-8 sm:w-auto sm:h-auto rounded-full bg-gray-100 hover:bg-gray-200 sm:bg-transparent sm:hover:bg-transparent text-gray-600 hover:text-[#F47B20] transition-colors sm:mr-4"
@@ -460,24 +760,6 @@ export default function BikeDetailsPage() {
               </div>
             </div>
           </div>
-
-          {/* Availability Notice */}
-          {/* {bike.availableQuantity <= 3 && bike.availableQuantity > 0 && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4">
-              <div className="flex items-start">
-                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 mr-2 sm:mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-xs sm:text-sm text-orange-800 font-medium mb-1">
-                    Limited Availability
-                  </p>
-                  <p className="text-xs sm:text-sm text-orange-700 leading-relaxed">
-                    Only {bike.availableQuantity} bike(s) available for your
-                    selected dates. Book now to secure your reservation.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )} */}
 
           {/* No Availability */}
           {bike.availableQuantity <= 0 && (
@@ -540,20 +822,6 @@ export default function BikeDetailsPage() {
                           <MapPin className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                           <span>{bike.location}</span>
                         </div>
-                        {/* <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-yellow-400 fill-current" />
-                            <span>
-                              {bike.ratings} ({bike.numReviews} reviews)
-                            </span>
-                          </div>
-                          <div className="flex items-center">
-                            <Shield className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-green-500" />
-                            <span className="text-green-600 font-medium">
-                              {bike.availableQuantity} Available
-                            </span>
-                          </div>
-                        </div> */}
                       </div>
                     </div>
 
@@ -581,7 +849,6 @@ export default function BikeDetailsPage() {
                         Choose KM Package
                       </h3>
                       <div className="flex gap-2 sm:gap-3">
-                        {/* Show limited km option only if it's NOT a weekend booking */}
                         {bike.pricePerDay?.limitedKm?.isActive &&
                           !pricing.isWeekendBooking && (
                             <Button
@@ -666,7 +933,7 @@ export default function BikeDetailsPage() {
                               Helmet Rental Available
                             </p>
                             <p className="text-xs sm:text-sm text-blue-700 leading-relaxed">
-                              1 helmet FREE, additional helmets at ₹60 each
+                              {bike?.helmetInfo?.freeHelmetPerBooking || 1} helmet FREE, additional helmets at ₹{bike?.helmetInfo?.pricePerHelmet || 60} each
                             </p>
                           </div>
                         </div>
@@ -678,9 +945,9 @@ export default function BikeDetailsPage() {
                             Number of Helmets
                           </span>
                           <div className="text-xs sm:text-sm text-gray-600 mt-1">
-                            {helmetQuantity <= 1
+                            {helmetQuantity <= (bike?.helmetInfo?.freeHelmetPerBooking || 1)
                               ? `${helmetQuantity} helmet - FREE`
-                              : `1 FREE + ${helmetQuantity - 1} paid`}
+                              : `${bike?.helmetInfo?.freeHelmetPerBooking || 1} FREE + ${helmetQuantity - (bike?.helmetInfo?.freeHelmetPerBooking || 1)} paid`}
                           </div>
                         </div>
 
@@ -690,7 +957,7 @@ export default function BikeDetailsPage() {
                             size="sm"
                             className="w-8 h-8 p-0 rounded-full"
                             onClick={() =>
-                              setHelmetQuantity(Math.max(0, helmetQuantity - 1))
+                              handleHelmetQuantityChange(Math.max(0, helmetQuantity - 1))
                             }
                             disabled={
                               helmetQuantity <= 0 || bike.availableQuantity <= 0
@@ -708,12 +975,12 @@ export default function BikeDetailsPage() {
                             size="sm"
                             className="w-8 h-8 p-0 rounded-full"
                             onClick={() =>
-                              setHelmetQuantity(
-                                Math.min(10, helmetQuantity + 1)
+                              handleHelmetQuantityChange(
+                                Math.min(bike?.helmetInfo?.maxQuantity || 10, helmetQuantity + 1)
                               )
                             }
                             disabled={
-                              helmetQuantity >= 10 ||
+                              helmetQuantity >= (bike?.helmetInfo?.maxQuantity || 10) ||
                               bike.availableQuantity <= 0
                             }
                           >
@@ -727,7 +994,7 @@ export default function BikeDetailsPage() {
                           <p className="text-xs sm:text-sm text-orange-800">
                             <Shield className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
                             Additional helmet charges: ₹
-                            {(helmetQuantity - 1) * 60}
+                            {(helmetQuantity - 1) * (bike?.helmetInfo?.pricePerHelmet || 60)}
                           </p>
                         </div>
                       )}
@@ -756,8 +1023,9 @@ export default function BikeDetailsPage() {
                   onTimeChange={(time) =>
                     handleBookingParamChange("startTime", time)
                   }
-                  minDate={tomorrow}
+                  minDate={new Date()}
                   showTimeAfterDate={true}
+                  restrictCurrentTime={true}
                 />
 
                 <ModernDateTimePicker
@@ -770,11 +1038,12 @@ export default function BikeDetailsPage() {
                   onTimeChange={(time) =>
                     handleBookingParamChange("endTime", time)
                   }
-                  minDate={bookingParams.startDate || tomorrow}
+                  minDate={bookingParams.startDate || new Date()}
                   showTimeAfterDate={false}
                   isDropOff={true}
                   pickupDate={bookingParams.startDate}
                   pickupTime={bookingParams.startTime}
+                  restrictCurrentTime={true}
                 />
 
                 {pricing.breakdown.duration && (
@@ -801,7 +1070,6 @@ export default function BikeDetailsPage() {
             {/* Price Highlight Card - Mobile Ultra Compact */}
             <Card className="shadow-xl border-2 sm:py-0 py-2 border-[#F47B20] bg-white">
               <CardContent className="py-2 p-3 sm:p-2">
-                {/* Mobile: Inline layout, Desktop: Stacked */}
                 <div className="flex items-center justify-between sm:block sm:text-center">
                   <div className="sm:mb-2">
                     <div className="text-base sm:text-lg text-[#F47B20] font-medium sm:mb-1">
@@ -815,7 +1083,6 @@ export default function BikeDetailsPage() {
                     </p>
                   </div>
 
-                  {/* Mobile: Compact breakdown beside price */}
                   <div className="text-sm text-right sm:hidden">
                     <div className="text-gray-600">
                       {pricing.breakdown.duration}
@@ -825,24 +1092,23 @@ export default function BikeDetailsPage() {
                       {pricing.breakdown.basePrice?.toLocaleString() || 0}
                     </div>
                     {pricing.breakdown.extraCharges > 0 && (
-                      <div className="text-orange-600">
+                      <div className="text-gray-600">
                         Extra: ₹
                         {pricing.breakdown.extraCharges?.toLocaleString()}
                       </div>
                     )}
                     {pricing.breakdown.helmetCharges > 0 && (
-                      <div className="text-blue-600">
+                      <div className="text-gray-600">
                         Helmet: ₹
                         {pricing.breakdown.helmetCharges?.toLocaleString()}
                       </div>
                     )}
                     <div className="text-gray-600">
-                      GST: ₹{pricing.breakdown.gst?.toLocaleString() || 0}
+                      GST ({pricing.breakdown.gstPercentage || 0}%): ₹{pricing.breakdown.gst?.toLocaleString() || 0}
                     </div>
                   </div>
                 </div>
 
-                {/* Desktop: Full breakdown */}
                 <div className="hidden sm:block p-4 bg-gray-50 rounded-lg border space-y-2 text-left mt-4">
                   <div className="text-sm text-gray-600 flex justify-between">
                     <span>Base Price:</span>
@@ -852,7 +1118,7 @@ export default function BikeDetailsPage() {
                   </div>
 
                   {pricing.breakdown.extraCharges > 0 && (
-                    <div className="text-sm text-orange-600 flex justify-between">
+                    <div className="text-sm text-gray-600 flex justify-between">
                       <span>Extra Charges:</span>
                       <span>
                         ₹{pricing.breakdown.extraCharges?.toLocaleString()}
@@ -861,7 +1127,7 @@ export default function BikeDetailsPage() {
                   )}
 
                   {pricing.breakdown.helmetCharges > 0 && (
-                    <div className="text-sm text-blue-600 flex justify-between">
+                    <div className="text-sm text-gray-600 flex justify-between">
                       <span>Helmet Charges:</span>
                       <span>
                         ₹{pricing.breakdown.helmetCharges?.toLocaleString()}
@@ -878,8 +1144,9 @@ export default function BikeDetailsPage() {
                     </span>
                   </div>
 
+
                   <div className="text-sm text-gray-600 flex justify-between">
-                    <span>GST (5%):</span>
+                    <span>GST ({pricing.breakdown.gstPercentage?.toLocaleString() || 0}%):</span>
                     <span>₹{pricing.breakdown.gst?.toLocaleString() || 0}</span>
                   </div>
 
@@ -898,7 +1165,6 @@ export default function BikeDetailsPage() {
             {/* Booking Summary - Mobile Ultra Compact */}
             <Card className="shadow-lg border-0 bg-white">
               <CardContent className="p-3 sm:p-6">
-                {/* Mobile: Grid layout, Desktop: List */}
                 <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 sm:space-y-3 sm:block text-sm sm:text-sm">
                   <div className="sm:flex sm:justify-between">
                     <span className="text-gray-600 block sm:inline font-medium">
@@ -959,7 +1225,7 @@ export default function BikeDetailsPage() {
                       <span className="font-semibold text-right sm:text-left">
                         {helmetQuantity <= 1
                           ? "FREE"
-                          : `₹${((helmetQuantity - 1) * 60).toLocaleString()}`}
+                          : `₹${((helmetQuantity - 1) * (bike?.helmetInfo?.pricePerHelmet || 60)).toLocaleString()}`}
                       </span>
                     </div>
                   )}
@@ -993,7 +1259,6 @@ export default function BikeDetailsPage() {
 
                 <Separator className="my-2 sm:my-4" />
 
-                {/* Terms & Conditions - Mobile Ultra Compact */}
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 sm:p-4">
                   <div className="flex items-start space-x-2">
                     <Checkbox
@@ -1075,8 +1340,9 @@ export default function BikeDetailsPage() {
       {/* Login Modal */}
       <LoginModal
         isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
+        onClose={handleLoginModalClose}
         onLoginSuccess={handleLoginSuccess}
+        proceedWithBooking={proceedWithBooking}
       />
 
       <Footer />
