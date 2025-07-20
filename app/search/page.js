@@ -713,7 +713,7 @@ export default function SearchPage() {
           />
         </div> */}
 
-        <div>
+        {/* <div>
           <label className="block text-sm font-semibold mb-3 text-gray-700">
             Price Range
           </label>
@@ -734,7 +734,7 @@ export default function SearchPage() {
               <SelectItem value="2000+">₹2000+</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
         {/* <div>
           <label className="block text-sm font-semibold mb-3 text-gray-700">
