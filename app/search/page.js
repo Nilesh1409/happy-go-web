@@ -107,6 +107,15 @@ const formatDate = (date) => {
   });
 };
 
+// Format date for API in IST without timezone conversion
+const formatDateForAPI = (date) => {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 // Pricing logic utility
 const getPricingOptions = (bike) => {
   const options = [];
@@ -274,8 +283,8 @@ export default function SearchPage() {
       setError(null);
 
       const params = {
-        startDate: searchData.startDate?.toISOString().split("T")[0] || "",
-        endDate: searchData.endDate?.toISOString().split("T")[0] || "",
+        startDate: formatDateForAPI(searchData.startDate),
+        endDate: formatDateForAPI(searchData.endDate),
         startTime: searchData.startTime,
         endTime: searchData.endTime,
         location: searchData.location,
@@ -351,7 +360,7 @@ export default function SearchPage() {
         setSearchData(prev => ({
           ...prev,
           startTime: nextTime,
-          endTime: prev.endDate && prev.startDate.toDateString() === prev.endDate.toDateString() 
+          endTime: prev.endDate && prev.startDate.toDateString() === prev.endDate.toDateString() && prev.startTime === prev.endTime
             ? add30Minutes(nextTime) 
             : prev.endTime
         }));
@@ -567,7 +576,7 @@ export default function SearchPage() {
       )}
 
       <div className="space-y-6">
-        <div>
+        {/* <div>
           <label className="block text-sm font-semibold mb-3 text-gray-700 flex items-center">
             <Filter className="w-4 h-4 mr-2" />
             Sort by
@@ -585,7 +594,7 @@ export default function SearchPage() {
               <SelectItem value="price-high">Price - High to Low</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
         <div>
           <label className="block text-sm font-semibold mb-3 text-gray-700 flex items-center">
@@ -773,13 +782,13 @@ export default function SearchPage() {
               "Apply Filters"
             )}
           </Button>
-          <Button
+          {/* <Button
             variant="outline"
             className="px-6 py-3 border-gray-300 hover:bg-gray-50 transition-colors duration-200"
             onClick={resetFilters}
           >
             Reset
-          </Button>
+          </Button> */}
         </div>
       </div>
     </div>
@@ -1043,7 +1052,7 @@ export default function SearchPage() {
                           {pricingOptions.length > 0 && (
                             <>
                               <div className="text-center text-gray-500 text-sm mb-3 font-medium">
-                                Choose km limit
+                                 KM limit
                               </div>
 
                               <div className="flex flex-wrap gap-2 mb-4 justify-center">
@@ -1116,14 +1125,8 @@ export default function SearchPage() {
                                   }?${new URLSearchParams({
                                     ...Object.fromEntries(
                                       Object.entries({
-                                        startDate:
-                                          searchData.startDate
-                                            ?.toISOString()
-                                            .split("T")[0] || "",
-                                        endDate:
-                                          searchData.endDate
-                                            ?.toISOString()
-                                            .split("T")[0] || "",
+                                        startDate: formatDateForAPI(searchData.startDate),
+                                        endDate: formatDateForAPI(searchData.endDate),
                                         startTime: searchData.startTime || "",
                                         endTime: searchData.endTime || "",
                                         location: searchData.location || "",

@@ -318,7 +318,7 @@ export default function BookingConfirmedPage() {
         <Card className="mb-4 sm:mb-6 shadow-xl border-2 border-green-200">
           <CardHeader className="bg-green-50 pb-3 sm:pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-              <CardTitle className="text-lg sm:text-xl text-green-800 text-center sm:text-left">
+                              <CardTitle className="text-lg sm:text-xl text-green-800 text-center sm:text-left">
                 Booking Details
               </CardTitle>
               <div className="flex items-center justify-center sm:justify-end space-x-2">
@@ -422,7 +422,7 @@ export default function BookingConfirmedPage() {
 
             {/* Trip Details - Always Visible */}
             <div className="mb-4 sm:mb-6">
-              <h4 className="font-semibold text-base sm:text-lg mb-3 text-center sm:text-left">Trip Details</h4>
+                              <h4 className="font-semibold text-base sm:text-lg mb-3 text-center sm:text-left">Trip Details</h4>
               <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm">
                 <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600 text-xs mb-1">Duration</span>

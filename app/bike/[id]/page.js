@@ -1166,50 +1166,51 @@ export default function BikeDetailsPage() {
             {/* Booking Summary - Mobile Ultra Compact */}
             <Card className="shadow-lg border-0 bg-white">
               <CardContent className="p-3 sm:p-6">
-                <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 sm:space-y-3 sm:block text-sm sm:text-sm">
-                  <div className="sm:flex sm:justify-between">
-                    <span className="text-gray-600 block sm:inline font-medium">
+                <div className="space-y-3 text-sm sm:text-sm">
+                  {/* Mobile: 2-column grid, Desktop: flexbox with justify-between */}
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 font-medium">
                       Vehicle:
                     </span>
-                    <span className="font-semibold text-right sm:text-left">
+                    <span className="font-semibold ml-4 sm:ml-0">
                       {bike.title}
                     </span>
                   </div>
 
-                  <div className="sm:flex sm:justify-between">
-                    <span className="text-gray-600 block sm:inline font-medium">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 font-medium">
                       Location:
                     </span>
-                    <span className="font-semibold text-right sm:text-left">
+                    <span className="font-semibold ml-4 sm:ml-0">
                       {bike.location}
                     </span>
                   </div>
 
-                  <div className="sm:flex sm:justify-between">
-                    <span className="text-gray-600 block sm:inline font-medium">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 font-medium">
                       KM Package:
                     </span>
-                    <span className="font-semibold text-right sm:text-left">
+                    <span className="font-semibold ml-4 sm:ml-0">
                       {selectedKmOption === "limited"
                         ? `${bike.pricePerDay?.limitedKm?.kmLimit || 60} km`
                         : "Unlimited"}
                     </span>
                   </div>
 
-                  <div className="sm:flex sm:justify-between">
-                    <span className="text-gray-600 block sm:inline font-medium">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 font-medium">
                       Duration:
                     </span>
-                    <span className="font-semibold text-right sm:text-left">
+                    <span className="font-semibold ml-4 sm:ml-0">
                       {pricing.breakdown.duration}
                     </span>
                   </div>
 
-                  <div className="sm:flex sm:justify-between">
-                    <span className="text-gray-600 block sm:inline font-medium">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 font-medium">
                       Helmets:
                     </span>
-                    <span className="font-semibold text-right sm:text-left">
+                    <span className="font-semibold ml-4 sm:ml-0">
                       {helmetQuantity > 0
                         ? `${helmetQuantity} helmet${
                             helmetQuantity !== 1 ? "s" : ""
@@ -1219,11 +1220,11 @@ export default function BikeDetailsPage() {
                   </div>
 
                   {helmetQuantity > 0 && (
-                    <div className="sm:flex sm:justify-between">
-                      <span className="text-gray-600 block sm:inline font-medium">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600 font-medium">
                         Helmet Charges:
                       </span>
-                      <span className="font-semibold text-right sm:text-left">
+                      <span className="font-semibold ml-4 sm:ml-0">
                         {helmetQuantity <= 1
                           ? "FREE"
                           : `₹${((helmetQuantity - 1) * (bike?.helmetInfo?.pricePerHelmet || 60)).toLocaleString()}`}
@@ -1231,11 +1232,11 @@ export default function BikeDetailsPage() {
                     </div>
                   )}
 
-                  <div className="col-span-2 sm:col-span-1 sm:flex sm:justify-between">
-                    <span className="text-gray-600 block sm:inline font-medium">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 font-medium">
                       Pickup:
                     </span>
-                    <span className="font-semibold text-right sm:text-left">
+                    <span className="font-semibold ml-4 sm:ml-0 flex-shrink-0">
                       {bookingParams.startDate && bookingParams.startTime
                         ? `${bookingParams.startDate.toLocaleDateString()} ${
                             bookingParams.startTime
@@ -1244,11 +1245,11 @@ export default function BikeDetailsPage() {
                     </span>
                   </div>
 
-                  <div className="col-span-2 sm:col-span-1 sm:flex sm:justify-between">
-                    <span className="text-gray-600 block sm:inline font-medium">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 font-medium">
                       Dropoff:
                     </span>
-                    <span className="font-semibold text-right sm:text-left">
+                    <span className="font-semibold ml-4 sm:ml-0 flex-shrink-0">
                       {bookingParams.endDate && bookingParams.endTime
                         ? `${bookingParams.endDate.toLocaleDateString()} ${
                             bookingParams.endTime
