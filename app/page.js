@@ -34,6 +34,30 @@ const formatDateForURL = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+// Helper function to get next 30-minute block from current time
+const getNextHalfHourBlock = () => {
+  const now = new Date();
+  const currentMinutes = now.getMinutes();
+  const currentHours = now.getHours();
+  
+  // Round up to next 30-minute block
+  let nextMinutes = currentMinutes <= 30 ? 30 : 0;
+  let nextHours = currentMinutes <= 30 ? currentHours : currentHours + 1;
+  
+  // Handle day overflow
+  if (nextHours >= 24) {
+    nextHours = 0;
+  }
+  
+  // Format as HH:MM
+  return `${String(nextHours).padStart(2, "0")}:${String(nextMinutes).padStart(2, "0")}`;
+};
+
+// Helper function to check if two dates are the same day
+const isSameDay = (date1, date2) => {
+  return date1.toDateString() === date2.toDateString();
+};
+
 export default function HomePage() {
   const tomorrow = new Date();
   const today = new Date();
@@ -44,7 +68,7 @@ export default function HomePage() {
   // Fix: Initialize with tomorrow instead of today
   const [searchData, setSearchData] = useState({
     pickupDate: today,
-    pickupTime: "08:00",
+    pickupTime: isSameDay(today, new Date()) ? getNextHalfHourBlock() : "08:00",
     dropoffDate: today, // Fix: Use day after tomorrow
     dropoffTime: "20:00",
     location: "Chikkamagaluru",
@@ -89,6 +113,19 @@ export default function HomePage() {
       }));
     }
   }, [searchData.pickupDate, searchData.pickupTime]); // Remove dropoffDate and dropoffTime from dependencies
+
+  // Update pickup time when pickup date is changed to today
+  useEffect(() => {
+    if (searchData.pickupDate && isSameDay(searchData.pickupDate, new Date())) {
+      const nextHalfHour = getNextHalfHourBlock();
+      if (searchData.pickupTime !== nextHalfHour) {
+        setSearchData((prev) => ({
+          ...prev,
+          pickupTime: nextHalfHour,
+        }));
+      }
+    }
+  }, [searchData.pickupDate]); // Only depend on pickupDate to avoid infinite loops
 
   const loadTrendingBikes = async () => {
     try {

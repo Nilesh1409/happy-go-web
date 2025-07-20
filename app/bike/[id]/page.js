@@ -133,6 +133,7 @@ export default function BikeDetailsPage() {
     startTime: parseTime(searchParams.get("startTime")),
     endTime: parseTime(searchParams.get("endTime")) || "18:00",
   });
+  console.log("bookingParams", bookingParams);
 
   // NEW: Function to preserve current user selections
   const preserveCurrentBookingData = useCallback(() => {
@@ -210,7 +211,7 @@ export default function BikeDetailsPage() {
         setBookingParams(prev => ({
           ...prev,
           startTime: nextTime,
-          endTime: prev.endDate && prev.startDate.toDateString() === prev.endDate.toDateString() 
+          endTime: prev.endDate && prev.startDate.toDateString() === prev.endDate.toDateString() && prev.startTime === prev.endTime
             ? add30Minutes(nextTime) 
             : prev.endTime
         }));
