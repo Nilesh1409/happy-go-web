@@ -25,6 +25,7 @@ jobs:
         run: npm run build
 
       - name: Deploy to server
+        id: deploy
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.HOST }}
@@ -36,3 +37,50 @@ jobs:
             npm ci
             npm run build
             pm2 restart bike-rental-frontend
+
+      - name: Send success email
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "✅ Production Deployment Successful - ${{ github.repository }}"
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: ${{ secrets.SMTP_USERNAME }}
+          html_body: |
+            <h2>🚀 Deployment Successful!</h2>
+            <p><strong>Repository:</strong> ${{ github.repository }}</p>
+            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+            <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <p><strong>Commit Message:</strong> ${{ github.event.head_commit.message }}</p>
+            <p><strong>Author:</strong> ${{ github.actor }}</p>
+            <p><strong>Deployment Time:</strong> ${{ github.event.head_commit.timestamp }}</p>
+            <p><strong>Workflow:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Details</a></p>
+            <hr>
+            <p>Your application has been successfully deployed to production! 🎉</p>
+
+      - name: Send failure email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.SMTP_SERVER }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "❌ Production Deployment Failed - ${{ github.repository }}"
+          to: ${{ secrets.NOTIFICATION_EMAIL }}
+          from: ${{ secrets.SMTP_USERNAME }}
+          html_body: |
+            <h2>🚨 Deployment Failed!</h2>
+            <p><strong>Repository:</strong> ${{ github.repository }}</p>
+            <p><strong>Branch:</strong> ${{ github.ref_name }}</p>
+            <p><strong>Commit:</strong> ${{ github.sha }}</p>
+            <p><strong>Commit Message:</strong> ${{ github.event.head_commit.message }}</p>
+            <p><strong>Author:</strong> ${{ github.actor }}</p>
+            <p><strong>Failed Step:</strong> ${{ job.status }}</p>
+            <p><strong>Workflow:</strong> <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">View Logs</a></p>
+            <hr>
+            <p>Please check the workflow logs for more details and fix the issues.</p>
+            <p><strong>Action Required:</strong> Review the deployment logs and resolve any issues.</p>
