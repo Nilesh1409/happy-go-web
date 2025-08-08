@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +21,24 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { apiService } from "@/lib/api";
 
-export default function RegisterPage() {
+// Loading component for Suspense fallback
+function RegisterPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
+      <Header />
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading registration...</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Main register component that uses useSearchParams
+function RegisterPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -627,5 +644,14 @@ export default function RegisterPage() {
 
       <Footer />
     </div>
+  );
+}
+
+// Main export with Suspense wrapper
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<RegisterPageSkeleton />}>
+      <RegisterPageContent />
+    </Suspense>
   );
 }

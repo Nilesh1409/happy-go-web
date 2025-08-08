@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +23,24 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { apiService } from "@/lib/api";
 
-export default function CartPage() {
+// Loading component for Suspense fallback
+function CartPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F47B20] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading cart...</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Main cart component that uses useSearchParams
+function CartPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [cart, setCart] = useState(null);
@@ -634,5 +652,14 @@ export default function CartPage() {
 
       <Footer />
     </div>
+  );
+}
+
+// Main export with Suspense wrapper
+export default function CartPage() {
+  return (
+    <Suspense fallback={<CartPageSkeleton />}>
+      <CartPageContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { Suspense, useState, useEffect, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -166,7 +166,33 @@ const add30Minutes = (timeStr) => {
     .padStart(2, "0")}`;
 };
 
+// Loading component for Suspense fallback
+function SearchPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <Header />
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading search...</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Main export with Suspense wrapper
 export default function SearchPage() {
+  return (
+    <Suspense fallback={<SearchPageSkeleton />}>
+      <SearchPageContent />
+    </Suspense>
+  );
+}
+
+// Main search component that uses useSearchParams
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 

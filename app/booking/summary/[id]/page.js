@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,7 +12,33 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { apiService } from "@/lib/api";
 
+// Loading component for Suspense fallback
+function BookingSummaryPageSkeleton() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading booking summary...</p>
+        </div>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+// Main export with Suspense wrapper
 export default function BookingSummaryPage() {
+  return (
+    <Suspense fallback={<BookingSummaryPageSkeleton />}>
+      <BookingSummaryPageContent />
+    </Suspense>
+  );
+}
+
+// Main booking summary component that uses useSearchParams
+function BookingSummaryPageContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const [bike, setBike] = useState(null);
