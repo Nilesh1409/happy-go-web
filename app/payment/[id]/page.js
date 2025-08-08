@@ -224,7 +224,7 @@ export default function PaymentPage() {
         amount: amount,
         currency: currency || "INR",
         name: "Happy Go Bike Rentals",
-        description: `Payment for ${bike?.title || "Bike Rental"}`,
+        description: `Payment for ${bikeTitle}`,
         order_id: orderId,
         prefill: {
           name: user?.name || userData?.name || "",
@@ -278,25 +278,46 @@ export default function PaymentPage() {
     }
   };
 
-  // Defensive data extraction with fallbacks
-  const bike = booking?.bike || {};
+  // Defensive data extraction with fallbacks for multi-bike bookings
+  const bikeItems = booking?.bikeItems || [];
   const bikeDetails = booking?.bikeDetails || {};
   const priceDetails = booking?.priceDetails || {};
   const user = booking?.user || {};
-  const images = Array.isArray(bike?.images) ? bike.images : [];
-  const bikeImage = images[0] || "/placeholder.svg?height=120&width=180";
-  const bikeTitle = bike?.title || "Bike";
+  const helmetDetails = booking?.helmetDetails || {};
+  
+  // For single bike legacy support
+  const bike = booking?.bike || {};
+  
+  // Multi-bike booking data
+  const isMultiBike = bikeItems.length > 0;
+  const totalBikes = isMultiBike ? bikeItems.reduce((sum, item) => sum + item.quantity, 0) : 1;
+  
+  // Default fallback image that exists
+  const defaultBikeImage = "/assets/happygo.jpeg";
+  
+  // Get primary bike info (first bike or legacy bike)
+  const primaryBike = isMultiBike ? bikeItems[0] : bike;
+  const bikeImage = defaultBikeImage; // Use default since API doesn't return bike details
+  const bikeTitle = isMultiBike 
+    ? `${totalBikes} Bike${totalBikes > 1 ? 's' : ''} Booking` 
+    : (bike?.title || "Bike Booking");
   const bikeBrand = bike?.brand || "";
   const bikeModel = bike?.model || "";
+  
   const kmLimit = bikeDetails?.isUnlimited
     ? "Unlimited"
     : bikeDetails?.kmLimit
     ? `${bikeDetails.kmLimit} km`
+    : isMultiBike && bikeItems[0]?.kmOption === "unlimited"
+    ? "Unlimited"
+    : isMultiBike && bikeItems[0]?.kmLimit
+    ? `${bikeItems[0].kmLimit} km`
     : "-";
+    
   const additionalKmPrice = bikeDetails?.additionalKmPrice || 0;
   const additionalCharges = bikeDetails?.additionalCharges?.amount || 0;
-  const helmetQuantity = bikeDetails?.helmetQuantity || 0;
-  const helmetCharges = priceDetails?.helmetCharges || 0;
+  const helmetQuantity = helmetDetails?.quantity || bikeDetails?.helmetQuantity || 0;
+  const helmetCharges = priceDetails?.helmetCharges || helmetDetails?.charges || 0;
   const bookingDuration = getBookingDuration(
     booking?.startDate,
     booking?.endDate
@@ -429,53 +450,59 @@ export default function PaymentPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 sm:space-y-6">
-                {/* Bike Info - Mobile Optimized */}
-                <div className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-4">
-                  <div className="flex-shrink-0 mx-auto sm:mx-0">
-                    <Image
-                      src={bikeImage}
-                      alt={bikeTitle}
-                      width={120}
-                      height={80}
-                      className="rounded-lg object-cover w-full max-w-[120px] sm:w-[120px] sm:h-[80px]"
-                      onError={(e) => {
-                        e.target.src = "/placeholder.svg?height=80&width=120";
-                      }}
-                    />
-                  </div>
-                  <div className="flex-1 text-center sm:text-left">
-                    <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">{bikeTitle}</h3>
-                    {(bikeBrand || bikeModel) && (
-                      <p className="text-sm text-gray-600 mb-3">
+                {/* Booking Info - No Image, Fully Responsive */}
+                <div className="w-full">
+                  <div className="text-center sm:text-left">
+                    <h3 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 text-gray-900">{bikeTitle}</h3>
+                    {isMultiBike ? (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-4">
+                        <h4 className="text-sm sm:text-base font-semibold text-blue-800 mb-2">Multi-bike booking details:</h4>
+                        <div className="space-y-1 sm:space-y-2">
+                          {bikeItems.map((item, index) => (
+                            <div key={index} className="flex flex-col sm:flex-row sm:justify-between sm:items-center text-xs sm:text-sm text-blue-700 bg-white rounded p-2">
+                              <span className="font-medium">
+                                Bike {index + 1}: {item.quantity} unit{item.quantity > 1 ? 's' : ''} ({item.kmOption} - {item.kmLimit}km)
+                              </span>
+                              <span className="font-semibold mt-1 sm:mt-0">
+                                ₹{item.pricePerUnit} x {item.quantity} = ₹{item.totalPrice?.toFixed(2)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (bikeBrand || bikeModel) && (
+                      <p className="text-sm sm:text-base text-gray-600 mb-3">
                         {bikeBrand} {bikeModel}
                       </p>
                     )}
                     
-                    {/* Date/Time Info - Mobile Stacked */}
-                    <div className="space-y-3 text-sm">
-                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                        <div className="flex flex-col items-center">
-                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 mb-1" />
-                          <div className="text-center">
-                            <span className="text-gray-600 text-xs sm:text-sm">Pickup</span>
-                            <div className="font-medium text-xs sm:text-sm">
-                              {formatDate(booking.startDate)}
-                            </div>
-                            <div className="font-medium text-xs text-gray-500">
-                              {formatTime(booking.startTime)}
-                            </div>
+                    {/* Date/Time Info - Fully Responsive */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-4">
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                        <div className="flex items-center justify-center sm:justify-start mb-2">
+                          <Calendar className="w-4 h-4 text-orange-600 mr-2" />
+                          <span className="text-sm font-semibold text-orange-800">Pickup</span>
+                        </div>
+                        <div className="text-center sm:text-left">
+                          <div className="font-bold text-sm sm:text-base text-gray-900">
+                            {formatDate(booking.startDate)}
+                          </div>
+                          <div className="font-medium text-sm text-orange-700">
+                            {formatTime(booking.startTime)}
                           </div>
                         </div>
-                        <div className="flex flex-col items-center">
-                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 mb-1" />
-                          <div className="text-center">
-                            <span className="text-gray-600 text-xs sm:text-sm">Dropoff</span>
-                            <div className="font-medium text-xs sm:text-sm">
-                              {formatDate(booking.endDate)}
-                            </div>
-                            <div className="font-medium text-xs text-gray-500">
-                              {formatTime(booking.endTime)}
-                            </div>
+                      </div>
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-center justify-center sm:justify-start mb-2">
+                          <Calendar className="w-4 h-4 text-blue-600 mr-2" />
+                          <span className="text-sm font-semibold text-blue-800">Dropoff</span>
+                        </div>
+                        <div className="text-center sm:text-left">
+                          <div className="font-bold text-sm sm:text-base text-gray-900">
+                            {formatDate(booking.endDate)}
+                          </div>
+                          <div className="font-medium text-sm text-blue-700">
+                            {formatTime(booking.endTime)}
                           </div>
                         </div>
                       </div>
@@ -484,17 +511,38 @@ export default function PaymentPage() {
                 </div>
 
                 {/* Booking Details Grid */}
-                <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                      <span className="text-gray-600 text-xs sm:text-sm">Duration:</span>
-                      <span className="font-medium">{bookingDuration}</span>
+                <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-4">
+                  {/* Basic Info - Responsive Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="flex justify-between items-center p-2 bg-white rounded text-sm">
+                      <span className="text-gray-600 font-medium">Duration:</span>
+                      <span className="font-semibold text-gray-900">{bookingDuration}</span>
                     </div>
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                      <span className="text-gray-600 text-xs sm:text-sm">KM Limit:</span>
-                      <span className="font-medium">{kmLimit}</span>
+                    <div className="flex justify-between items-center p-2 bg-white rounded text-sm">
+                      <span className="text-gray-600 font-medium">Total Bikes:</span>
+                      <span className="font-semibold text-gray-900">{totalBikes}</span>
                     </div>
                   </div>
+
+                  {/* Bulk Discount Info */}
+                  {priceDetails.bulkDiscount?.amount > 0 && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center mb-2 sm:mb-0">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                          <span className="text-sm font-semibold text-green-800">
+                            Bulk Booking Discount ({priceDetails.bulkDiscount.percentage}%)
+                          </span>
+                        </div>
+                        <span className="text-lg font-bold text-green-600">
+                          -₹{priceDetails.bulkDiscount.amount}
+                        </span>
+                      </div>
+                      <p className="text-xs text-green-700 mt-1">
+                        You saved ₹{priceDetails.bulkDiscount.amount} by booking multiple bikes!
+                      </p>
+                    </div>
+                  )}
 
                   {/* Helmet Information */}
                   {helmetQuantity > 0 && (
@@ -549,20 +597,38 @@ export default function PaymentPage() {
                   </div>
                 </div>
 
-                {/* User Details */}
+                {/* User Details - Responsive */}
                 {(user?.name || user?.email || user?.mobile) && (
-                  <div className="p-3 sm:p-4 bg-blue-50 rounded-lg">
-                    <div className="flex items-center mb-2">
-                      <User className="w-4 h-4 mr-2 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-800">
-                        Booking Details
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-center mb-3">
+                      <User className="w-5 h-5 mr-2 text-blue-600" />
+                      <span className="text-base font-semibold text-blue-800">
+                        Booking Information
                       </span>
                     </div>
-                    <div className="text-xs text-blue-700 space-y-1">
-                      {user.name && <div>Name: {user.name}</div>}
-                      {user.email && <div>Email: {user.email}</div>}
-                      {user.mobile && <div>Mobile: {user.mobile}</div>}
-                      <div>Booking ID: {booking._id}</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {user.name && (
+                        <div className="bg-white rounded-lg p-3">
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Name</span>
+                          <div className="text-sm font-semibold text-gray-900 mt-1">{user.name}</div>
+                        </div>
+                      )}
+                      {user.email && (
+                        <div className="bg-white rounded-lg p-3">
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email</span>
+                          <div className="text-sm font-semibold text-gray-900 mt-1 break-all">{user.email}</div>
+                        </div>
+                      )}
+                      {user.mobile && (
+                        <div className="bg-white rounded-lg p-3">
+                          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Mobile</span>
+                          <div className="text-sm font-semibold text-gray-900 mt-1">{user.mobile}</div>
+                        </div>
+                      )}
+                      <div className="bg-white rounded-lg p-3">
+                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Booking ID</span>
+                        <div className="text-sm font-semibold text-gray-900 mt-1 break-all">{booking._id}</div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -707,6 +773,15 @@ export default function PaymentPage() {
                         </div>
                       )}
 
+                      {priceDetails.bulkDiscount?.amount > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-green-600">Bulk Discount ({priceDetails.bulkDiscount.percentage}%)</span>
+                          <span className="font-medium text-green-600">
+                            -{formatCurrency(priceDetails.bulkDiscount.amount)}
+                          </span>
+                        </div>
+                      )}
+
                       {helmetCharges > 0 && (
                         <div className="flex justify-between">
                           <span className="text-blue-600">Helmet Charges</span>
@@ -760,6 +835,15 @@ export default function PaymentPage() {
                       <span className="text-gray-600">Extra Charges</span>
                       <span className="font-medium">
                         {formatCurrency(priceDetails.extraCharges)}
+                      </span>
+                    </div>
+                  )}
+
+                  {priceDetails.bulkDiscount?.amount > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-green-600">Bulk Discount ({priceDetails.bulkDiscount.percentage}%)</span>
+                      <span className="font-medium text-green-600">
+                        -{formatCurrency(priceDetails.bulkDiscount.amount)}
                       </span>
                     </div>
                   )}

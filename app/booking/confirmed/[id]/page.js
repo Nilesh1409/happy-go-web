@@ -198,27 +198,44 @@ export default function BookingConfirmedPage() {
     alert("Receipt download feature will be available soon!");
   };
 
-  // Defensive data extraction
-  const bike = booking?.bike || {};
+  // Update the data extraction section:
+  const bikeItems = booking?.bikeItems || [];
+  const bikeItemsWithDetails = booking?.bikeItemsWithDetails || [];
   const bikeDetails = booking?.bikeDetails || {};
   const priceDetails = booking?.priceDetails || {};
   const user = booking?.user || {};
-  const images = Array.isArray(bike?.images) ? bike.images : [];
-  const bikeImage = images[0] || "/placeholder.svg?height=200&width=300";
-  const bikeTitle = bike?.title || "Bike";
-  const bikeBrand = bike?.brand || "";
-  const bikeModel = bike?.model || "";
-  const kmLimit = bikeDetails?.isUnlimited
-    ? "Unlimited"
-    : bikeDetails?.kmLimit
-    ? `${bikeDetails.kmLimit} km`
-    : "-";
+  const helmetDetails = booking?.helmetDetails || {};
+
+  // Multi-bike booking data
+  const isMultiBike = bikeItems.length > 0;
+  const totalBikes = booking?.totalBikes || bikeItems.reduce((sum, item) => sum + item.quantity, 0);
+  const bikeTypes = booking?.bikeTypes || 1;
+
+  // For backward compatibility with single bike bookings
+  const bike = booking?.bike || {};
+  const primaryBike = isMultiBike && bikeItemsWithDetails.length > 0 ? bikeItemsWithDetails[0].bike : bike;
+
+  // Use real bike image from the API response
+  const bikeImage = primaryBike?.images?.[0] || "/assets/happygo.jpeg";
+  const bikeTitle = isMultiBike 
+    ? `${totalBikes} Bike${totalBikes > 1 ? 's' : ''} Booking (${bikeTypes} ${bikeTypes > 1 ? 'types' : 'type'})` 
+    : (bike?.title || "Bike Booking");
+
+  // Add these missing variables:
   const additionalKmPrice = bikeDetails?.additionalKmPrice || 0;
   const additionalCharges = bikeDetails?.additionalCharges?.amount || 0;
   const bookingDuration = getBookingDuration(
     booking?.startDate,
     booking?.endDate
   );
+  const bikeBrand = primaryBike?.brand || "";
+  const bikeModel = primaryBike?.model || "";
+  const kmLimit = bikeDetails?.isUnlimited
+    ? "Unlimited"
+    : bikeDetails?.kmLimit
+    ? `${bikeDetails.kmLimit} km`
+    : "-";
+
   const isPaymentCompleted = booking?.paymentStatus === "completed";
   const isBookingConfirmed = booking?.bookingStatus === "confirmed";
 
@@ -370,30 +387,70 @@ export default function BookingConfirmedPage() {
               )}
             </div>
 
-            {/* Bike Details - Mobile First Layout */}
+            {/* Bike Details - Multi-bike Support */}
             <div className="flex flex-col items-center space-y-4 mb-6">
-              <div className="w-full max-w-xs sm:max-w-sm">
-                <Image
-                  src={bikeImage}
-                  alt={bikeTitle}
-                  width={300}
-                  height={200}
-                  className="rounded-lg object-cover shadow-md w-full h-auto"
-                  onError={(e) => {
-                    e.target.src = "/placeholder.svg?height=200&width=300";
-                  }}
-                />
-              </div>
+              {!isMultiBike && (
+                <div className="w-full max-w-xs sm:max-w-sm">
+                  <Image
+                    src={bikeImage}
+                    alt={bikeTitle}
+                    width={300}
+                    height={200}
+                    className="rounded-lg object-cover shadow-md w-full h-auto"
+                    onError={(e) => {
+                      e.target.src = "/assets/happygo.jpeg";
+                    }}
+                  />
+                </div>
+              )}
+              
               <div className="text-center w-full">
                 <h3 className="text-xl sm:text-2xl font-bold mb-2">{bikeTitle}</h3>
-                {(bikeBrand || bikeModel) && (
+                
+                {isMultiBike ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <h4 className="text-sm sm:text-base font-semibold text-blue-800 mb-3">Booked Bikes:</h4>
+                    <div className="space-y-3">
+                      {bikeItemsWithDetails.map((item, index) => (
+                        <div key={index} className="bg-white rounded-lg p-3 border">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 mx-auto sm:mx-0">
+                              <Image
+                                src={item.bike.images?.[0] || "/assets/happygo.jpeg"}
+                                alt={item.bike.title}
+                                width={96}
+                                height={96}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.src = "/assets/happygo.jpeg";
+                                }}
+                              />
+                            </div>
+                            <div className="flex-1 text-center sm:text-left">
+                              <h5 className="font-semibold text-sm sm:text-base">{item.bike.title}</h5>
+                              <p className="text-xs sm:text-sm text-gray-600">{item.bike.brand} {item.bike.model} ({item.bike.year})</p>
+                              <div className="flex flex-col sm:flex-row sm:justify-between mt-2 text-xs sm:text-sm">
+                                <span className="text-blue-600 font-medium">
+                                  {item.quantity} unit{item.quantity > 1 ? 's' : ''} • {item.kmOption} ({item.kmLimit}km)
+                                </span>
+                                <span className="font-semibold">
+                                  ₹{item.pricePerUnit} x {item.quantity} = ₹{item.totalPrice?.toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (primaryBike?.brand || primaryBike?.model) && (
                   <p className="text-gray-600 mb-4 text-sm sm:text-base">
-                    {bikeBrand} {bikeModel}
+                    {primaryBike.brand} {primaryBike.model}
                   </p>
                 )}
                 
                 {/* Date/Time Info - Mobile Stacked */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mt-4">
                   <div className="flex flex-col items-center p-3 bg-green-50 rounded-lg">
                     <Calendar className="w-4 h-4 text-green-600 mb-2" />
                     <span className="text-gray-600 text-xs">Pickup</span>
@@ -420,43 +477,59 @@ export default function BookingConfirmedPage() {
 
             <Separator className="my-4 sm:my-6" />
 
-            {/* Trip Details - Always Visible */}
+            {/* Trip Details - Enhanced for Multi-bike */}
             <div className="mb-4 sm:mb-6">
-                              <h4 className="font-semibold text-base sm:text-lg mb-3 text-center sm:text-left">Trip Details</h4>
+              <h4 className="font-semibold text-base sm:text-lg mb-3 text-center sm:text-left">Trip Details</h4>
               <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm">
                 <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600 text-xs mb-1">Duration</span>
                   <span className="font-medium">{bookingDuration}</span>
                 </div>
                 <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="text-gray-600 text-xs mb-1">KM Limit</span>
-                  <span className="font-medium">{kmLimit}</span>
+                  <span className="text-gray-600 text-xs mb-1">Total Bikes</span>
+                  <span className="font-medium">{totalBikes}</span>
                 </div>
-                {additionalKmPrice > 0 && (
-                  <>
-                    <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-gray-600 text-xs mb-1">Extra KM Rate</span>
-                      <span className="font-medium">{formatCurrency(additionalKmPrice)}/km</span>
-                    </div>
-                    <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-gray-600 text-xs mb-1">Status</span>
-                      <Badge
-                        variant="secondary"
-                        className={
-                          isBookingConfirmed
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }
-                      >
-                        {booking.bookingStatus || "Pending"}
-                      </Badge>
-                    </div>
-                  </>
-                )}
+                <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
+                  <span className="text-gray-600 text-xs mb-1">Bike Types</span>
+                  <span className="font-medium">{bikeTypes}</span>
+                </div>
+                <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
+                  <span className="text-gray-600 text-xs mb-1">Status</span>
+                  <Badge
+                    variant="secondary"
+                    className={
+                      isBookingConfirmed
+                        ? "bg-green-100 text-green-800"
+                        : "bg-yellow-100 text-yellow-800"
+                    }
+                  >
+                    {booking.bookingStatus || "Pending"}
+                  </Badge>
+                </div>
               </div>
+              
+              {/* Bulk Discount Highlight */}
+              {priceDetails.bulkDiscount?.amount > 0 && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center mb-2 sm:mb-0">
+                      <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                      <span className="text-sm font-semibold text-green-800">
+                        Bulk Booking Discount ({priceDetails.bulkDiscount.percentage}%)
+                      </span>
+                    </div>
+                    <span className="text-lg font-bold text-green-600">
+                      -₹{priceDetails.bulkDiscount.amount}
+                    </span>
+                  </div>
+                  <p className="text-xs text-green-700 mt-1">
+                    You saved ₹{priceDetails.bulkDiscount.amount} by booking multiple bikes!
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* Payment Summary - Collapsible on Mobile */}
+            {/* Payment Summary - Enhanced */}
             <div className="mb-4 sm:mb-6">
               <button
                 onClick={() => setShowPaymentDetails(!showPaymentDetails)}
@@ -480,14 +553,25 @@ export default function BookingConfirmedPage() {
                       {formatCurrency(priceDetails.basePrice)}
                     </span>
                   </div>
+                  
+                  {priceDetails.bulkDiscount?.amount > 0 && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="text-green-600">Bulk Discount ({priceDetails.bulkDiscount.percentage}%):</span>
+                      <span className="font-medium text-green-600">
+                        -{formatCurrency(priceDetails.bulkDiscount.amount)}
+                      </span>
+                    </div>
+                  )}
+                  
                   {priceDetails.taxes > 0 && (
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-600">Taxes & Fees:</span>
+                      <span className="text-gray-600">Taxes & Fees ({priceDetails.gstPercentage}%):</span>
                       <span className="font-medium">
                         {formatCurrency(priceDetails.taxes)}
                       </span>
                     </div>
                   )}
+                  
                   {priceDetails.discount > 0 && (
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-600">Discount:</span>
@@ -496,14 +580,16 @@ export default function BookingConfirmedPage() {
                       </span>
                     </div>
                   )}
-                  {additionalCharges > 0 && (
+                  
+                  {helmetDetails?.charges > 0 && (
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-600">Additional Charges:</span>
+                      <span className="text-gray-600">Helmet Charges:</span>
                       <span className="font-medium">
-                        {formatCurrency(additionalCharges)}
+                        {formatCurrency(helmetDetails.charges)}
                       </span>
                     </div>
                   )}
+                  
                   <Separator />
                   <div className="flex justify-between items-center text-base sm:text-lg font-bold py-1">
                     <span>Total Paid:</span>

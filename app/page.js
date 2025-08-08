@@ -39,18 +39,21 @@ const getNextHalfHourBlock = () => {
   const now = new Date();
   const currentMinutes = now.getMinutes();
   const currentHours = now.getHours();
-  
+
   // Round up to next 30-minute block
   let nextMinutes = currentMinutes <= 30 ? 30 : 0;
   let nextHours = currentMinutes <= 30 ? currentHours : currentHours + 1;
-  
+
   // Handle day overflow
   if (nextHours >= 24) {
     nextHours = 0;
   }
-  
+
   // Format as HH:MM
-  return `${String(nextHours).padStart(2, "0")}:${String(nextMinutes).padStart(2, "0")}`;
+  return `${String(nextHours).padStart(2, "0")}:${String(nextMinutes).padStart(
+    2,
+    "0"
+  )}`;
 };
 
 // Helper function to check if two dates are the same day
@@ -65,11 +68,23 @@ export default function HomePage() {
   const dayAfterTomorrow = new Date();
   dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2);
 
+  const getDefaultPickupTime = () => {
+    if (!isSameDay(today, new Date())) {
+      return "08:00";
+    }
+
+    const nextHalfHour = getNextHalfHourBlock();
+    const [hour] = nextHalfHour.split(":").map(Number);
+
+    // If next half hour is 8 AM or later, use it; otherwise use 8:00 AM
+    return hour >= 8 ? nextHalfHour : "08:00";
+  };
+
   // Fix: Initialize with tomorrow instead of today
   const [searchData, setSearchData] = useState({
     pickupDate: today,
-    pickupTime: isSameDay(today, new Date()) ? getNextHalfHourBlock() : "08:00",
-    dropoffDate: today, // Fix: Use day after tomorrow
+    pickupTime: getDefaultPickupTime(),
+    dropoffDate: today,
     dropoffTime: "20:00",
     location: "Chikkamagaluru",
   });
@@ -114,18 +129,43 @@ export default function HomePage() {
     }
   }, [searchData.pickupDate, searchData.pickupTime]); // Remove dropoffDate and dropoffTime from dependencies
 
-  // Update pickup time when pickup date is changed to today
+  // Handle pickup date changes to update time if needed
   useEffect(() => {
-    if (searchData.pickupDate && isSameDay(searchData.pickupDate, new Date())) {
-      const nextHalfHour = getNextHalfHourBlock();
-      if (searchData.pickupTime !== nextHalfHour) {
+    if (!searchData.pickupDate) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isToday =
+      searchData.pickupDate.toDateString() === today.toDateString();
+
+    // If pickup date is today, validate pickup time against current time
+    if (isToday) {
+      const now = new Date();
+      const currentHour = now.getHours();
+      const currentMinute = now.getMinutes();
+
+      // Convert current time and selected time to minutes for comparison
+      const currentTimeMinutes = currentHour * 60 + currentMinute;
+      const selectedTimeMinutes = searchData.pickupTime
+        ? parseInt(searchData.pickupTime.split(":")[0]) * 60 +
+          parseInt(searchData.pickupTime.split(":")[1])
+        : 0;
+
+      // If selected time is in the past or too close, update to next available slot
+      if (selectedTimeMinutes <= currentTimeMinutes + 30) {
+        const nextTime = getNextHalfHourBlock();
+
+        // Apply the same logic: if next half hour >= 8 AM, use it; otherwise use 8:00 AM
+        const [hour] = nextTime.split(":").map(Number);
+        const finalTime = hour >= 8 ? nextTime : "08:00";
+
         setSearchData((prev) => ({
           ...prev,
-          pickupTime: nextHalfHour,
+          pickupTime: finalTime,
         }));
       }
     }
-  }, [searchData.pickupDate]); // Only depend on pickupDate to avoid infinite loops
+  }, [searchData.pickupDate, searchData.pickupTime]);
 
   const loadTrendingBikes = async () => {
     try {
@@ -462,21 +502,21 @@ export default function HomePage() {
                       <div className="flex justify-between items-center">
                         <div>
                           <span className="text-xl sm:text-2xl font-bold text-gray-900">
-                            ₹{
-                              bike.priceLimited?.breakdown?.basePrice || 
-                              bike.priceUnlimited?.breakdown?.basePrice || 
-                              bike.pricePerDay?.limitedKm?.price || 
-                              bike.pricePerDay?.unlimited?.price || 
-                              500
-                            }
+                            ₹
+                            {bike.priceLimited?.breakdown?.basePrice ||
+                              bike.priceUnlimited?.breakdown?.basePrice ||
+                              bike.pricePerDay?.limitedKm?.price ||
+                              bike.pricePerDay?.unlimited?.price ||
+                              500}
                           </span>
                           <span className="text-sm text-gray-600">
-                            /{bike.priceLimited?.breakdown?.duration || 
-                             bike.priceUnlimited?.breakdown?.duration || 
-                             "day"}
+                            /
+                            {bike.priceLimited?.breakdown?.duration ||
+                              bike.priceUnlimited?.breakdown?.duration ||
+                              "day"}
                           </span>
                         </div>
-                        <Button className="btn-primary text-sm" asChild>
+                        {/* <Button className="btn-primary text-sm" asChild>
                           <Link 
                             href={`/bike/${bike._id}${bike.defaultSearchPeriod ? `?${new URLSearchParams({
                               startDate: bike.defaultSearchPeriod.startDate,
@@ -488,7 +528,7 @@ export default function HomePage() {
                           >
                             Book Now
                           </Link>
-                        </Button>
+                        </Button> */}
                       </div>
                     </div>
                   </CardContent>

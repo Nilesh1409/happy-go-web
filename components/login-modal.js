@@ -159,30 +159,29 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
       setError("Please enter a valid 6-digit OTP");
       return;
     }
-
+  
     setLoading(true);
     setError("");
-
+  
     try {
       const response = await apiService.verifyMobileOTP(mobile, otp);
-
+  
       // Store token and user data
       localStorage.setItem("token", response.token);
       localStorage.setItem("user", JSON.stringify(response.data));
-
-      // Success callback
+  
+      // Call success callback immediately without page refresh
       if (onLoginSuccess) {
         onLoginSuccess(response.data);
       }
-
-      onClose();
-      
-      // If proceedWithBooking is provided, call it instead of reloading
+  
+      // Only close modal and proceed with booking if specified
       if (proceedWithBooking) {
+        onClose();
         proceedWithBooking();
-      } else {
-        window.location.reload(); // Refresh to update header
       }
+      // ✅ Don't refresh the page - let the parent component handle the flow
+      
     } catch (error) {
       setError(error.message || "Invalid OTP. Please try again.");
     } finally {
@@ -289,14 +288,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
     if (onLoginSuccess) {
       onLoginSuccess();
     }
-    onClose();
     
-    // If proceedWithBooking is provided, call it instead of reloading
+    // Only close and proceed with booking if specified
     if (proceedWithBooking) {
+      onClose();
       proceedWithBooking();
-    } else {
-      window.location.reload();
     }
+    // ✅ Don't refresh the page - let the parent component handle the flow
   };
 
   const resetModal = () => {
