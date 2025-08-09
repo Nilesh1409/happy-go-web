@@ -33,6 +33,7 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { apiService } from "@/lib/api";
 import AadhaarVerificationModal from "@/components/aadhar-verification-modal";
+import { toast } from "@/lib/toast";
 
 // Utility functions for robust data handling
 const formatDate = (dateStr) => {
@@ -185,7 +186,7 @@ export default function BookingConfirmedPage() {
       } else {
         // Fallback: copy to clipboard
         copyToClipboard(`${shareData.text} - ${shareData.url}`);
-        alert("Booking details copied to clipboard!");
+        toast.success("Copied!", "Booking details copied to clipboard!");
       }
     } catch (error) {
       console.error("Error sharing:", error);
@@ -194,8 +195,11 @@ export default function BookingConfirmedPage() {
 
   const handleDownloadReceipt = () => {
     // This would typically generate and download a PDF receipt
-    // For now, we'll just show an alert
-    alert("Receipt download feature will be available soon!");
+    // For now, we'll show a toast notification
+    toast.info(
+      "Coming Soon",
+      "Receipt download feature will be available soon!"
+    );
   };
 
   // Update the data extraction section:
@@ -208,18 +212,25 @@ export default function BookingConfirmedPage() {
 
   // Multi-bike booking data
   const isMultiBike = bikeItems.length > 0;
-  const totalBikes = booking?.totalBikes || bikeItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalBikes =
+    booking?.totalBikes ||
+    bikeItems.reduce((sum, item) => sum + item.quantity, 0);
   const bikeTypes = booking?.bikeTypes || 1;
 
   // For backward compatibility with single bike bookings
   const bike = booking?.bike || {};
-  const primaryBike = isMultiBike && bikeItemsWithDetails.length > 0 ? bikeItemsWithDetails[0].bike : bike;
+  const primaryBike =
+    isMultiBike && bikeItemsWithDetails.length > 0
+      ? bikeItemsWithDetails[0].bike
+      : bike;
 
   // Use real bike image from the API response
   const bikeImage = primaryBike?.images?.[0] || "/assets/happygo.jpeg";
-  const bikeTitle = isMultiBike 
-    ? `${totalBikes} Bike${totalBikes > 1 ? 's' : ''} Booking (${bikeTypes} ${bikeTypes > 1 ? 'types' : 'type'})` 
-    : (bike?.title || "Bike Booking");
+  const bikeTitle = isMultiBike
+    ? `${totalBikes} Bike${totalBikes > 1 ? "s" : ""} Booking (${bikeTypes} ${
+        bikeTypes > 1 ? "types" : "type"
+      })`
+    : bike?.title || "Bike Booking";
 
   // Add these missing variables:
   const additionalKmPrice = bikeDetails?.additionalKmPrice || 0;
@@ -246,7 +257,9 @@ export default function BookingConfirmedPage() {
         <div className="flex items-center justify-center py-20 px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#F47B20] mx-auto mb-4"></div>
-            <p className="text-gray-600 text-sm sm:text-base">Loading booking details...</p>
+            <p className="text-gray-600 text-sm sm:text-base">
+              Loading booking details...
+            </p>
           </div>
         </div>
         <Footer />
@@ -262,7 +275,9 @@ export default function BookingConfirmedPage() {
           <Card>
             <CardContent className="p-6 sm:p-8 lg:p-12 text-center">
               <AlertTriangle className="w-12 h-12 sm:w-16 sm:h-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl sm:text-2xl font-bold mb-4">Booking Not Found</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mb-4">
+                Booking Not Found
+              </h2>
               <p className="text-gray-600 mb-6 text-sm sm:text-base">
                 {error || "Unable to load booking details. Please try again."}
               </p>
@@ -327,7 +342,8 @@ export default function BookingConfirmedPage() {
             🎉 Booking Confirmed!
           </h2>
           <p className="text-gray-600 text-base sm:text-lg px-4">
-            Your booking has been confirmed successfully. Get ready for your ride!
+            Your booking has been confirmed successfully. Get ready for your
+            ride!
           </p>
         </div>
 
@@ -335,7 +351,7 @@ export default function BookingConfirmedPage() {
         <Card className="mb-4 sm:mb-6 shadow-xl border-2 border-green-200">
           <CardHeader className="bg-green-50 pb-3 sm:pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-                              <CardTitle className="text-lg sm:text-xl text-green-800 text-center sm:text-left">
+              <CardTitle className="text-lg sm:text-xl text-green-800 text-center sm:text-left">
                 Booking Details
               </CardTitle>
               <div className="flex items-center justify-center sm:justify-end space-x-2">
@@ -363,7 +379,9 @@ export default function BookingConfirmedPage() {
           <CardContent className="p-4 sm:p-6">
             {/* Booking ID - Mobile Optimized */}
             <div className="text-center mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
-              <div className="text-xs sm:text-sm text-gray-600 mb-2">Booking ID</div>
+              <div className="text-xs sm:text-sm text-gray-600 mb-2">
+                Booking ID
+              </div>
               <div className="flex items-center justify-center space-x-2">
                 <span className="font-mono text-sm sm:text-lg font-semibold break-all">
                   {booking._id}
@@ -403,20 +421,30 @@ export default function BookingConfirmedPage() {
                   />
                 </div>
               )}
-              
+
               <div className="text-center w-full">
-                <h3 className="text-xl sm:text-2xl font-bold mb-2">{bikeTitle}</h3>
-                
+                <h3 className="text-xl sm:text-2xl font-bold mb-2">
+                  {bikeTitle}
+                </h3>
+
                 {isMultiBike ? (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <h4 className="text-sm sm:text-base font-semibold text-blue-800 mb-3">Booked Bikes:</h4>
+                    <h4 className="text-sm sm:text-base font-semibold text-blue-800 mb-3">
+                      Booked Bikes:
+                    </h4>
                     <div className="space-y-3">
                       {bikeItemsWithDetails.map((item, index) => (
-                        <div key={index} className="bg-white rounded-lg p-3 border">
+                        <div
+                          key={index}
+                          className="bg-white rounded-lg p-3 border"
+                        >
                           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                             <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 mx-auto sm:mx-0">
                               <Image
-                                src={item.bike.images?.[0] || "/assets/happygo.jpeg"}
+                                src={
+                                  item.bike.images?.[0] ||
+                                  "/assets/happygo.jpeg"
+                                }
                                 alt={item.bike.title}
                                 width={96}
                                 height={96}
@@ -427,14 +455,22 @@ export default function BookingConfirmedPage() {
                               />
                             </div>
                             <div className="flex-1 text-center sm:text-left">
-                              <h5 className="font-semibold text-sm sm:text-base">{item.bike.title}</h5>
-                              <p className="text-xs sm:text-sm text-gray-600">{item.bike.brand} {item.bike.model} ({item.bike.year})</p>
+                              <h5 className="font-semibold text-sm sm:text-base">
+                                {item.bike.title}
+                              </h5>
+                              <p className="text-xs sm:text-sm text-gray-600">
+                                {item.bike.brand} {item.bike.model} (
+                                {item.bike.year})
+                              </p>
                               <div className="flex flex-col sm:flex-row sm:justify-between mt-2 text-xs sm:text-sm">
                                 <span className="text-blue-600 font-medium">
-                                  {item.quantity} unit{item.quantity > 1 ? 's' : ''} • {item.kmOption} ({item.kmLimit}km)
+                                  {item.quantity} unit
+                                  {item.quantity > 1 ? "s" : ""} •{" "}
+                                  {item.kmOption} ({item.kmLimit}km)
                                 </span>
                                 <span className="font-semibold">
-                                  ₹{item.pricePerUnit} x {item.quantity} = ₹{item.totalPrice?.toFixed(2)}
+                                  ₹{item.pricePerUnit} x {item.quantity} = ₹
+                                  {item.totalPrice?.toFixed(2)}
                                 </span>
                               </div>
                             </div>
@@ -443,12 +479,14 @@ export default function BookingConfirmedPage() {
                       ))}
                     </div>
                   </div>
-                ) : (primaryBike?.brand || primaryBike?.model) && (
-                  <p className="text-gray-600 mb-4 text-sm sm:text-base">
-                    {primaryBike.brand} {primaryBike.model}
-                  </p>
+                ) : (
+                  (primaryBike?.brand || primaryBike?.model) && (
+                    <p className="text-gray-600 mb-4 text-sm sm:text-base">
+                      {primaryBike.brand} {primaryBike.model}
+                    </p>
+                  )
                 )}
-                
+
                 {/* Date/Time Info - Mobile Stacked */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mt-4">
                   <div className="flex flex-col items-center p-3 bg-green-50 rounded-lg">
@@ -479,14 +517,18 @@ export default function BookingConfirmedPage() {
 
             {/* Trip Details - Enhanced for Multi-bike */}
             <div className="mb-4 sm:mb-6">
-              <h4 className="font-semibold text-base sm:text-lg mb-3 text-center sm:text-left">Trip Details</h4>
+              <h4 className="font-semibold text-base sm:text-lg mb-3 text-center sm:text-left">
+                Trip Details
+              </h4>
               <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm">
                 <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-600 text-xs mb-1">Duration</span>
                   <span className="font-medium">{bookingDuration}</span>
                 </div>
                 <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
-                  <span className="text-gray-600 text-xs mb-1">Total Bikes</span>
+                  <span className="text-gray-600 text-xs mb-1">
+                    Total Bikes
+                  </span>
                   <span className="font-medium">{totalBikes}</span>
                 </div>
                 <div className="flex flex-col items-center p-3 bg-gray-50 rounded-lg">
@@ -507,7 +549,7 @@ export default function BookingConfirmedPage() {
                   </Badge>
                 </div>
               </div>
-              
+
               {/* Bulk Discount Highlight */}
               {priceDetails.bulkDiscount?.amount > 0 && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 mt-4">
@@ -515,7 +557,8 @@ export default function BookingConfirmedPage() {
                     <div className="flex items-center mb-2 sm:mb-0">
                       <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                       <span className="text-sm font-semibold text-green-800">
-                        Bulk Booking Discount ({priceDetails.bulkDiscount.percentage}%)
+                        Bulk Booking Discount (
+                        {priceDetails.bulkDiscount.percentage}%)
                       </span>
                     </div>
                     <span className="text-lg font-bold text-green-600">
@@ -523,7 +566,8 @@ export default function BookingConfirmedPage() {
                     </span>
                   </div>
                   <p className="text-xs text-green-700 mt-1">
-                    You saved ₹{priceDetails.bulkDiscount.amount} by booking multiple bikes!
+                    You saved ₹{priceDetails.bulkDiscount.amount} by booking
+                    multiple bikes!
                   </p>
                 </div>
               )}
@@ -535,7 +579,9 @@ export default function BookingConfirmedPage() {
                 onClick={() => setShowPaymentDetails(!showPaymentDetails)}
                 className="w-full flex items-center justify-between p-3 bg-green-50 rounded-lg mb-3 sm:hidden"
               >
-                <h4 className="font-semibold text-base text-green-800">Payment Summary</h4>
+                <h4 className="font-semibold text-base text-green-800">
+                  Payment Summary
+                </h4>
                 {showPaymentDetails ? (
                   <ChevronUp className="w-4 h-4 text-green-600" />
                 ) : (
@@ -544,8 +590,14 @@ export default function BookingConfirmedPage() {
               </button>
 
               {/* Desktop: Always show, Mobile: Collapsible */}
-              <div className={`${showPaymentDetails ? 'block' : 'hidden'} sm:block`}>
-                <h4 className="hidden sm:block font-semibold text-lg mb-3">Payment Summary</h4>
+              <div
+                className={`${
+                  showPaymentDetails ? "block" : "hidden"
+                } sm:block`}
+              >
+                <h4 className="hidden sm:block font-semibold text-lg mb-3">
+                  Payment Summary
+                </h4>
                 <div className="space-y-2 sm:space-y-3 text-sm">
                   <div className="flex justify-between items-center py-1">
                     <span className="text-gray-600">Base Amount:</span>
@@ -553,25 +605,29 @@ export default function BookingConfirmedPage() {
                       {formatCurrency(priceDetails.basePrice)}
                     </span>
                   </div>
-                  
+
                   {priceDetails.bulkDiscount?.amount > 0 && (
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-green-600">Bulk Discount ({priceDetails.bulkDiscount.percentage}%):</span>
+                      <span className="text-green-600">
+                        Bulk Discount ({priceDetails.bulkDiscount.percentage}%):
+                      </span>
                       <span className="font-medium text-green-600">
                         -{formatCurrency(priceDetails.bulkDiscount.amount)}
                       </span>
                     </div>
                   )}
-                  
+
                   {priceDetails.taxes > 0 && (
                     <div className="flex justify-between items-center py-1">
-                      <span className="text-gray-600">Taxes & Fees ({priceDetails.gstPercentage}%):</span>
+                      <span className="text-gray-600">
+                        Taxes & Fees ({priceDetails.gstPercentage}%):
+                      </span>
                       <span className="font-medium">
                         {formatCurrency(priceDetails.taxes)}
                       </span>
                     </div>
                   )}
-                  
+
                   {priceDetails.discount > 0 && (
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-600">Discount:</span>
@@ -580,7 +636,7 @@ export default function BookingConfirmedPage() {
                       </span>
                     </div>
                   )}
-                  
+
                   {helmetDetails?.charges > 0 && (
                     <div className="flex justify-between items-center py-1">
                       <span className="text-gray-600">Helmet Charges:</span>
@@ -589,7 +645,7 @@ export default function BookingConfirmedPage() {
                       </span>
                     </div>
                   )}
-                  
+
                   <Separator />
                   <div className="flex justify-between items-center text-base sm:text-lg font-bold py-1">
                     <span>Total Paid:</span>
@@ -620,7 +676,9 @@ export default function BookingConfirmedPage() {
                   {user.email && (
                     <div className="flex justify-between">
                       <span className="text-gray-600">Email:</span>
-                      <span className="font-medium break-all">{user.email}</span>
+                      <span className="font-medium break-all">
+                        {user.email}
+                      </span>
                     </div>
                   )}
                   {user.mobile && (
@@ -677,7 +735,11 @@ export default function BookingConfirmedPage() {
               </div>
             </button>
           </CardHeader>
-          <CardContent className={`${showInstructions ? 'block' : 'hidden'} sm:block p-4 sm:p-6`}>
+          <CardContent
+            className={`${
+              showInstructions ? "block" : "hidden"
+            } sm:block p-4 sm:p-6`}
+          >
             <div className="space-y-4 sm:space-y-6">
               <div>
                 <h5 className="font-semibold mb-3 text-orange-800 text-sm sm:text-base">
@@ -733,10 +795,18 @@ export default function BookingConfirmedPage() {
             </Link>
           </Button>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button variant="outline" className="h-12 text-sm sm:text-base" asChild>
+            <Button
+              variant="outline"
+              className="h-12 text-sm sm:text-base"
+              asChild
+            >
               <Link href="/">Go to Home</Link>
             </Button>
-            <Button variant="outline" className="h-12 text-sm sm:text-base" asChild>
+            <Button
+              variant="outline"
+              className="h-12 text-sm sm:text-base"
+              asChild
+            >
               <Link href="/">Book Another Bike</Link>
             </Button>
           </div>
@@ -748,18 +818,33 @@ export default function BookingConfirmedPage() {
             <div className="flex items-center justify-center mb-4">
               <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600" />
             </div>
-            <h4 className="font-semibold mb-2 text-sm sm:text-base">Need Help?</h4>
+            <h4 className="font-semibold mb-2 text-sm sm:text-base">
+              Need Help?
+            </h4>
             <p className="text-xs sm:text-sm text-gray-600 mb-4">
               Our support team is available 24/7 to assist you
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
-                <a href="tel:+919008022800" className="flex items-center justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+                asChild
+              >
+                <a
+                  href="tel:+919008022800"
+                  className="flex items-center justify-center"
+                >
                   <Phone className="w-4 h-4 mr-2" />
                   Call +91 90080-22800
                 </a>
               </Button>
-              <Button variant="outline" size="sm" className="w-full sm:w-auto" asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full sm:w-auto"
+                asChild
+              >
                 <a
                   href="mailto:support@happygobike.com"
                   className="flex items-center justify-center"

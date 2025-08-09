@@ -22,6 +22,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { apiService } from "@/lib/api";
+import { toast } from "@/lib/toast";
 
 // Loading component for Suspense fallback
 function CartPageSkeleton() {
@@ -49,17 +50,41 @@ function CartPageContent() {
   const [error, setError] = useState("");
   const [helmetQuantity, setHelmetQuantity] = useState(0);
 
+  // Helper function to get and validate search parameters
+  const getSearchParams = () => {
+    // Ensure consistent time formatting by properly decoding URL parameters
+    const rawStartTime = searchParams.get("startTime") || "";
+    const rawEndTime = searchParams.get("endTime") || "";
+
+    const params = {
+      startDate: searchParams.get("startDate") || "",
+      endDate: searchParams.get("endDate") || "",
+      startTime: rawStartTime,
+      endTime: rawEndTime,
+    };
+
+    // Log for debugging
+    console.log("🔍 URL Search Params:", {
+      raw: {
+        startDate: searchParams.get("startDate"),
+        endDate: searchParams.get("endDate"),
+        startTime: rawStartTime,
+        endTime: rawEndTime,
+      },
+      processed: params,
+      note: "These should match exactly in both GET /cart and PUT /cart/helmets",
+    });
+
+    return params;
+  };
+
   const loadCart = async () => {
     try {
       setLoading(true);
 
       // Get search parameters for cart loading
-      const params = {
-        startDate: searchParams.get("startDate") || "",
-        endDate: searchParams.get("endDate") || "",
-        startTime: searchParams.get("startTime") || "",
-        endTime: searchParams.get("endTime") || "",
-      };
+      const params = getSearchParams();
+      console.log("🛒 Cart Load - Sending to API:", params);
 
       const response = await apiService.getCart(params);
       setCart(response.data);
@@ -100,15 +125,58 @@ function CartPageContent() {
     if (newQuantity < 0) return;
 
     try {
-      const response = await apiService.updateHelmetQuantity(newQuantity);
+      // Use cart's booking data instead of URL parameters for consistency
+      const formatCartDate = (dateString) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        return date.toISOString().split("T")[0]; // YYYY-MM-DD format
+      };
+
+      const params = {
+        quantity: newQuantity,
+        startDate: formatCartDate(cart?.startDate),
+        endDate: formatCartDate(cart?.endDate),
+        startTime: cart?.startTime || "",
+        endTime: cart?.endTime || "",
+      };
+
+      console.log("🪖 Helmet Update - Using Cart Data:", {
+        cartDates: {
+          startDate: cart?.startDate,
+          endDate: cart?.endDate,
+          startTime: cart?.startTime,
+          endTime: cart?.endTime,
+        },
+        urlParams: {
+          startDate: searchParams.get("startDate"),
+          endDate: searchParams.get("endDate"),
+          startTime: searchParams.get("startTime"),
+          endTime: searchParams.get("endTime"),
+        },
+        finalApiParams: params,
+        note: "✅ Now using cart data instead of URL params for consistency",
+      });
+      console.log(
+        "🔍 API will call:",
+        `PUT /api/cart/helmets?startDate=${params.startDate}&endDate=${
+          params.endDate
+        }&startTime=${encodeURIComponent(
+          params.startTime
+        )}&endTime=${encodeURIComponent(params.endTime)}`
+      );
+      console.log(
+        "🔍 Request body:",
+        JSON.stringify({ quantity: params.quantity }, null, 2)
+      );
+
+      const response = await apiService.updateHelmetQuantity(params);
       if (response.success) {
         setHelmetQuantity(newQuantity);
         await loadCart(); // Reload to get updated pricing and message
 
         // Show backend message if available
         if (response.message) {
-          // You might want to use a toast instead of alert for better UX
-          console.log(response.message); // or display in a toast
+          toast.info("Helmet updated", response.message);
         }
       }
     } catch (error) {
@@ -250,32 +318,36 @@ function CartPageContent() {
 
         {/* Header Navigation */}
         <div className="bg-white border-b shadow-sm">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center h-16">
+          <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
+            <div className="flex items-center h-14 sm:h-16">
               <Link
                 href="/"
                 className="flex items-center text-gray-600 hover:text-[#F47B20] transition-colors mr-4"
               >
-                <ArrowLeft className="w-5 h-5 mr-2" />
-                <span className="font-medium">Back to Home</span>
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+                <span className="font-medium text-sm sm:text-base">
+                  Back to Home
+                </span>
               </Link>
             </div>
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Card className="shadow-lg text-center py-12">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 lg:px-8 py-6 sm:py-8">
+          <Card className="shadow-lg text-center py-8 sm:py-12">
             <CardContent>
-              <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h2 className="text-xl font-bold mb-4">Your cart is empty</h2>
-              <p className="text-gray-600 mb-6">
+              <ShoppingCart className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400 mx-auto mb-4" />
+              <h2 className="text-lg sm:text-xl font-bold mb-4">
+                Your cart is empty
+              </h2>
+              <p className="text-gray-600 mb-6 text-sm sm:text-base">
                 Add some bikes to your cart to get started
               </p>
               <Button
-                className="bg-[#F47B20] hover:bg-[#E06A0F] text-white"
+                className="bg-[#F47B20] hover:bg-[#E06A0F] text-white px-6 py-2 sm:px-8 sm:py-3"
                 asChild
               >
-                <Link href="/search">Browse Bikes</Link>
+                <Link href="/">Browse Bikes</Link>
               </Button>
             </CardContent>
           </Card>
@@ -291,117 +363,121 @@ function CartPageContent() {
 
       {/* Header Navigation */}
       <div className="bg-white border-b shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             <Link
               href="/"
               className="flex items-center text-gray-600 hover:text-[#F47B20] transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              <span className="font-medium">Continue Shopping</span>
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+              <span className="font-medium text-sm sm:text-base">
+                Continue Shopping
+              </span>
             </Link>
 
             <div className="flex items-center">
-              <ShoppingCart className="w-5 h-5 mr-2 text-[#F47B20]" />
-              <span className="font-semibold text-gray-900">
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-[#F47B20]" />
+              <span className="font-semibold text-gray-900 text-sm sm:text-base">
                 {cart.items.reduce((sum, item) => sum + item.quantity, 0)} Items
-                in Cart
+                <span className="hidden sm:inline"> in Cart</span>
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 flex items-start">
-            <AlertTriangle className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-            <span>{error}</span>
+          <div className="bg-red-50 border border-red-200 text-red-600 px-3 sm:px-4 py-3 rounded-lg mb-4 sm:mb-6 flex items-start">
+            <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+            <span className="text-sm sm:text-base">{error}</span>
           </div>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg text-[#F47B20] flex items-center">
-                  <ShoppingCart className="w-5 h-5 mr-2" />
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg text-[#F47B20] flex items-center">
+                  <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Your Bikes ({cart.items.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {cart.items.map((item) => (
-                  <div key={item._id} className="border rounded-lg p-4">
-                    <div className="flex gap-4">
+                  <div key={item._id} className="border rounded-lg p-3">
+                    <div className="flex gap-3">
                       {/* Bike Image */}
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                         <Image
                           src={item.bike.images?.[0] || "/assets/happygo.jpeg"}
                           alt={item.bike.title}
-                          width={100}
-                          height={100}
+                          width={64}
+                          height={64}
                           className="w-full h-full object-cover"
                         />
                       </div>
 
                       {/* Bike Details */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate">
+                        <h3 className="font-semibold text-gray-900 text-sm truncate">
                           {item.bike.title}
                         </h3>
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-xs text-gray-600 mb-3">
                           {item.kmOption === "unlimited"
                             ? "Unlimited KM"
                             : `${item.kmLimit || 60} KM Limited`}
                         </p>
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-3">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-8 h-8 p-0 rounded-full bg-transparent"
-                              onClick={() =>
-                                updateQuantity(item._id, item.quantity - 1)
-                              }
-                              disabled={updating[item._id]}
-                            >
-                              {updating[item._id] ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <Minus className="w-3 h-3" />
-                              )}
-                            </Button>
+                        <div className="flex flex-col gap-3">
+                          {/* Quantity Controls - Mobile First */}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-6 h-6 sm:w-8 sm:h-8 p-0 rounded-full"
+                                onClick={() =>
+                                  updateQuantity(item._id, item.quantity - 1)
+                                }
+                                disabled={updating[item._id]}
+                              >
+                                {updating[item._id] ? (
+                                  <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
+                                ) : (
+                                  <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                )}
+                              </Button>
 
-                            <span className="font-semibold text-lg min-w-[2rem] text-center">
-                              {item.quantity}
-                            </span>
+                              <span className="font-semibold text-sm sm:text-lg min-w-[1.5rem] sm:min-w-[2rem] text-center">
+                                {item.quantity}
+                              </span>
 
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="w-8 h-8 p-0 rounded-full bg-transparent"
-                              onClick={() =>
-                                updateQuantity(item._id, item.quantity + 1)
-                              }
-                              disabled={
-                                updating[item._id] ||
-                                item.quantity >= item.bike.availableQuantity
-                              }
-                            >
-                              {updating[item._id] ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <Plus className="w-3 h-3" />
-                              )}
-                            </Button>
-                          </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-6 h-6 sm:w-8 sm:h-8 p-0 rounded-full"
+                                onClick={() =>
+                                  updateQuantity(item._id, item.quantity + 1)
+                                }
+                                disabled={
+                                  updating[item._id] ||
+                                  item.quantity >= item.bike.availableQuantity
+                                }
+                              >
+                                {updating[item._id] ? (
+                                  <Loader2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-spin" />
+                                ) : (
+                                  <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                                )}
+                              </Button>
+                            </div>
 
-                          <div className="text-right">
-                            {/* <div className="font-bold text-lg">₹{item?.totalPriceWithoutGst?.toLocaleString()}</div> */}
-                            <div className="font-bold text-lg">
-                              ₹{item.pricePerUnit}/bike
+                            <div className="text-right">
+                              <div className="font-bold text-sm text-[#F47B20]">
+                                ₹{item.pricePerUnit}/bike
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -417,7 +493,7 @@ function CartPageContent() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1.5 self-start"
                         onClick={() => updateQuantity(item._id, 0)}
                         disabled={updating[item._id]}
                       >
@@ -431,22 +507,21 @@ function CartPageContent() {
 
             {/* Helmet Section */}
             <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-lg text-[#F47B20] flex items-center">
-                  <Shield className="w-5 h-5 mr-2" />
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg text-[#F47B20] flex items-center">
+                  <Shield className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                   Add Helmets
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                   <div className="flex items-start">
-                    <Shield className="w-5 h-5 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
+                    <Shield className="w-4 h-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-sm text-blue-800 font-medium mb-1">
                         Helmet Rental Available
                       </p>
-                      {/* Use dynamic message from backend */}
-                      <p className="text-sm text-blue-700">
+                      <p className="text-xs text-blue-700">
                         {cart.helmetDetails?.message ||
                           "1 helmet FREE per bike, additional helmets at ₹60 each"}
                       </p>
@@ -454,52 +529,52 @@ function CartPageContent() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-4">
-                  <div>
-                    <span className="font-medium text-gray-900">
-                      Number of Helmets
-                    </span>
-                    <div className="text-sm text-gray-600 mt-1">
-                      {/* Use dynamic message instead of hardcoded calculation */}
-                      {cart.helmetDetails?.message ||
-                        `${helmetQuantity} helmet(s) selected`}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0 mr-3">
+                      <span className="font-medium text-gray-900 text-sm">
+                        Number of Helmets
+                      </span>
+                      <div className="text-xs text-gray-600 mt-1">
+                        {helmetQuantity} helmet(s) selected
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex items-center space-x-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-8 h-8 p-0 rounded-full bg-transparent"
-                      onClick={() =>
-                        updateHelmetQuantity(Math.max(0, helmetQuantity - 1))
-                      }
-                    >
-                      <Minus className="w-3 h-3" />
-                    </Button>
+                    <div className="flex items-center space-x-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-6 h-6 sm:w-8 sm:h-8 p-0 rounded-full"
+                        onClick={() =>
+                          updateHelmetQuantity(Math.max(0, helmetQuantity - 1))
+                        }
+                      >
+                        <Minus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      </Button>
 
-                    <span className="w-8 text-center font-medium">
-                      {helmetQuantity}
-                    </span>
+                      <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">
+                        {helmetQuantity}
+                      </span>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-8 h-8 p-0 rounded-full bg-transparent"
-                      onClick={() =>
-                        updateHelmetQuantity(Math.min(20, helmetQuantity + 1))
-                      }
-                    >
-                      <Plus className="w-3 h-3" />
-                    </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-6 h-6 sm:w-8 sm:h-8 p-0 rounded-full"
+                        onClick={() =>
+                          updateHelmetQuantity(Math.min(20, helmetQuantity + 1))
+                        }
+                      >
+                        <Plus className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
                 {/* Show helmet charges info only if there are charges */}
                 {cart.helmetDetails?.charges > 0 && (
                   <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                    <p className="text-sm text-orange-800">
-                      <Shield className="w-4 h-4 inline mr-1" />
+                    <p className="text-sm text-orange-800 flex items-center">
+                      <Shield className="w-4 h-4 inline mr-2" />
                       Helmet charges: ₹{cart.helmetDetails.charges}
                     </p>
                   </div>
@@ -510,9 +585,9 @@ function CartPageContent() {
 
           {/* Order Summary */}
           <div className="space-y-4">
-            <Card className="shadow-xl border-2 border-[#F47B20]">
-              <CardHeader>
-                <CardTitle className="text-lg text-[#F47B20]">
+            <Card className="shadow-xl border-2 border-[#F47B20] lg:sticky lg:top-4">
+              <CardHeader className="pb-3 sm:pb-6">
+                <CardTitle className="text-base sm:text-lg text-[#F47B20]">
                   Order Summary
                 </CardTitle>
               </CardHeader>
@@ -581,8 +656,8 @@ function CartPageContent() {
                 {cart.pricing.bulkDiscount?.amount > 0 && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                     <div className="flex items-center text-green-700">
-                      <Gift className="w-4 h-4 mr-2" />
-                      <span className="text-sm font-medium">
+                      <Gift className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-medium">
                         You saved ₹{cart.pricing.bulkDiscount.amount} with bulk
                         booking!
                       </span>
@@ -598,7 +673,7 @@ function CartPageContent() {
                   {loading ? (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Processing...
+                      <span>Processing...</span>
                     </div>
                   ) : (
                     "Proceed to Checkout"
@@ -613,29 +688,26 @@ function CartPageContent() {
 
             {/* Booking Details */}
             <Card className="shadow-lg">
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <CardTitle className="text-base text-gray-900">
                   Booking Details
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 text-sm">
+              <CardContent className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Pickup:</span>
-                  <span className="font-medium">
-                    {new Date(cart.startDate).toLocaleDateString()}{" "}
+                  <span className="font-medium text-right">
+                    {new Date(cart.startDate).toLocaleDateString()}
+                    <br />
                     {cart.startTime}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Dropoff:</span>
-                  <span className="font-medium">
-                    {new Date(cart.endDate).toLocaleDateString()} {cart.endTime}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Duration:</span>
-                  <span className="font-medium">
-                    {cart?.bookingDuration?.duration}
+                  <span className="font-medium text-right">
+                    {new Date(cart.endDate).toLocaleDateString()}
+                    <br />
+                    {cart.endTime}
                   </span>
                 </div>
                 <div className="flex justify-between">

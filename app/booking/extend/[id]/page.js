@@ -1,22 +1,23 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Calendar, Clock } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Calendar, Clock } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { toast } from "@/lib/toast";
 
 export default function ExtendBookingPage() {
-  const params = useParams()
-  const [booking, setBooking] = useState(null)
-  const [newEndDate, setNewEndDate] = useState("")
-  const [newEndTime, setNewEndTime] = useState("")
-  const [reason, setReason] = useState("")
-  const [loading, setLoading] = useState(false)
+  const params = useParams();
+  const [booking, setBooking] = useState(null);
+  const [newEndDate, setNewEndDate] = useState("");
+  const [newEndTime, setNewEndTime] = useState("");
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     // Simulate API call for booking details
@@ -27,30 +28,43 @@ export default function ExtendBookingPage() {
       currentEndDate: "23 Jun 2025",
       currentEndTime: "06:00 PM",
       pricePerDay: 500,
-    })
-  }, [params.id])
+    });
+  }, [params.id]);
 
   const handleExtendBooking = async () => {
     if (!newEndDate || !newEndTime) {
-      alert("Please select new end date and time")
-      return
+      toast.warning(
+        "Missing Information",
+        "Please select new end date and time"
+      );
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      alert("Booking extended successfully!")
-      window.location.href = "/bookings"
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      toast.success(
+        "Booking Extended",
+        "Your booking has been extended successfully!"
+      );
+      window.location.href = "/bookings";
     } catch (error) {
-      alert("Failed to extend booking. Please try again.")
+      toast.error(
+        "Extension Failed",
+        "Failed to extend booking. Please try again."
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   if (!booking) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -59,7 +73,10 @@ export default function ExtendBookingPage() {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
-            <Link href="/bookings" className="flex items-center text-gray-600 mr-4">
+            <Link
+              href="/bookings"
+              className="flex items-center text-gray-600 mr-4"
+            >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <h1 className="text-xl font-semibold">Extend Booking</h1>
@@ -84,7 +101,8 @@ export default function ExtendBookingPage() {
               <div>
                 <h3 className="font-semibold text-lg">{booking.bikeTitle}</h3>
                 <p className="text-gray-600">
-                  Current end: {booking.currentEndDate} at {booking.currentEndTime}
+                  Current end: {booking.currentEndDate} at{" "}
+                  {booking.currentEndTime}
                 </p>
               </div>
             </div>
@@ -98,7 +116,9 @@ export default function ExtendBookingPage() {
           <CardContent className="space-y-6">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">New End Date</label>
+                <label className="block text-sm font-medium mb-2">
+                  New End Date
+                </label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   <Input
@@ -111,7 +131,9 @@ export default function ExtendBookingPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">New End Time</label>
+                <label className="block text-sm font-medium mb-2">
+                  New End Time
+                </label>
                 <div className="relative">
                   <Clock className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                   <Input
@@ -125,7 +147,9 @@ export default function ExtendBookingPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Reason for Extension (Optional)</label>
+              <label className="block text-sm font-medium mb-2">
+                Reason for Extension (Optional)
+              </label>
               <Textarea
                 placeholder="Please provide a reason for extending your booking..."
                 value={reason}
@@ -141,8 +165,12 @@ export default function ExtendBookingPage() {
                   <div>
                     New end date: {newEndDate} at {newEndTime}
                   </div>
-                  <div>Additional charges may apply based on extended duration</div>
-                  <div className="font-medium text-orange-600">Estimated additional cost: ₹{booking.pricePerDay}</div>
+                  <div>
+                    Additional charges may apply based on extended duration
+                  </div>
+                  <div className="font-medium text-orange-600">
+                    Estimated additional cost: ₹{booking.pricePerDay}
+                  </div>
                 </div>
               </div>
             )}
@@ -158,5 +186,5 @@ export default function ExtendBookingPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

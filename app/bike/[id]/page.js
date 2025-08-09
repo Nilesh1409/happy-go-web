@@ -25,6 +25,7 @@ import Footer from "@/components/footer";
 import LoginModal from "@/components/login-modal";
 import ModernDateTimePicker from "@/components/modern-date-time-picker";
 import { apiService } from "@/lib/api";
+import { toast } from "@/lib/toast";
 
 const formatDateForAPI = (date) => {
   if (!date) return "";
