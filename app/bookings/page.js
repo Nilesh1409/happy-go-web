@@ -385,7 +385,7 @@ export default function BookingsPage() {
                               {booking.bookingStatus}
                             </span>
                           </Badge>
-                          <Badge
+                           <Badge
                             className={`${getStatusColor(
                               booking.paymentStatus
                             )} border text-xs`}
@@ -394,7 +394,13 @@ export default function BookingsPage() {
                             <span className="ml-1 capitalize">
                               {booking.paymentStatus}
                             </span>
-                          </Badge>
+                          </Badge> 
+                          {booking.paymentStatus === "pending" && (
+                            <Badge className="bg-red-100 text-red-800 border-red-200 border text-xs">
+                              <AlertCircle className="w-3 h-3" />
+                              <span className="ml-1">Incomplete</span>
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-xs text-gray-500">
                           ID: {booking._id.slice(-8)}
@@ -501,21 +507,23 @@ export default function BookingsPage() {
                         {/* Action Buttons */}
                         <div className="space-y-2">
                           <div className="grid grid-cols-2 gap-2">
+                            {booking.paymentStatus !== "pending" && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="text-xs"
+                              >
+                                <Link href={`/booking/confirmed/${booking._id}`}>
+                                  View Details
+                                </Link>
+                              </Button>
+                            )}
                             <Button
                               variant="outline"
                               size="sm"
                               asChild
-                              className="text-xs"
-                            >
-                              <Link href={`/booking/confirmed/${booking._id}`}>
-                                View Details
-                              </Link>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                              className="text-xs"
+                              className={`text-xs ${booking.paymentStatus === "pending" ? "col-span-2" : ""}`}
                             >
                               <a href="tel:+919008022800">
                                 <Phone className="w-3 h-3 mr-1" />
@@ -591,17 +599,8 @@ export default function BookingsPage() {
                               </p>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                              <Badge
-                                className={`${getStatusColor(
-                                  booking.bookingStatus
-                                )} border text-xs sm:text-sm`}
-                              >
-                                {getStatusIcon(booking.bookingStatus)}
-                                <span className="ml-1 capitalize">
-                                  {booking.bookingStatus}
-                                </span>
-                              </Badge>
-                              <Badge
+                            
+                              {/* <Badge
                                 className={`${getStatusColor(
                                   booking.paymentStatus
                                 )} border text-xs sm:text-sm`}
@@ -610,7 +609,23 @@ export default function BookingsPage() {
                                 <span className="ml-1 capitalize">
                                   {booking.paymentStatus}
                                 </span>
-                              </Badge>
+                              </Badge> */}
+                              {booking.paymentStatus === "pending" ? (
+                                <Badge className="bg-red-100 text-red-800 border-red-200 border text-xs sm:text-sm">
+                                  <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                  <span className="ml-1">Incomplete</span>
+                                </Badge>
+                              ):
+                              <Badge
+                              className={`${getStatusColor(
+                                booking.bookingStatus
+                              )} border text-xs sm:text-sm`}
+                            >
+                              {getStatusIcon(booking.bookingStatus)}
+                              <span className="ml-1 capitalize">
+                                {booking.bookingStatus}
+                              </span>
+                            </Badge>}
                             </div>
                           </div>
 
@@ -691,12 +706,14 @@ export default function BookingsPage() {
 
                           {/* Action Buttons */}
                           <div className="flex flex-wrap gap-2 sm:gap-3">
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href={`/booking/confirmed/${booking._id}`}>
-                                View Details
-                                <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
-                              </Link>
-                            </Button>
+                            {booking.paymentStatus !== "pending" && (
+                              <Button variant="outline" size="sm" asChild>
+                                <Link href={`/booking/confirmed/${booking._id}`}>
+                                  View Details
+                                  <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
+                                </Link>
+                              </Button>
+                            )}
 
                             {/* {booking.bookingStatus === "confirmed" && (
                               <Button
