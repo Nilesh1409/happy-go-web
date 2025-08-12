@@ -777,6 +777,48 @@ export default function BookingConfirmedPage() {
                     <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                     <span>Return on time to avoid late fees</span>
                   </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span>Inform 10 minutes prior to returning the scooty</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Additional Terms & Conditions */}
+              <div>
+                <h5 className="font-semibold mb-3 text-orange-800 text-sm sm:text-base">
+                  Terms & Conditions:
+                </h5>
+                <div className="space-y-2 text-xs sm:text-sm">
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span>Travelling is restricted to only Chikmagalur surrounding areas</span>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span className="font-medium">Amount will not be refunded if booking is cancelled</span>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span className="font-medium">Late return INR 200 will be charged per scooty per hour</span>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span className="font-medium">
+                      Damage of scooty & helmet cost will be completely charged on you. All damages will be charged as per company exclusive showroom only
+                    </span>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-red-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span className="font-medium">INR 1000 will be charged for loss of key</span>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span>Duplicate key delivery will be extra chargeable</span>
+                  </div>
+                </div>
+                <div className="mt-4 pt-3 border-t border-orange-200 text-center">
+                  <span className="text-green-600 font-medium text-sm">Have a safe ride. Thank you!</span>
                 </div>
               </div>
             </div>

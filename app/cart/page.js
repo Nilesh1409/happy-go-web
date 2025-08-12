@@ -427,7 +427,22 @@ function CartPageContent() {
                         <p className="text-xs text-gray-600 mb-3">
                           {item.kmOption === "unlimited"
                             ? "Unlimited KM"
-                            : `${item.kmLimit || 60} KM Limited`}
+                            : (() => {
+                                // Get km limit from bike pricing structure similar to search page
+                                const getKmLimit = () => {
+                                  // Check if bike has pricePerDay structure
+                                  if (item.bike?.pricePerDay) {
+                                    // Try weekday first, then weekend
+                                    const weekdayLimit = item.bike.pricePerDay.weekday?.limitedKm?.kmLimit;
+                                    const weekendLimit = item.bike.pricePerDay.weekend?.limitedKm?.kmLimit;
+                                    return weekdayLimit || weekendLimit || 0;
+                                  }
+                                  // Fallback to item's kmLimit or 0
+                                  return item.kmLimit || 0;
+                                };
+                                const kmLimit = getKmLimit();
+                                return kmLimit > 0 ? `${kmLimit} KM Limited` : "0 KM Limited";
+                              })()}
                         </p>
 
                         <div className="flex flex-col gap-3">

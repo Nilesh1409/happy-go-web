@@ -1191,7 +1191,7 @@ function SearchPageContent() {
                   return (
                     <Card
                       key={bike._id}
-                      className={`group relative overflow-hidden transition-all duration-300 bg-white border-0 shadow-lg hover:shadow-2xl hover:-translate-y-2 rounded-3xl ${
+                      className={`group relative overflow-hidden transition-all duration-300 bg-white border-0 shadow-lg hover:shadow-2xl hover:-translate-y-2 rounded-3xl p-0 pt-2 ${
                         !bike.isAvailable ? "opacity-90" : ""
                       }`}
                     >
@@ -1259,7 +1259,7 @@ function SearchPageContent() {
                         </div>
 
                         {/* Content Section - Enhanced */}
-                        <div className="p-3 sm:p-4">
+                        <div className="p-3 sm:p-4 pb-2 px-2">
                           {/* Title and Brand - Enhanced Typography */}
                           <div className="mb-3">
                             <h3 className="font-bold text-base sm:text-lg text-gray-900 mb-1.5 line-clamp-1 group-hover:text-orange-600 transition-colors duration-300">
@@ -1283,6 +1283,7 @@ function SearchPageContent() {
                           </div>
 
                           {/* Pricing Options - Enhanced Design */}
+                          {pricingOptions && console.log("pricingOptions",pricingOptions)}
                           {pricingOptions.length > 0 && (
                             <div className="mb-3">
                               <div className="text-xs font-bold text-gray-500 mb-3 text-center uppercase tracking-wider">
@@ -1333,177 +1334,131 @@ function SearchPageContent() {
                             </div>
                           </div>
 
-                          {/* Price and Cart Actions - Enhanced */}
-                          <div className="space-y-3">
-                            {/* Price Display - Enhanced */}
-                            <div className="text-center bg-gradient-to-br from-orange-50 via-white to-orange-50 rounded-2xl p-3 shadow-inner border border-orange-100">
-                              <div
-                                className={`text-xl sm:text-2xl font-black bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent ${
-                                  !bike.isAvailable ? "opacity-60" : ""
-                                }`}
-                              >
-                                ₹{totalPrice?.toLocaleString()}
-                              </div>
-                              <div className="text-sm text-gray-600 font-semibold mt-1">
-                                {selection?.duration || "per day"}
+                          {/* Quantity Selector */}
+                          {bike.isAvailable && bike.availableQuantity > 0 && (
+                            <div className="mb-3">
+                              <div className="flex items-center justify-center px-2">
+                                <div className="flex items-center bg-gradient-to-r from-gray-100 to-gray-200 rounded-3xl p-1 sm:p-2 shadow-inner max-w-full">
+                                  <button
+                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-white shadow-lg flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-400 touch-manipulation"
+                                    onClick={() =>
+                                      updateQuantity(
+                                        bike._id,
+                                        (quantities[bike._id] || 1) - 1
+                                      )
+                                    }
+                                    disabled={
+                                      (quantities[bike._id] || 1) <= 1
+                                    }
+                                  >
+                                    <Minus className="w-4 h-4" />
+                                  </button>
+                                  <div className="px-3 sm:px-6 py-2 text-center min-w-[3rem]">
+                                    <div className="text-lg sm:text-xl font-black text-gray-900">
+                                      {quantities[bike._id] || 1}
+                                    </div>
+                                  </div>
+                                  <button
+                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-white shadow-lg flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-400 touch-manipulation"
+                                    onClick={() =>
+                                      updateQuantity(
+                                        bike._id,
+                                        (quantities[bike._id] || 1) + 1
+                                      )
+                                    }
+                                    disabled={
+                                      (quantities[bike._id] || 1) >=
+                                      bike.availableQuantity
+                                    }
+                                  >
+                                    <Plus className="w-4 h-4" />
+                                  </button>
+                                </div>
                               </div>
                             </div>
+                          )}
 
-                            {/* Quantity Selector and Add to Cart - Enhanced */}
-                            {bike.isAvailable && bike.availableQuantity > 0 ? (
-                              // {/* Responsive Buttons - Keep in Same Row */}
-                              <div className="space-y-3">
-                                {/* Quantity Selector - Enhanced & Mobile Responsive */}
-                                <div className="flex items-center justify-center px-2">
-                                  <div className="flex items-center bg-gradient-to-r from-gray-100 to-gray-200 rounded-3xl p-1 sm:p-2 shadow-inner max-w-full">
-                                    <button
-                                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-white shadow-lg flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-400 touch-manipulation"
-                                      onClick={() =>
-                                        updateQuantity(
-                                          bike._id,
-                                          (quantities[bike._id] || 1) - 1
-                                        )
-                                      }
-                                      disabled={
-                                        (quantities[bike._id] || 1) <= 1
-                                      }
-                                    >
-                                      <Minus className="w-4 h-4" />
-                                    </button>
-                                    <div className="px-3 sm:px-6 py-2 text-center min-w-[3rem]">
-                                      <div className="text-lg sm:text-xl font-black text-gray-900">
-                                        {quantities[bike._id] || 1}
-                                      </div>
-                                    </div>
-                                    <button
-                                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-white shadow-lg flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-400 touch-manipulation"
-                                      onClick={() =>
-                                        updateQuantity(
-                                          bike._id,
-                                          (quantities[bike._id] || 1) + 1
-                                        )
-                                      }
-                                      disabled={
-                                        (quantities[bike._id] || 1) >=
-                                        bike.availableQuantity
-                                      }
-                                    >
-                                      <Plus className="w-4 h-4" />
-                                    </button>
-                                  </div>
+                          {/* Price and Add to Cart Button - Same Row - Subtle Background */}
+                          {bike.isAvailable && bike.availableQuantity > 0 ? (
+                            <div className="bg-gray-50 border-t border-gray-200 p-3 px-4 rounded-lg flex items-center justify-between">
+                              {/* Price Display */}
+                              <div className="text-gray-900">
+                                <div className="text-xl sm:text-2xl font-black text-[#F47B20]">
+                                  ₹{totalPrice?.toLocaleString()}
                                 </div>
-
-                                {/* Add to Cart Button - Enhanced & Mobile Responsive - Same Row */}
-                                {cart.totalItems > 0 ? (
-                                  <div className="flex gap-1 sm:gap-2 px-2">
-                                    <Button
-                                      size="lg"
-                                      className="flex-1 bg-gradient-to-r from-orange-500 via-orange-600 to-red-500 hover:from-orange-600 hover:via-orange-700 hover:to-red-600 text-white rounded-2xl font-black text-xs sm:text-sm py-3 sm:py-4 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] border-0 min-h-[44px] touch-manipulation"
-                                      onClick={() =>
-                                        addToCart(
-                                          bike._id,
-                                          quantities[bike._id] || 1
-                                        )
-                                      }
-                                      disabled={cartLoading}
-                                    >
-                                      {cartLoading ? (
-                                        <>
-                                          <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 animate-spin" />
-                                          <span className="hidden xs:inline sm:hidden">
-                                            Add...
-                                          </span>
-                                          <span className="xs:hidden sm:inline">
-                                            Adding...
-                                          </span>
-                                          <span className="hidden sm:inline">
-                                            ...
-                                          </span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
-                                          <span className="hidden xs:inline">
-                                            ADD
-                                          </span>
-                                          <span className="xs:hidden sm:inline">
-                                            ADD TO CART
-                                          </span>
-                                        </>
-                                      )}
-                                    </Button>
-                                    {/* Go to Cart Button - Compact for Same Row */}
-                                    <Button
-                                      variant="default"
-                                      size="md"
-                                      asChild
-                                      className="bg-[#f47b20] hover:bg-[#e06a1a] text-white font-semibold px-2 sm:px-4 py-3 sm:py-4 transition-all duration-200 relative shadow-lg border-0 min-h-[44px] touch-manipulation flex-shrink-0 min-w-[80px] sm:min-w-[120px]"
-                                    >
-                                      <Link
-                                        href={`/cart?${new URLSearchParams({
-                                          startDate:
-                                            formatDateForAPI(
-                                              searchData.startDate
-                                            ) || "",
-                                          endDate:
-                                            formatDateForAPI(
-                                              searchData.endDate
-                                            ) || "",
-                                          startTime: searchData.startTime || "",
-                                          endTime: searchData.endTime || "",
-                                        }).toString()}`}
-                                        className="flex items-center gap-1 justify-center"
-                                      >
-                                        <ShoppingCart className="w-4 h-4" />
-                                        <span className="text-xs sm:text-sm font-bold">
-                                          CART
-                                        </span>
-                                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
-                                        {cart.totalItems > 0 && (
-                                          <Badge className="absolute -top-2 -right-2 bg-green-500 text-white text-xs w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center p-0 shadow-lg border-2 border-white font-bold">
-                                            {cart.totalItems}
-                                          </Badge>
-                                        )}
-                                      </Link>
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <div className="px-2">
-                                    <Button
-                                      className="w-full bg-gradient-to-r from-orange-500 via-orange-600 to-red-500 hover:from-orange-600 hover:via-orange-700 hover:to-red-600 text-white rounded-2xl font-black text-sm py-3 sm:py-4 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] border-0 min-h-[44px] touch-manipulation"
-                                      onClick={() =>
-                                        addToCart(
-                                          bike._id,
-                                          quantities[bike._id] || 1
-                                        )
-                                      }
-                                      disabled={cartLoading}
-                                    >
-                                      {cartLoading ? (
-                                        <>
-                                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                          Adding to Cart...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <ShoppingCart className="w-5 h-5 mr-2" />
-                                          ADD TO CART
-                                        </>
-                                      )}
-                                    </Button>
-                                  </div>
-                                )}
+                                <div className="text-sm font-medium text-gray-600">
+                                  {selection?.duration || "per day"}
+                                </div>
                               </div>
-                            ) : (
+                              
+                              {/* Add to Cart Button */}
                               <Button
-                                className="w-full bg-gray-300 text-gray-600 cursor-not-allowed rounded-2xl font-black text-sm py-3 border-0"
+                                className="bg-[#F47B20] text-white hover:bg-[#E06A0F] font-black text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-0"
+                                onClick={() =>
+                                  addToCart(
+                                    bike._id,
+                                    quantities[bike._id] || 1
+                                  )
+                                }
+                                disabled={cartLoading}
+                              >
+                                {cartLoading ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                                    <span className="hidden sm:inline">Adding...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span>Add to Cart</span>
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="bg-gray-50 border-t border-gray-200 p-3 rounded-lg flex items-center justify-center">
+                              <Button
+                                className="w-full bg-gray-300 text-gray-600 cursor-not-allowed rounded-xl font-black text-sm border-0"
                                 disabled
                               >
-                                <Clock className="w-5 h-5 mr-2" />
+                                <Clock className="w-4 h-4 mr-2" />
                                 UNAVAILABLE
                               </Button>
-                            )}
-                          </div>
+                            </div>
+                          )}
+
+                          {/* Go to Cart Button - Show when cart has items */}
+                          {/* {cart.totalItems > 0 && bike.isAvailable && bike.availableQuantity > 0 && (
+                            <div className="mt-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="w-full border-[#F47B20] text-[#F47B20] hover:bg-[#F47B20] hover:text-white font-semibold py-2 transition-all duration-200 relative"
+                              >
+                                <Link
+                                  href={`/cart?${new URLSearchParams({
+                                    startDate:
+                                      formatDateForAPI(
+                                        searchData.startDate
+                                      ) || "",
+                                    endDate:
+                                      formatDateForAPI(
+                                        searchData.endDate
+                                      ) || "",
+                                    startTime: searchData.startTime || "",
+                                    endTime: searchData.endTime || "",
+                                  }).toString()}`}
+                                  className="flex items-center gap-2 justify-center"
+                                >
+                                  <ShoppingCart className="w-4 h-4" />
+                                  <span className="text-sm font-bold">
+                                    GO TO CART ({cart.totalItems})
+                                  </span>
+                                  <ArrowRight className="w-4 h-4" />
+                                </Link>
+                              </Button>
+                            </div>
+                          )} */}
                         </div>
                       </CardContent>
                     </Card>
