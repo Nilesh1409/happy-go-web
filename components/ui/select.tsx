@@ -74,7 +74,7 @@ function SelectContent({
           className={cn(
             "p-1",
             position === "popper" &&
-              "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1"
+              "min-h-[2rem] w-full min-w-[8rem] scroll-my-1 h-[var(--radix-select-trigger-height)] min-w-[var(--radix-select-trigger-width)]"
           )}
         >
           {children}

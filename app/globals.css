@@ -114,12 +114,90 @@
 
 @layer base {
   * {
+    /* Fallback for older browsers */
+    border-color: #e5e7eb;
+    outline-color: rgba(180, 180, 180, 0.5);
+    /* Modern browsers with CSS variables */
     @apply border-border outline-ring/50;
   }
   body {
+    /* Fallback for older browsers */
+    background-color: #ffffff;
+    color: #1f2937;
+    /* Modern browsers with CSS variables */
     @apply bg-background text-foreground;
   }
+  
+  /* Additional fallbacks for common elements */
+  .bg-card {
+    background-color: #ffffff !important;
+  }
+  .text-card-foreground {
+    color: #1f2937 !important;
+  }
+  .bg-primary {
+    background-color: #f47b20 !important;
+  }
+  .text-primary-foreground {
+    color: #fcfcfc !important;
+  }
+  .bg-secondary {
+    background-color: #f8fafc !important;
+  }
+  .text-secondary-foreground {
+    color: #2a2a2a !important;
+  }
+  .border-border {
+    border-color: #e5e7eb !important;
+  }
+  .text-muted-foreground {
+    color: #8a8a8a !important;
+  }
+  .bg-destructive {
+    background-color: #e54b4b !important;
+  }
 }
+
+/* CSS Variables Feature Detection */
+@supports (--css: variables) {
+  /* Override fallbacks with CSS variables for browsers that support them */
+  .bg-card {
+    background-color: var(--card) !important;
+  }
+  .text-card-foreground {
+    color: var(--card-foreground) !important;
+  }
+  .bg-primary {
+    background-color: var(--primary) !important;
+  }
+  .text-primary-foreground {
+    color: var(--primary-foreground) !important;
+  }
+  .bg-secondary {
+    background-color: var(--secondary) !important;
+  }
+  .text-secondary-foreground {
+    color: var(--secondary-foreground) !important;
+  }
+  .border-border {
+    border-color: var(--border) !important;
+  }
+  .text-muted-foreground {
+    color: var(--muted-foreground) !important;
+  }
+  .bg-destructive {
+    background-color: var(--destructive) !important;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+  * {
+    border-color: var(--border);
+    outline-color: hsl(var(--ring) / 0.5);
+  }
+}
+
 /* Remove the previous CSS and add this instead */
 @supports (-webkit-appearance: none) {
   /* Safari-specific fixes */
