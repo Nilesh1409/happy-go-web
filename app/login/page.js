@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,11 +12,22 @@ import Footer from "@/components/footer";
 import { apiService } from "@/lib/api";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [step, setStep] = useState("mobile"); // 'mobile' or 'otp'
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Check if user is already logged in and redirect to home
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+    
+    if (token && user) {
+      router.replace("/");
+    }
+  }, [router]);
 
   const handleSendOTP = async () => {
     if (!mobile || mobile.length !== 10) {
@@ -53,7 +65,7 @@ export default function LoginPage() {
       localStorage.setItem("user", JSON.stringify(response.data));
 
       // Redirect to home page
-      window.location.href = "/";
+      router.push("/");
     } catch (error) {
       setError(error.message || "Invalid OTP. Please try again.");
     } finally {

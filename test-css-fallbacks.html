@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Fallback Test</title>
+    <style>
+        /* Test CSS Variables Support */
+        .test-container {
+            padding: 20px;
+            margin: 20px;
+            border: 2px solid;
+            
+            /* Fallback first */
+            background-color: #f47b20;
+            color: #ffffff;
+            border-color: #e5e7eb;
+            
+            /* CSS Variables override if supported */
+            background-color: var(--primary, #f47b20);
+            color: var(--primary-foreground, #ffffff);
+            border-color: var(--border, #e5e7eb);
+        }
+        
+        .support-check {
+            padding: 10px;
+            margin: 10px;
+            /* This will only work if CSS variables are supported */
+            background: var(--test-color, red);
+        }
+        
+        :root {
+            --primary: #f47b20;
+            --primary-foreground: #ffffff;
+            --border: #e5e7eb;
+            --test-color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSS Fallback Test Page</h1>
+    
+    <div class="test-container">
+        <h2>Primary Button Style</h2>
+        <p>This should be orange background with white text in ALL browsers</p>
+        <p>If you see this with proper colors, fallbacks are working!</p>
+    </div>
+    
+    <div style="padding: 20px; margin: 20px; border: 2px solid #e5e7eb;">
+        <h2>Tailwind CSS Utilities Test</h2>
+        <p class="text-gray-900 font-bold text-lg">Gray text (should be dark)</p>
+        <p class="text-[#F47B20] font-semibold">Orange text (your brand color)</p>
+        <div class="bg-[#F47B20] text-white p-4 rounded-lg shadow-lg">
+            Orange background button style
+        </div>
+        <div class="bg-gradient-to-r from-[#F47B20] to-[#E06A0F] text-white p-3 rounded-xl mt-2">
+            Gradient background (orange to darker orange)
+        </div>
+        <p class="text-xs text-gray-600 mt-2">Small gray text</p>
+    </div>
+    
+    <div class="support-check">
+        <p><strong>CSS Variables Support Test:</strong></p>
+        <p>🟢 Green background = CSS Variables supported</p>
+        <p>🔴 Red background = Using fallbacks (older browser)</p>
+    </div>
+    
+    <script>
+        // JavaScript test for CSS Variables support
+        function testCSSVariables() {
+            try {
+                // Test if CSS.supports exists and works
+                if (window.CSS && CSS.supports && CSS.supports('(--css: variables)')) {
+                    document.getElementById('js-test').innerHTML = '✅ CSS Variables supported (Modern browser)';
+                    document.getElementById('js-test').style.color = 'green';
+                } else {
+                    document.getElementById('js-test').innerHTML = '❌ CSS Variables NOT supported (Older browser - using fallbacks)';
+                    document.getElementById('js-test').style.color = 'red';
+                }
+            } catch (e) {
+                document.getElementById('js-test').innerHTML = '❌ Very old browser detected';
+                document.getElementById('js-test').style.color = 'red';
+            }
+        }
+    </script>
+    
+    <div style="padding: 20px; margin: 20px; border: 1px solid #ccc;">
+        <h3>JavaScript Detection:</h3>
+        <p id="js-test">Testing...</p>
+        <button onclick="testCSSVariables()">Run CSS Support Test</button>
+    </div>
+    
+    <div style="padding: 20px; margin: 20px; background: #f0f0f0;">
+        <h3>Manual Visual Check:</h3>
+        <ul>
+            <li>Orange button above should look the same in all browsers</li>
+            <li>Text should be readable (white on orange)</li>
+            <li>Borders should be visible (light gray)</li>
+            <li>Green/red indicator shows CSS variable support</li>
+        </ul>
+    </div>
+</body>
+</html>

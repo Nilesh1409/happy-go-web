@@ -114,12 +114,239 @@
 
 @layer base {
   * {
+    /* Fallback for older browsers */
+    border-color: #e5e7eb;
+    outline-color: rgba(180, 180, 180, 0.5);
+    /* Modern browsers with CSS variables */
     @apply border-border outline-ring/50;
   }
   body {
+    /* Fallback for older browsers */
+    background-color: #ffffff;
+    color: #1f2937;
+    /* Modern browsers with CSS variables */
     @apply bg-background text-foreground;
   }
+  
+  /* Additional fallbacks for common elements */
+  .bg-card {
+    background-color: #ffffff !important;
+  }
+  .text-card-foreground {
+    color: #1f2937 !important;
+  }
+  .bg-primary {
+    background-color: #f47b20 !important;
+  }
+  .text-primary-foreground {
+    color: #fcfcfc !important;
+  }
+  .bg-secondary {
+    background-color: #f8fafc !important;
+  }
+  .text-secondary-foreground {
+    color: #2a2a2a !important;
+  }
+  .border-border {
+    border-color: #e5e7eb !important;
+  }
+  .text-muted-foreground {
+    color: #8a8a8a !important;
+  }
+  .bg-destructive {
+    background-color: #e54b4b !important;
+  }
+  
+  /* Critical Tailwind utility fallbacks for older browsers */
+  
+  /* Gray colors */
+  .text-gray-900 { color: #111827 !important; }
+  .text-gray-800 { color: #1f2937 !important; }
+  .text-gray-700 { color: #374151 !important; }
+  .text-gray-600 { color: #4b5563 !important; }
+  .text-gray-500 { color: #6b7280 !important; }
+  .text-gray-400 { color: #9ca3af !important; }
+  .text-gray-300 { color: #d1d5db !important; }
+  
+  .bg-gray-50 { background-color: #f9fafb !important; }
+  .bg-gray-100 { background-color: #f3f4f6 !important; }
+  .bg-gray-200 { background-color: #e5e7eb !important; }
+  .bg-gray-300 { background-color: #d1d5db !important; }
+  .bg-gray-400 { background-color: #9ca3af !important; }
+  .bg-gray-500 { background-color: #6b7280 !important; }
+  
+  .border-gray-200 { border-color: #e5e7eb !important; }
+  .border-gray-300 { border-color: #d1d5db !important; }
+  
+  /* Primary orange colors - your main brand colors */
+  .bg-\[#F47B20\] { background-color: #F47B20 !important; }
+  .hover\:bg-\[#E06A0F\]:hover { background-color: #E06A0F !important; }
+  .text-\[#F47B20\] { color: #F47B20 !important; }
+  .hover\:text-\[#F47B20\]:hover { color: #F47B20 !important; }
+  .border-\[#F47B20\] { border-color: #F47B20 !important; }
+  .hover\:border-\[#F47B20\]:hover { border-color: #F47B20 !important; }
+  
+  /* Orange colors */
+  .text-orange-600 { color: #ea580c !important; }
+  .text-orange-800 { color: #9a3412 !important; }
+  .bg-orange-50 { background-color: #fff7ed !important; }
+  .bg-orange-100 { background-color: #ffedd5 !important; }
+  .border-orange-200 { border-color: #fed7aa !important; }
+  .border-orange-300 { border-color: #fdba74 !important; }
+  
+  /* White and black */
+  .text-white { color: #ffffff !important; }
+  .bg-white { background-color: #ffffff !important; }
+  .text-black { color: #000000 !important; }
+  .bg-black { background-color: #000000 !important; }
+  
+  /* Red colors for errors */
+  .text-red-500 { color: #ef4444 !important; }
+  .text-red-600 { color: #dc2626 !important; }
+  .bg-red-50 { background-color: #fef2f2 !important; }
+  .bg-red-100 { background-color: #fee2e2 !important; }
+  .border-red-200 { border-color: #fecaca !important; }
+  
+  /* Green colors for success */
+  .text-green-600 { color: #16a34a !important; }
+  .text-green-700 { color: #15803d !important; }
+  .bg-green-50 { background-color: #f0fdf4 !important; }
+  .bg-green-100 { background-color: #dcfce7 !important; }
+  .bg-green-500 { background-color: #22c55e !important; }
+  .border-green-200 { border-color: #bbf7d0 !important; }
+  
+  /* Blue colors */
+  .text-blue-600 { color: #2563eb !important; }
+  .text-blue-700 { color: #1d4ed8 !important; }
+  .text-blue-800 { color: #1e40af !important; }
+  .bg-blue-50 { background-color: #eff6ff !important; }
+  .bg-blue-100 { background-color: #dbeafe !important; }
+  .border-blue-200 { border-color: #bfdbfe !important; }
+  
+  /* Yellow/Amber colors */
+  .text-yellow-600 { color: #d97706 !important; }
+  .text-yellow-800 { color: #92400e !important; }
+  .text-amber-600 { color: #d97706 !important; }
+  .bg-yellow-50 { background-color: #fffbeb !important; }
+  .border-yellow-200 { border-color: #fde68a !important; }
+  
+  /* Common gradients used in your app */
+  .bg-gradient-to-r.from-\[#F47B20\].to-\[#E06A0F\] {
+    background: linear-gradient(to right, #F47B20, #E06A0F) !important;
+  }
+  .bg-gradient-to-r.from-orange-500.to-orange-600 {
+    background: linear-gradient(to right, #f97316, #ea580c) !important;
+  }
+  .bg-gradient-to-r.from-orange-500.via-orange-600.to-red-500 {
+    background: linear-gradient(to right, #f97316, #ea580c, #ef4444) !important;
+  }
+  .bg-gradient-to-r.from-orange-600.via-orange-700.to-red-600 {
+    background: linear-gradient(to right, #ea580c, #c2410c, #dc2626) !important;
+  }
+  .bg-gradient-to-br.from-orange-50.via-white.to-orange-50 {
+    background: linear-gradient(to bottom right, #fff7ed, #ffffff, #fff7ed) !important;
+  }
+  .bg-gradient-to-r.from-gray-50.to-gray-100 {
+    background: linear-gradient(to right, #f9fafb, #f3f4f6) !important;
+  }
+  .bg-gradient-to-r.from-gray-100.to-gray-200 {
+    background: linear-gradient(to right, #f3f4f6, #e5e7eb) !important;
+  }
+  
+  /* Typography fallbacks */
+  .text-xs { font-size: 0.75rem !important; line-height: 1rem !important; }
+  .text-sm { font-size: 0.875rem !important; line-height: 1.25rem !important; }
+  .text-base { font-size: 1rem !important; line-height: 1.5rem !important; }
+  .text-lg { font-size: 1.125rem !important; line-height: 1.75rem !important; }
+  .text-xl { font-size: 1.25rem !important; line-height: 1.75rem !important; }
+  .text-2xl { font-size: 1.5rem !important; line-height: 2rem !important; }
+  .text-3xl { font-size: 1.875rem !important; line-height: 2.25rem !important; }
+  
+  .font-medium { font-weight: 500 !important; }
+  .font-semibold { font-weight: 600 !important; }
+  .font-bold { font-weight: 700 !important; }
+  .font-black { font-weight: 900 !important; }
+  
+  /* Layout utilities that might break */
+  .rounded-lg { border-radius: 0.5rem !important; }
+  .rounded-xl { border-radius: 0.75rem !important; }
+  .rounded-2xl { border-radius: 1rem !important; }
+  .rounded-3xl { border-radius: 1.5rem !important; }
+  .rounded-full { border-radius: 9999px !important; }
+  
+  .shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05) !important; }
+  .shadow { box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important; }
+  .shadow-md { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important; }
+  .shadow-lg { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important; }
+  .shadow-xl { box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important; }
+  .shadow-2xl { box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important; }
+  
+  /* Opacity utilities */
+  .opacity-50 { opacity: 0.5 !important; }
+  .opacity-60 { opacity: 0.6 !important; }
+  .opacity-90 { opacity: 0.9 !important; }
+  
+  /* Transform utilities that might not work */
+  .scale-105 { transform: scale(1.05) !important; }
+  .scale-\[1\.02\] { transform: scale(1.02) !important; }
+  .scale-\[0\.98\] { transform: scale(0.98) !important; }
+  .-translate-y-2 { transform: translateY(-0.5rem) !important; }
+  
+  /* Transition utilities */
+  .transition-all { 
+    transition-property: all !important; 
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; 
+    transition-duration: 150ms !important; 
+  }
+  .transition-colors { 
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke !important; 
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important; 
+    transition-duration: 150ms !important; 
+  }
+  .duration-200 { transition-duration: 200ms !important; }
+  .duration-300 { transition-duration: 300ms !important; }
 }
+
+/* CSS Variables Feature Detection */
+@supports (--css: variables) {
+  /* Override fallbacks with CSS variables for browsers that support them */
+  .bg-card {
+    background-color: var(--card) !important;
+  }
+  .text-card-foreground {
+    color: var(--card-foreground) !important;
+  }
+  .bg-primary {
+    background-color: var(--primary) !important;
+  }
+  .text-primary-foreground {
+    color: var(--primary-foreground) !important;
+  }
+  .bg-secondary {
+    background-color: var(--secondary) !important;
+  }
+  .text-secondary-foreground {
+    color: var(--secondary-foreground) !important;
+  }
+  .border-border {
+    border-color: var(--border) !important;
+  }
+  .text-muted-foreground {
+    color: var(--muted-foreground) !important;
+  }
+  .bg-destructive {
+    background-color: var(--destructive) !important;
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+  * {
+    border-color: var(--border);
+    outline-color: hsl(var(--ring) / 0.5);
+  }
+}
+
 /* Remove the previous CSS and add this instead */
 @supports (-webkit-appearance: none) {
   /* Safari-specific fixes */
