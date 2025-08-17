@@ -293,24 +293,9 @@ function RegisterPageContent() {
   // Success Step
   if (currentStep === "success") {
     return (
-      <div 
-        className="min-h-screen bg-gray-50"
-        style={{
-          // Fallbacks for older browsers to ensure scrolling
-          minHeight: "100vh",
-          backgroundColor: "#f9fafb",
-          overflowY: "auto",
-          overflowX: "hidden",
-        }}
-      >
+      <div className="min-h-screen bg-gray-50">
         <Header />
-        <div 
-          className="py-12"
-          style={{
-            // Ensure content can scroll
-            paddingTop: "3rem",
-            paddingBottom: "3rem",
-          }}>
+        <div className="py-12">
           <div className="max-w-md mx-auto px-4">
             <Card>
               <CardContent className="p-8 text-center">
@@ -364,19 +349,7 @@ function RegisterPageContent() {
                 <Button
                   onClick={handleContinueToDashboard}
                   className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white mb-3"
-                  style={{
-                    // Fallbacks for older browsers
-                    width: "100%",
-                    height: "3rem",
-                    fontSize: "1rem",
-                    fontWeight: 500,
-                    backgroundColor: "#F47B20",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "0.5rem",
-                    cursor: "pointer",
-                    marginBottom: "0.75rem",
-                  }}>
+                >
                   Start Booking Now
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -396,24 +369,9 @@ function RegisterPageContent() {
   // OTP Verification Step
   if (currentStep === "verify-otp") {
     return (
-      <div 
-        className="min-h-screen bg-gray-50"
-        style={{
-          // Fallbacks for older browsers to ensure scrolling
-          minHeight: "100vh",
-          backgroundColor: "#f9fafb",
-          overflowY: "auto",
-          overflowX: "hidden",
-        }}
-      >
+      <div className="min-h-screen bg-gray-50">
         <Header />
-        <div 
-          className="py-12"
-          style={{
-            // Ensure content can scroll
-            paddingTop: "3rem",
-            paddingBottom: "3rem",
-          }}>
+        <div className="py-12">
           <div className="max-w-md mx-auto px-4">
             <Card>
               <CardHeader>
@@ -465,16 +423,7 @@ function RegisterPageContent() {
                         onClick={handleResendOTP}
                         disabled={loading}
                         className="text-[#F47B20] border-[#F47B20]"
-                        style={{
-                          // Fallbacks for older browsers
-                          color: "#F47B20",
-                          backgroundColor: "transparent",
-                          border: "1px solid #F47B20",
-                          borderRadius: "0.5rem",
-                          padding: "0.5rem 1rem",
-                          cursor: loading ? "not-allowed" : "pointer",
-                          opacity: loading ? 0.5 : 1,
-                        }}>
+                      >
                         {loading ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -491,19 +440,7 @@ function RegisterPageContent() {
                     type="submit"
                     className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white h-12"
                     disabled={loading || otpData.otp.length !== 6}
-                    style={{
-                      // Fallbacks for older browsers
-                      width: "100%",
-                      height: "3rem",
-                      fontSize: "1rem",
-                      fontWeight: 500,
-                      backgroundColor: "#F47B20",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "0.5rem",
-                      cursor: loading || otpData.otp.length !== 6 ? "not-allowed" : "pointer",
-                      opacity: loading || otpData.otp.length !== 6 ? 0.5 : 1,
-                    }}>
+                  >
                     {loading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -535,26 +472,10 @@ function RegisterPageContent() {
 
   // Registration Step (existing form)
   return (
-    <div 
-      className="min-h-screen bg-gray-50"
-      style={{
-        // Fallbacks for older browsers to ensure scrolling
-        minHeight: "100vh",
-        backgroundColor: "#f9fafb",
-        overflowY: "auto",
-        overflowX: "hidden",
-      }}
-    >
+    <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div 
-        className="py-12"
-        style={{
-          // Ensure content can scroll
-          paddingTop: "3rem",
-          paddingBottom: "3rem",
-          minHeight: "calc(100vh - 200px)", // Account for header/footer
-        }}>
+      <div className="py-12">
         <div className="max-w-md mx-auto px-4">
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-[#F47B20] rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -692,19 +613,7 @@ function RegisterPageContent() {
                   type="submit"
                   className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white h-12 text-base font-medium"
                   disabled={loading || referralValidation.isValidating}
-                  style={{
-                    // Fallbacks for older browsers
-                    width: "100%",
-                    height: "3rem",
-                    fontSize: "1rem",
-                    fontWeight: 500,
-                    backgroundColor: "#F47B20",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "0.5rem",
-                    cursor: loading || referralValidation.isValidating ? "not-allowed" : "pointer",
-                    opacity: loading || referralValidation.isValidating ? 0.5 : 1,
-                  }}>
+                >
                   {loading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />

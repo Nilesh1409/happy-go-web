@@ -518,53 +518,51 @@
   transform: scale(0.95) !important;
 }
 
-/* Button color fallbacks for older browsers */
-.bg-green-600 {
-  background-color: #059669 !important;
+/* Enhanced scrolling support for modal */
+.overflow-y-auto {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
-.bg-green-700 {
-  background-color: #047857 !important;
+/* Additional button color fallbacks */
+.bg-green-600 {
+  background-color: #10b981 !important;
 }
 
 .bg-blue-600 {
-  background-color: #2563eb !important;
-}
-
-.bg-blue-700 {
-  background-color: #1d4ed8 !important;
+  background-color: #3b82f6 !important;
 }
 
 .bg-purple-600 {
+  background-color: #8b5cf6 !important;
+}
+
+.hover\:bg-green-700:hover {
+  background-color: #059669 !important;
+}
+
+.hover\:bg-blue-700:hover {
+  background-color: #2563eb !important;
+}
+
+.hover\:bg-purple-700:hover {
   background-color: #7c3aed !important;
 }
 
-.bg-purple-700 {
-  background-color: #6d28d9 !important;
+/* Ensure modal scrollable content works in all browsers */
+.max-h-\[95vh\] {
+  max-height: 95vh !important;
+  max-height: calc(100vh - 2rem) !important; /* Better fallback */
 }
 
-/* Ensure buttons are visible */
-button {
-  display: inline-block !important;
-  cursor: pointer !important;
+/* Card content padding for better mobile experience */
+.p-4\.sm\:p-6 {
+  padding: 1rem !important;
 }
 
-button:disabled {
-  cursor: not-allowed !important;
-  opacity: 0.5 !important;
-}
-
-/* Min-height fallbacks */
-.min-h-screen {
-  min-height: 100vh !important;
-  min-height: 100% !important; /* Fallback for browsers without vh support */
-}
-
-/* Overflow fallbacks for scrolling */
-.overflow-y-auto {
-  overflow-y: auto !important;
-}
-
-.overflow-x-hidden {
-  overflow-x: hidden !important;
+@media (min-width: 640px) {
+  .p-4\.sm\:p-6 {
+    padding: 1.5rem !important;
+  }
 }

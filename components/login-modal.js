@@ -337,13 +337,16 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
           maxWidth: "28rem",
           margin: "0 auto",
           padding: "0",
-          overflow: "hidden",
           borderRadius: "0.75rem",
           maxHeight: "95vh",
           overflowY: "auto",
+          overflowX: "hidden",
           backgroundColor: "white",
           border: "1px solid #e5e7eb",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+          // Ensure scrolling works on all browsers
+          webkitOverflowScrolling: "touch",
+          scrollBehavior: "smooth",
         }}>
         {/* Mobile Number Step */}
         {step === "mobile" && (
@@ -541,7 +544,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
                   height: "3rem",
                   fontSize: "1rem",
                   fontWeight: 600,
-                  backgroundColor: "#059669",
+                  backgroundColor: "#10b981",
                   color: "white",
                   border: "none",
                   borderRadius: "0.5rem",
@@ -610,7 +613,14 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
                 Join thousands of happy travelers
               </p>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <CardContent 
+              className="p-4 sm:p-6 space-y-4 sm:space-y-6"
+              style={{
+                // Fallbacks for older browsers - ensure registration form is scrollable
+                padding: "1rem",
+                maxHeight: "none", // Allow content to expand
+                overflowY: "visible",
+              }}>
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg text-sm flex items-start">
                   <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
@@ -753,7 +763,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
                   height: "3rem",
                   fontSize: "1rem",
                   fontWeight: 600,
-                  backgroundColor: "#2563eb",
+                  backgroundColor: "#3b82f6",
                   color: "white",
                   border: "none",
                   borderRadius: "0.5rem",
@@ -876,7 +886,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
                   height: "3rem",
                   fontSize: "1rem",
                   fontWeight: 600,
-                  backgroundColor: "#7c3aed",
+                  backgroundColor: "#8b5cf6",
                   color: "white",
                   border: "none",
                   borderRadius: "0.5rem",
