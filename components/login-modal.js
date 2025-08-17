@@ -330,13 +330,40 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
       // }}
     >
       <DialogContent 
-       style={{
-        border: "1px solid red",
-      }} className="w-[95vw] max-w-md mx-auto p-0  overflow-hidden rounded-xl sm:rounded-lg max-h-[95vh] overflow-y-auto">
+        className="w-[95vw] max-w-md mx-auto p-0 overflow-hidden rounded-xl sm:rounded-lg max-h-[95vh] overflow-y-auto"
+        style={{
+          // Fallbacks for older browsers
+          width: "95vw",
+          maxWidth: "28rem",
+          margin: "0 auto",
+          padding: "0",
+          borderRadius: "0.75rem",
+          maxHeight: "95vh",
+          overflowY: "auto",
+          overflowX: "hidden",
+          backgroundColor: "white",
+          border: "1px solid #e5e7eb",
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+          // Ensure scrolling works on all browsers
+          webkitOverflowScrolling: "touch",
+          scrollBehavior: "smooth",
+        }}>
         {/* Mobile Number Step */}
         {step === "mobile" && (
           <Card className="border-0 py-0 shadow-none">
-            <CardHeader className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-[#F47B20] to-orange-600 text-white rounded-t-xl sm:rounded-t-lg">
+            <CardHeader 
+              className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-[#F47B20] to-orange-600 text-white rounded-t-xl sm:rounded-t-lg"
+              style={{
+                // Fallbacks for older browsers
+                textAlign: "center",
+                paddingBottom: "1rem",
+                paddingTop: "1.5rem",
+                background: "linear-gradient(to bottom right, #F47B20, #ea580c)",
+                backgroundColor: "#F47B20", // Fallback for very old browsers
+                color: "white",
+                borderTopLeftRadius: "0.75rem",
+                borderTopRightRadius: "0.75rem",
+              }}>
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden mx-auto mb-3 sm:mb-4 flex items-center justify-center bg-white/10">
                 <img
                   src="/assets/happygo.jpeg"
@@ -389,7 +416,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
                 className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold bg-[#F47B20] hover:bg-[#E06A0F] transition-all duration-200"
                 onClick={handleSendOTP}
                 disabled={loading || mobile.length !== 10}
-              >
+                style={{
+                  // Fallbacks for older browsers
+                  width: "100%",
+                  height: "3rem",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  backgroundColor: "#F47B20",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "0.5rem",
+                  cursor: loading || mobile.length !== 10 ? "not-allowed" : "pointer",
+                  opacity: loading || mobile.length !== 10 ? 0.5 : 1,
+                }}>
                 {loading ? (
                   <div className="flex items-center">
                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
@@ -419,7 +458,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
         {/* Login OTP Step */}
         {step === "login-otp" && (
           <Card className="border-0 shadow-none py-0">
-            <CardHeader className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-t-xl sm:rounded-t-lg">
+            <CardHeader 
+              className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-t-xl sm:rounded-t-lg"
+              style={{
+                // Fallbacks for older browsers
+                textAlign: "center",
+                paddingBottom: "1rem",
+                paddingTop: "1.5rem",
+                background: "linear-gradient(to bottom right, #10b981, #059669)",
+                backgroundColor: "#10b981", // Fallback for very old browsers
+                color: "white",
+                borderTopLeftRadius: "0.75rem",
+                borderTopRightRadius: "0.75rem",
+              }}>
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
@@ -487,7 +538,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
                 className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold bg-green-600 hover:bg-green-700 transition-all duration-200"
                 onClick={handleVerifyLoginOTP}
                 disabled={loading || otp.length !== 6}
-              >
+                style={{
+                  // Fallbacks for older browsers
+                  width: "100%",
+                  height: "3rem",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  backgroundColor: "#10b981",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "0.5rem",
+                  cursor: loading || otp.length !== 6 ? "not-allowed" : "pointer",
+                  opacity: loading || otp.length !== 6 ? 0.5 : 1,
+                }}>
                 {loading ? (
                   <div className="flex items-center">
                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
@@ -522,7 +585,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
         {/* Registration Step */}
         {step === "register" && (
           <Card className="border-0 py-0 shadow-none">
-            <CardHeader className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-t-xl sm:rounded-t-lg">
+            <CardHeader 
+              className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-t-xl sm:rounded-t-lg"
+              style={{
+                // Fallbacks for older browsers
+                textAlign: "center",
+                paddingBottom: "1rem",
+                paddingTop: "1.5rem",
+                background: "linear-gradient(to bottom right, #3b82f6, #2563eb)",
+                backgroundColor: "#3b82f6", // Fallback for very old browsers
+                color: "white",
+                borderTopLeftRadius: "0.75rem",
+                borderTopRightRadius: "0.75rem",
+              }}>
               <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden mx-auto mb-3 sm:mb-4 flex items-center justify-center bg-white/10">
                 <img
                   src="/assets/happygo.jpeg"
@@ -538,7 +613,14 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
                 Join thousands of happy travelers
               </p>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+            <CardContent 
+              className="p-4 sm:p-6 space-y-4 sm:space-y-6"
+              style={{
+                // Fallbacks for older browsers - ensure registration form is scrollable
+                padding: "1rem",
+                maxHeight: "none", // Allow content to expand
+                overflowY: "visible",
+              }}>
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-2.5 sm:px-4 sm:py-3 rounded-lg text-sm flex items-start">
                   <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
@@ -675,7 +757,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
                 className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold bg-blue-600 hover:bg-blue-700 transition-all duration-200"
                 onClick={handleRegister}
                 disabled={loading || referralValidation.isValidating}
-              >
+                style={{
+                  // Fallbacks for older browsers
+                  width: "100%",
+                  height: "3rem",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  backgroundColor: "#3b82f6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "0.5rem",
+                  cursor: loading || referralValidation.isValidating ? "not-allowed" : "pointer",
+                  opacity: loading || referralValidation.isValidating ? 0.5 : 1,
+                }}>
                 {loading ? (
                   <div className="flex items-center">
                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
@@ -706,7 +800,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
         {/* Registration OTP Step */}
         {step === "register-otp" && (
           <Card className="border-0 shadow-none py-0">
-            <CardHeader className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-t-xl sm:rounded-t-lg">
+            <CardHeader 
+              className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-t-xl sm:rounded-t-lg"
+              style={{
+                // Fallbacks for older browsers
+                textAlign: "center",
+                paddingBottom: "1rem",
+                paddingTop: "1.5rem",
+                background: "linear-gradient(to bottom right, #8b5cf6, #7c3aed)",
+                backgroundColor: "#8b5cf6", // Fallback for very old browsers
+                color: "white",
+                borderTopLeftRadius: "0.75rem",
+                borderTopRightRadius: "0.75rem",
+              }}>
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
@@ -774,7 +880,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
                 className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold bg-purple-600 hover:bg-purple-700 transition-all duration-200"
                 onClick={handleVerifyRegisterOTP}
                 disabled={loading || otp.length !== 6}
-              >
+                style={{
+                  // Fallbacks for older browsers
+                  width: "100%",
+                  height: "3rem",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  backgroundColor: "#8b5cf6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "0.5rem",
+                  cursor: loading || otp.length !== 6 ? "not-allowed" : "pointer",
+                  opacity: loading || otp.length !== 6 ? 0.5 : 1,
+                }}>
                 {loading ? (
                   <div className="flex items-center">
                     <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mr-2" />
@@ -801,7 +919,19 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
         {/* Success Step */}
         {step === "success" && (
           <Card className="border-0 shadow-none py-0">
-            <CardHeader className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-t-xl sm:rounded-t-lg">
+            <CardHeader 
+              className="text-center pb-4 pt-6 sm:pt-6 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-t-xl sm:rounded-t-lg"
+              style={{
+                // Fallbacks for older browsers
+                textAlign: "center",
+                paddingBottom: "1rem",
+                paddingTop: "1.5rem",
+                background: "linear-gradient(to bottom right, #10b981, #059669)",
+                backgroundColor: "#10b981", // Fallback for very old browsers
+                color: "white",
+                borderTopLeftRadius: "0.75rem",
+                borderTopRightRadius: "0.75rem",
+              }}>
               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
                 <CheckCircle className="w-6 h-6 sm:w-10 sm:h-10 text-white" />
               </div>
@@ -851,7 +981,18 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
               <Button
                 onClick={handleContinue}
                 className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold bg-[#F47B20] hover:bg-[#E06A0F] transition-all duration-200"
-              >
+                style={{
+                  // Fallbacks for older browsers
+                  width: "100%",
+                  height: "3rem",
+                  fontSize: "1rem",
+                  fontWeight: 600,
+                  backgroundColor: "#F47B20",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "0.5rem",
+                  cursor: "pointer",
+                }}>
                 Start Booking Now
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
