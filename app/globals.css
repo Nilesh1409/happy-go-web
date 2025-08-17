@@ -430,3 +430,141 @@
     opacity: 0;
   }
 }
+
+/* Modal and Dialog CSS Fallbacks for Older Browsers */
+.bg-black\/80 {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+}
+
+.bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.bg-white\/20 {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Transform fallbacks */
+.translate-x-\[-50\%\] {
+  transform: translateX(-50%) !important;
+}
+
+.translate-y-\[-50\%\] {
+  transform: translateY(-50%) !important;
+}
+
+/* Position fallbacks */
+.left-\[50\%\] {
+  left: 50% !important;
+}
+
+.top-\[50\%\] {
+  top: 50% !important;
+}
+
+/* Gradient fallbacks for login modal */
+.bg-gradient-to-br.from-\[#F47B20\].to-orange-600 {
+  background: linear-gradient(to bottom right, #F47B20, #ea580c) !important;
+  background-color: #F47B20 !important; /* Fallback for very old browsers */
+}
+
+.bg-gradient-to-br.from-green-500.to-green-600 {
+  background: linear-gradient(to bottom right, #10b981, #059669) !important;
+  background-color: #10b981 !important;
+}
+
+.bg-gradient-to-br.from-blue-500.to-blue-600 {
+  background: linear-gradient(to bottom right, #3b82f6, #2563eb) !important;
+  background-color: #3b82f6 !important;
+}
+
+.bg-gradient-to-br.from-purple-500.to-purple-600 {
+  background: linear-gradient(to bottom right, #8b5cf6, #7c3aed) !important;
+  background-color: #8b5cf6 !important;
+}
+
+/* Viewport width fallbacks */
+.w-\[95vw\] {
+  width: 95vw !important;
+  width: 95% !important; /* Fallback for browsers without vw support */
+}
+
+.max-h-\[95vh\] {
+  max-height: 95vh !important;
+  max-height: 95% !important; /* Fallback for browsers without vh support */
+}
+
+/* Additional modern CSS fallbacks */
+.rounded-2xl {
+  border-radius: 1rem !important;
+}
+
+.overflow-hidden {
+  overflow: hidden !important;
+}
+
+.tracking-widest {
+  letter-spacing: 0.1em !important;
+}
+
+/* Dialog specific animation fallbacks */
+[data-state="open"] {
+  opacity: 1 !important;
+  transform: scale(1) !important;
+}
+
+[data-state="closed"] {
+  opacity: 0 !important;
+  transform: scale(0.95) !important;
+}
+
+/* Button color fallbacks for older browsers */
+.bg-green-600 {
+  background-color: #059669 !important;
+}
+
+.bg-green-700 {
+  background-color: #047857 !important;
+}
+
+.bg-blue-600 {
+  background-color: #2563eb !important;
+}
+
+.bg-blue-700 {
+  background-color: #1d4ed8 !important;
+}
+
+.bg-purple-600 {
+  background-color: #7c3aed !important;
+}
+
+.bg-purple-700 {
+  background-color: #6d28d9 !important;
+}
+
+/* Ensure buttons are visible */
+button {
+  display: inline-block !important;
+  cursor: pointer !important;
+}
+
+button:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+}
+
+/* Min-height fallbacks */
+.min-h-screen {
+  min-height: 100vh !important;
+  min-height: 100% !important; /* Fallback for browsers without vh support */
+}
+
+/* Overflow fallbacks for scrolling */
+.overflow-y-auto {
+  overflow-y: auto !important;
+}
+
+.overflow-x-hidden {
+  overflow-x: hidden !important;
+}
