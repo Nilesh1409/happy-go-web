@@ -42,6 +42,16 @@ function RegisterPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  // Check if user is already logged in and redirect to home
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+    
+    if (token && user) {
+      router.replace("/");
+    }
+  }, [router]);
+
   const [currentStep, setCurrentStep] = useState("register"); // "register" | "verify-otp" | "success"
 
   const [formData, setFormData] = useState({
@@ -277,7 +287,7 @@ function RegisterPageContent() {
   };
 
   const handleContinueToDashboard = () => {
-    router.push("/dashboard");
+    router.push("/");
   };
 
   // Success Step

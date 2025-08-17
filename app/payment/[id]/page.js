@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   ArrowLeft,
   Shield,
@@ -98,6 +99,7 @@ export default function PaymentPage() {
   const [showPriceBreakdown, setShowPriceBreakdown] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [isOnline, setIsOnline] = useState(true);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   // Network status monitoring
   useEffect(() => {
@@ -185,6 +187,11 @@ export default function PaymentPage() {
   };
 
   const handlePayment = async () => {
+    if (!acceptedTerms) {
+      setError("Please accept the terms and conditions to proceed with payment.");
+      return;
+    }
+
     if (!booking || !window.Razorpay) {
       setError("Payment gateway not available. Please refresh and try again.");
       return;
@@ -972,11 +979,38 @@ export default function PaymentPage() {
                   </div>
                 )}
 
+                {/* Terms and Conditions Checkbox */}
+                {!isPaymentCompleted && (
+                  <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div className="flex items-start space-x-3">
+                      <Checkbox
+                        id="terms"
+                        checked={acceptedTerms}
+                        onCheckedChange={setAcceptedTerms}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <label htmlFor="terms" className="text-sm text-gray-700 cursor-pointer">
+                          I agree to the{" "}
+                          <Link
+                            href="/terms"
+                            className="text-[#F47B20] hover:text-[#E06A0F] underline font-medium"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Terms and Conditions
+                          </Link>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Payment Button */}
                 <Button
                   className="w-full mt-6 bg-[#F47B20] hover:bg-[#E06A0F] text-white h-12 sm:h-14 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                   onClick={handlePayment}
-                  disabled={paymentLoading || isPaymentCompleted || !isOnline}
+                  disabled={paymentLoading || isPaymentCompleted || !isOnline || !acceptedTerms}
                 >
                   {paymentLoading ? (
                     <div className="flex items-center">

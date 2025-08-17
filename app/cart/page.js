@@ -321,12 +321,12 @@ function CartPageContent() {
           <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
             <div className="flex items-center h-14 sm:h-16">
               <Link
-                href="/"
+                href="/search"
                 className="flex items-center text-gray-600 hover:text-[#F47B20] transition-colors mr-4"
               >
                 <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
                 <span className="font-medium text-sm sm:text-base">
-                  Back to Home
+                  Back to Search
                 </span>
               </Link>
             </div>
@@ -347,7 +347,7 @@ function CartPageContent() {
                 className="bg-[#F47B20] hover:bg-[#E06A0F] text-white px-6 py-2 sm:px-8 sm:py-3"
                 asChild
               >
-                <Link href="/">Browse Bikes</Link>
+                <Link href="/search">Browse Bikes</Link>
               </Button>
             </CardContent>
           </Card>
@@ -366,7 +366,7 @@ function CartPageContent() {
         <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             <Link
-              href="/"
+              href="/search"
               className="flex items-center text-gray-600 hover:text-[#F47B20] transition-colors"
             >
               <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />

@@ -209,7 +209,7 @@ function SearchPageContent() {
   const [cartLoading, setCartLoading] = useState(false);
   const [quantities, setQuantities] = useState({}); // Track quantity for each bike
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [pendingCartAction, setPendingCartAction] = useState(null); // Store pending cart action
+  const [pendingCartAction, setPendingCartAction] = useState(null); // Store pending cart action with type
 
   const [filters, setFilters] = useState({
     sortBy: "relevance",
@@ -217,37 +217,129 @@ function SearchPageContent() {
     brand: "all",
   });
 
-  // Calculate initial times
-  const initialPickupDate = parseDate(searchParams.get("pickupDate"));
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Helper function to get stored search params from localStorage
+  const getStoredSearchParams = useCallback(() => {
+    try {
+      const stored = localStorage.getItem("searchParams");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  }, []);
 
-  const isPickupToday =
-    initialPickupDate &&
-    initialPickupDate.toDateString() === today.toDateString();
+  // Helper function to store search params in localStorage
+  const storeSearchParams = useCallback((params) => {
+    try {
+      localStorage.setItem("searchParams", JSON.stringify(params));
+    } catch (error) {
+      console.error("Failed to store search params:", error);
+    }
+  }, []);
 
-  const initialPickupTime =
-    searchParams.get("pickupTime") ||
-    (isPickupToday ? getNext30MinBlock() : "08:00");
+  // Check if current URL has search params
+  const hasUrlParams = useMemo(() => {
+    return !!(
+      searchParams.get("pickupDate") ||
+      searchParams.get("pickupTime") ||
+      searchParams.get("dropoffDate") ||
+      searchParams.get("dropoffTime") ||
+      searchParams.get("location")
+    );
+  }, [searchParams]);
 
-  const initialDropoffDate =
-    parseDate(searchParams.get("dropoffDate")) || initialPickupDate;
-  const isSameDay =
-    initialPickupDate &&
-    initialDropoffDate &&
-    initialPickupDate.toDateString() === initialDropoffDate.toDateString();
+  // Get initial data - prioritize URL params, then stored params, then defaults
+  const getInitialSearchData = useCallback(() => {
+    let pickupDate, dropoffDate, pickupTime, dropoffTime, location;
 
-  const initialDropoffTime =
-    searchParams.get("dropoffTime") ||
-    (isSameDay ? add30Minutes(initialPickupTime) : "20:00");
+    if (hasUrlParams) {
+      // URL has params - use them and store them
+      pickupDate = parseDate(searchParams.get("pickupDate"));
+      dropoffDate = parseDate(searchParams.get("dropoffDate"));
+      pickupTime = searchParams.get("pickupTime");
+      dropoffTime = searchParams.get("dropoffTime");
+      location = searchParams.get("location");
+    } else {
+      // No URL params - try to load from localStorage
+      const stored = getStoredSearchParams();
+      if (stored) {
+        pickupDate = parseDate(stored.pickupDate);
+        dropoffDate = parseDate(stored.dropoffDate);
+        pickupTime = stored.pickupTime;
+        dropoffTime = stored.dropoffTime;
+        location = stored.location;
+      }
+    }
 
-  const [searchData, setSearchData] = useState({
-    startDate: initialPickupDate,
-    endDate: initialDropoffDate,
-    startTime: initialPickupTime,
-    endTime: initialDropoffTime,
-    location: searchParams.get("location") || "Chikkamagaluru",
-  });
+    // Calculate defaults for missing values
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (!pickupDate) {
+      pickupDate = today;
+    }
+
+    const isPickupToday = pickupDate.toDateString() === today.toDateString();
+    if (!pickupTime) {
+      pickupTime = isPickupToday ? getNext30MinBlock() : "08:00";
+    }
+
+    if (!dropoffDate) {
+      dropoffDate = pickupDate;
+    }
+
+    const isSameDay = pickupDate.toDateString() === dropoffDate.toDateString();
+    if (!dropoffTime) {
+      dropoffTime = isSameDay ? add30Minutes(pickupTime) : "20:00";
+    }
+
+    if (!location) {
+      location = "Chikkamagaluru";
+    }
+
+    return {
+      startDate: pickupDate,
+      endDate: dropoffDate,
+      startTime: pickupTime,
+      endTime: dropoffTime,
+      location: location,
+    };
+  }, [searchParams, hasUrlParams, getStoredSearchParams]);
+
+  const [searchData, setSearchData] = useState(() => getInitialSearchData());
+
+  // Store search params whenever they change (if URL has params)
+  useEffect(() => {
+    if (hasUrlParams) {
+      const paramsToStore = {
+        pickupDate: searchParams.get("pickupDate"),
+        dropoffDate: searchParams.get("dropoffDate"),
+        pickupTime: searchParams.get("pickupTime"),
+        dropoffTime: searchParams.get("dropoffTime"),
+        location: searchParams.get("location"),
+      };
+      storeSearchParams(paramsToStore);
+    }
+  }, [hasUrlParams, searchParams, storeSearchParams]);
+
+  // Auto-populate URL from stored params if visiting without params
+  useEffect(() => {
+    if (!hasUrlParams) {
+      const stored = getStoredSearchParams();
+      if (stored && (stored.pickupDate || stored.pickupTime || stored.dropoffDate || stored.dropoffTime || stored.location)) {
+        // Build URL with stored params
+        const urlParams = new URLSearchParams();
+        if (stored.pickupDate) urlParams.set("pickupDate", stored.pickupDate);
+        if (stored.dropoffDate) urlParams.set("dropoffDate", stored.dropoffDate);
+        if (stored.pickupTime) urlParams.set("pickupTime", stored.pickupTime);
+        if (stored.dropoffTime) urlParams.set("dropoffTime", stored.dropoffTime);
+        if (stored.location) urlParams.set("location", stored.location);
+        
+        // Update URL without triggering a page reload
+        const newUrl = `/search?${urlParams.toString()}`;
+        router.replace(newUrl);
+      }
+    }
+  }, [hasUrlParams, getStoredSearchParams, router]);
 
   // Calculate extra charges based on time
   const calculateExtraCharges = useCallback((time, type) => {
@@ -403,7 +495,7 @@ function SearchPageContent() {
 
         if (!token) {
           // Store the pending action and show login modal
-          setPendingCartAction({ bikeId, quantity });
+          setPendingCartAction({ bikeId, quantity, actionType: 'addToCart' });
           setShowLoginModal(true);
           return;
         }
@@ -451,10 +543,8 @@ function SearchPageContent() {
 
         // Handle specific error cases
         if (error.response?.status === 401) {
-          // Token expired or invalid
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
-          setPendingCartAction({ bikeId, quantity });
+          // Token expired or invalid - global handler will clear tokens and redirect
+          setPendingCartAction({ bikeId, quantity, actionType: 'addToCart' });
           setShowLoginModal(true);
           return;
         }
@@ -468,6 +558,142 @@ function SearchPageContent() {
       }
     },
     [bikeSelections, searchData]
+  );
+
+  const bookNow = useCallback(
+    async (bikeId, quantity = 1) => {
+      try {
+        setCartLoading(true);
+        
+        // Debug logging
+        console.log("🚀 Book Now clicked:", { bikeId, quantity });
+        console.log("🔍 Available bikes:", bikes.map(b => ({ id: b._id, title: b.title })));
+        console.log("⚙️ Bike selections:", bikeSelections);
+        console.log("📅 Search data:", searchData);
+
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          // Store the pending action and show login modal
+          setPendingCartAction({ bikeId, quantity, actionType: 'bookNow' });
+          setShowLoginModal(true);
+          return;
+        }
+
+        // Find the bike to get pricing options
+        const bike = bikes.find(b => b._id === bikeId);
+        if (!bike) {
+          throw new Error("Bike not found");
+        }
+
+        let selection = bikeSelections[bikeId];
+        
+        // If no selection exists, use the first available pricing option
+        if (!selection) {
+          const pricingOptions = getPricingOptions(bike);
+          if (pricingOptions.length > 0) {
+            selection = pricingOptions[0];
+            console.log("🔧 Using default selection:", selection);
+          } else {
+            throw new Error("No pricing options available for this bike");
+          }
+        }
+
+        // Validate required fields
+        if (!searchData.startDate || !searchData.endDate) {
+          throw new Error("Please select pickup and dropoff dates");
+        }
+
+        if (!searchData.startTime || !searchData.endTime) {
+          throw new Error("Please select pickup and dropoff times");
+        }
+
+        // Validate all required fields before creating payload
+        const formattedStartDate = formatDateForAPI(searchData.startDate);
+        const formattedEndDate = formatDateForAPI(searchData.endDate);
+
+        if (!bikeId) {
+          throw new Error("Bike ID is missing");
+        }
+
+        if (!formattedStartDate || !formattedEndDate) {
+          throw new Error("Invalid dates provided");
+        }
+
+        if (!selection.type) {
+          throw new Error("Invalid pricing option selected");
+        }
+
+        const payload = {
+          bikeId: String(bikeId), // Ensure it's a string
+          quantity: Number(quantity), // Ensure it's a number
+          kmOption: String(selection.type),
+          startDate: formattedStartDate,
+          endDate: formattedEndDate,
+          startTime: String(searchData.startTime),
+          endTime: String(searchData.endTime),
+        };
+
+        // Validate payload doesn't contain undefined values
+        Object.keys(payload).forEach(key => {
+          if (payload[key] === undefined || payload[key] === null || payload[key] === '') {
+            throw new Error(`Missing required field: ${key}`);
+          }
+        });
+
+        console.log("📦 Validated payload being sent:", payload);
+
+        const response = await apiService.addToCart(payload);
+
+        if (response.success) {
+          // Update cart state
+          setCart(response.data);
+          const totalItems =
+            response.data.items?.reduce(
+              (sum, item) => sum + item.quantity,
+              0
+            ) || 0;
+          setCart((prev) => ({ ...prev, totalItems }));
+
+          // Reset quantity for this bike
+          setQuantities((prev) => ({ ...prev, [bikeId]: 1 }));
+
+          // Show success message
+          toast.success(
+            "Booking confirmed!",
+            response.message || "Item added successfully"
+          );
+
+          // Redirect to cart page
+          router.push(`/cart?${new URLSearchParams({
+            startDate: formatDateForAPI(searchData.startDate) || "",
+            endDate: formatDateForAPI(searchData.endDate) || "",
+            startTime: searchData.startTime || "",
+            endTime: searchData.endTime || "",
+          }).toString()}`);
+        } else {
+          throw new Error(response.message || "Failed to add to cart");
+        }
+      } catch (error) {
+        console.error("❌ Book now error:", error);
+
+        // Handle specific error cases
+        if (error.response?.status === 401) {
+          // Token expired or invalid - global handler will clear tokens and redirect
+          setPendingCartAction({ bikeId, quantity, actionType: 'bookNow' });
+          setShowLoginModal(true);
+          return;
+        }
+
+        toast.error(
+          "Booking failed",
+          error.response?.data?.message || error.message || "Please try again"
+        );
+      } finally {
+        setCartLoading(false);
+      }
+    },
+    [bikeSelections, searchData, router, bikes]
   );
 
   const updateQuantity = useCallback(
@@ -491,15 +717,19 @@ function SearchPageContent() {
 
     // Execute pending cart action if exists
     if (pendingCartAction) {
-      const { bikeId, quantity } = pendingCartAction;
+      const { bikeId, quantity, actionType } = pendingCartAction;
       setPendingCartAction(null);
 
       // Add a small delay to ensure token is properly set
       setTimeout(() => {
-        addToCart(bikeId, quantity);
+        if (actionType === 'bookNow') {
+          bookNow(bikeId, quantity);
+        } else {
+          addToCart(bikeId, quantity);
+        }
       }, 100);
     }
-  }, [pendingCartAction, addToCart, loadCart]);
+  }, [pendingCartAction, addToCart, bookNow, loadCart]);
   const handleLoginModalClose = useCallback(() => {
     setShowLoginModal(false);
     setPendingCartAction(null);
@@ -682,7 +912,7 @@ function SearchPageContent() {
   }, [bikes, bikeSelections, filters.sortBy]);
 
   // Event handlers
-  const handleBackClick = () => router.back();
+  const handleBackClick = () => router.push("/");
 
   const applyFilters = () => {
     setMobileFiltersOpen(false);
@@ -1334,13 +1564,14 @@ function SearchPageContent() {
                             </div>
                           </div>
 
-                          {/* Quantity Selector */}
+                          {/* Quantity Selector and Add to Cart - Same Row */}
                           {bike.isAvailable && bike.availableQuantity > 0 && (
                             <div className="mb-3">
-                              <div className="flex items-center justify-center px-2">
-                                <div className="flex items-center bg-gradient-to-r from-gray-100 to-gray-200 rounded-3xl p-1 sm:p-2 shadow-inner max-w-full">
+                              <div className="flex items-center justify-between gap-2 px-2">
+                                {/* Quantity Controls - Left Side - Compact */}
+                                <div className="flex items-center bg-gradient-to-r from-gray-100 to-gray-200 rounded-full p-1 shadow-inner">
                                   <button
-                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-white shadow-lg flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-400 touch-manipulation"
+                                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white shadow flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-400 touch-manipulation"
                                     onClick={() =>
                                       updateQuantity(
                                         bike._id,
@@ -1351,15 +1582,15 @@ function SearchPageContent() {
                                       (quantities[bike._id] || 1) <= 1
                                     }
                                   >
-                                    <Minus className="w-4 h-4" />
+                                    <Minus className="w-3 h-3" />
                                   </button>
-                                  <div className="px-3 sm:px-6 py-2 text-center min-w-[3rem]">
-                                    <div className="text-lg sm:text-xl font-black text-gray-900">
+                                  <div className="px-2 sm:px-3 py-1 text-center min-w-[1.5rem] sm:min-w-[2rem]">
+                                    <div className="text-sm sm:text-base font-bold text-gray-900">
                                       {quantities[bike._id] || 1}
                                     </div>
                                   </div>
                                   <button
-                                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-white shadow-lg flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-400 touch-manipulation"
+                                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white shadow flex items-center justify-center hover:bg-orange-50 hover:text-orange-600 transition-all duration-200 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-gray-400 touch-manipulation"
                                     onClick={() =>
                                       updateQuantity(
                                         bike._id,
@@ -1371,14 +1602,39 @@ function SearchPageContent() {
                                       bike.availableQuantity
                                     }
                                   >
-                                    <Plus className="w-4 h-4" />
+                                    <Plus className="w-3 h-3" />
                                   </button>
                                 </div>
+                                
+                                {/* Add to Cart Button - Right Side - Secondary Style */}
+                                <Button
+                                  variant="outline"
+                                  className="border-[#F47B20] text-[#F47B20] hover:bg-[#F47B20] hover:text-white font-semibold text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg transition-all duration-300 flex-shrink-0 h-8 sm:h-9"
+                                  onClick={() =>
+                                    addToCart(
+                                      bike._id,
+                                      quantities[bike._id] || 1
+                                    )
+                                  }
+                                  disabled={cartLoading}
+                                >
+                                  {cartLoading ? (
+                                    <>
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ShoppingCart className="w-3 h-3 mr-1" />
+                                      <span className="hidden xs:inline">Add to Cart</span>
+                                      <span className="xs:hidden">Add to Cart</span>
+                                    </>
+                                  )}
+                                </Button>
                               </div>
                             </div>
                           )}
 
-                          {/* Price and Add to Cart Button - Same Row - Subtle Background */}
+                          {/* Price and Book Now Button - Same Row */}
                           {bike.isAvailable && bike.availableQuantity > 0 ? (
                             <div className="bg-gray-50 border-t border-gray-200 p-3 px-4 rounded-lg flex items-center justify-between">
                               {/* Price Display */}
@@ -1391,11 +1647,11 @@ function SearchPageContent() {
                                 </div>
                               </div>
                               
-                              {/* Add to Cart Button */}
+                              {/* Book Now Button - Primary Style */}
                               <Button
-                                className="bg-[#F47B20] text-white hover:bg-[#E06A0F] font-black text-sm sm:text-base px-4 sm:px-6 py-2 sm:py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-0"
+                                className="bg-[#F47B20] text-white hover:bg-[#E06A0F] font-black text-sm sm:text-base px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-0 transform hover:scale-105"
                                 onClick={() =>
-                                  addToCart(
+                                  bookNow(
                                     bike._id,
                                     quantities[bike._id] || 1
                                   )
@@ -1405,11 +1661,12 @@ function SearchPageContent() {
                                 {cartLoading ? (
                                   <>
                                     <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                                    <span className="hidden sm:inline">Adding...</span>
+                                    <span className="hidden sm:inline">Booking...</span>
+                                    <span className="sm:hidden">...</span>
                                   </>
                                 ) : (
                                   <>
-                                    <span>Add to Cart</span>
+                                    <span>Book Now</span>
                                   </>
                                 )}
                               </Button>
@@ -1425,40 +1682,6 @@ function SearchPageContent() {
                               </Button>
                             </div>
                           )}
-
-                          {/* Go to Cart Button - Show when cart has items */}
-                          {/* {cart.totalItems > 0 && bike.isAvailable && bike.availableQuantity > 0 && (
-                            <div className="mt-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                asChild
-                                className="w-full border-[#F47B20] text-[#F47B20] hover:bg-[#F47B20] hover:text-white font-semibold py-2 transition-all duration-200 relative"
-                              >
-                                <Link
-                                  href={`/cart?${new URLSearchParams({
-                                    startDate:
-                                      formatDateForAPI(
-                                        searchData.startDate
-                                      ) || "",
-                                    endDate:
-                                      formatDateForAPI(
-                                        searchData.endDate
-                                      ) || "",
-                                    startTime: searchData.startTime || "",
-                                    endTime: searchData.endTime || "",
-                                  }).toString()}`}
-                                  className="flex items-center gap-2 justify-center"
-                                >
-                                  <ShoppingCart className="w-4 h-4" />
-                                  <span className="text-sm font-bold">
-                                    GO TO CART ({cart.totalItems})
-                                  </span>
-                                  <ArrowRight className="w-4 h-4" />
-                                </Link>
-                              </Button>
-                            </div>
-                          )} */}
                         </div>
                       </CardContent>
                     </Card>
