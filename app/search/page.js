@@ -1507,7 +1507,7 @@ function SearchPageContent() {
                               <span className="text-sm font-bold text-gray-700">
                                 {bike.availableQuantity > 0
                                   ? `${bike.availableQuantity} available`
-                                  : "Out of stock"}
+                                  : "Sold Out"}
                               </span>
                             </div>
                           </div>
