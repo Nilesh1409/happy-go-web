@@ -219,7 +219,7 @@ export default function PaymentPage() {
       }
 
       const { id: orderId, amount, currency } = orderResponse.data;
-      const userData = JSON.parse(localStorage.getItem("user") || "{}");
+      const userData = apiService.safeLocalStorageGet("user", {});
 
       // Validate Razorpay key
       if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {

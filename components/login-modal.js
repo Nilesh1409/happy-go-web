@@ -168,7 +168,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
   
       // Store token and user data
       localStorage.setItem("token", response.token);
-      localStorage.setItem("user", JSON.stringify(response.data));
+      apiService.safeLocalStorageSet("user", response.data);
   
       // Call success callback immediately without page refresh
       if (onLoginSuccess) {
@@ -258,7 +258,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, proceedWit
 
       // Store token and user data
       localStorage.setItem("token", response.token);
-      localStorage.setItem("user", JSON.stringify(response.data));
+      apiService.safeLocalStorageSet("user", response.data);
 
       setStep("success");
     } catch (error) {

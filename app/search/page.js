@@ -219,21 +219,12 @@ function SearchPageContent() {
 
   // Helper function to get stored search params from localStorage
   const getStoredSearchParams = useCallback(() => {
-    try {
-      const stored = localStorage.getItem("searchParams");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
+    return apiService.safeLocalStorageGet("searchParams");
   }, []);
 
   // Helper function to store search params in localStorage
   const storeSearchParams = useCallback((params) => {
-    try {
-      localStorage.setItem("searchParams", JSON.stringify(params));
-    } catch (error) {
-      console.error("Failed to store search params:", error);
-    }
+    apiService.safeLocalStorageSet("searchParams", params);
   }, []);
 
   // Check if current URL has search params
@@ -464,7 +455,13 @@ function SearchPageContent() {
   const loadCart = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) return;
+      const user = apiService.safeLocalStorageGet("user");
+      
+      // Only fetch cart if user is logged in
+      if (!token || !user) {
+        setCart({ items: [], totalItems: 0 });
+        return;
+      }
 
       const params = {
         startDate: formatDateForAPI(searchData.startDate),
@@ -484,6 +481,8 @@ function SearchPageContent() {
       }
     } catch (error) {
       console.error("Failed to load cart:", error);
+      // Reset cart on error
+      setCart({ items: [], totalItems: 0 });
     }
   }, [searchData]);
 
@@ -712,7 +711,7 @@ function SearchPageContent() {
   const handleLoginSuccess = useCallback(async () => {
     setShowLoginModal(false);
 
-    // Reload cart after login
+    // Reload cart after login (now that user is authenticated)
     await loadCart();
 
     // Execute pending cart action if exists

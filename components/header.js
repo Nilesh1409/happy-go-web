@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Phone, Mail, Menu, X, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { apiService } from "@/lib/api";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -12,15 +13,17 @@ export default function Header() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (userData) setUser(JSON.parse(userData));
+    // Safe user data loading
+    const userData = apiService.safeLocalStorageGet("user");
+    if (userData) {
+      setUser(userData);
+    }
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    // Use the safe logout method from API service
+    apiService.logoutAndRedirect();
     setUser(null);
-    window.location.href = "/";
   };
 
   const handleWhatsAppClick = () => {
