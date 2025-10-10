@@ -102,7 +102,7 @@ function BookingSummaryPageContent() {
         ? bike.pricePerDay.limitedKm?.price
         : bike.pricePerDay.unlimited?.price;
     const subtotal = basePrice * days;
-    const taxes = Math.round(subtotal * 0.18); // 18% tax
+    const taxes = Math.round(subtotal * 0.05); // 5% tax
     const total = subtotal + taxes;
 
     return {
@@ -314,7 +314,7 @@ function BookingSummaryPageContent() {
                     <span className="font-medium">₹0.00</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Taxes (18%)</span>
+                    <span className="text-gray-600">Taxes (5%)</span>
                     <span className="font-medium">₹{pricing.taxes}.00</span>
                   </div>
                   <hr className="my-2" />

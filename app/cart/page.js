@@ -656,7 +656,7 @@ function CartPageContent() {
                   <Separator />
 
                   <div className="flex justify-between">
-                    <span>GST (18%):</span>
+                    <span>GST (5%):</span>
                     <span>₹{cart.pricing.gst.toLocaleString()}</span>
                   </div>
 
