@@ -248,7 +248,15 @@ export default function BookingConfirmedPage() {
     : "-";
 
   const isPaymentCompleted = booking?.paymentStatus === "completed";
+  const isPaymentPartial = booking?.paymentStatus === "partial";
   const isBookingConfirmed = booking?.bookingStatus === "confirmed";
+  
+  // Payment details
+  const paymentDetails = booking?.paymentDetails || {};
+  const totalAmount = priceDetails?.totalAmount || 0;
+  const paidAmount = paymentDetails?.paidAmount || 0;
+  const remainingAmount = paymentDetails?.remainingAmount || 0;
+  const partialPaymentPercentage = paymentDetails?.partialPaymentPercentage || 25;
 
   if (loading) {
     return (
@@ -305,12 +313,12 @@ export default function BookingConfirmedPage() {
       <Header />
 
       {/* Mobile-First Header */}
-      <div className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+      <div className={`${isPaymentCompleted ? "bg-gradient-to-r from-green-500 to-green-600" : isPaymentPartial ? "bg-gradient-to-r from-blue-500 to-blue-600" : "bg-gradient-to-r from-orange-500 to-orange-600"} text-white`}>
         <div className="px-4 sm:px-6 lg:px-8 lg:max-w-4xl lg:mx-auto">
           <div className="flex items-center h-14 sm:h-16">
             <Link
               href="/"
-              className="flex items-center mr-3 sm:mr-4 hover:text-green-200 transition-colors p-1"
+              className="flex items-center mr-3 sm:mr-4 hover:opacity-80 transition-opacity p-1"
             >
               <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 mr-1 sm:mr-2" />
               <span className="text-sm sm:text-base">Home</span>
@@ -319,7 +327,12 @@ export default function BookingConfirmedPage() {
             <div className="flex items-center space-x-1 sm:space-x-2">
               {isPaymentCompleted && (
                 <Badge className="bg-white text-green-600 hover:bg-gray-100 text-xs">
-                  Paid
+                  Fully Paid
+                </Badge>
+              )}
+              {isPaymentPartial && (
+                <Badge className="bg-white text-blue-600 hover:bg-gray-100 text-xs">
+                  Partially Paid
                 </Badge>
               )}
               {isBookingConfirmed && (
@@ -335,17 +348,62 @@ export default function BookingConfirmedPage() {
       <div className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:max-w-4xl lg:mx-auto">
         {/* Success Banner - Mobile Optimized */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 animate-pulse">
+          <div className={`w-16 h-16 sm:w-20 sm:h-20 ${isPaymentCompleted ? "bg-green-500" : isPaymentPartial ? "bg-blue-500" : "bg-orange-500"} rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 animate-pulse`}>
             <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-green-600 mb-2">
-            🎉 Booking Confirmed!
+          <h2 className={`text-2xl sm:text-3xl font-bold ${isPaymentCompleted ? "text-green-600" : isPaymentPartial ? "text-blue-600" : "text-orange-600"} mb-2`}>
+            {isPaymentCompleted ? "🎉 Booking Confirmed!" : isPaymentPartial ? "✅ Booking Reserved!" : "📝 Booking Created!"}
           </h2>
           <p className="text-gray-600 text-base sm:text-lg px-4">
-            Your booking has been confirmed successfully. Get ready for your
-            ride!
+            {isPaymentCompleted 
+              ? "Your booking has been confirmed successfully. Get ready for your ride!"
+              : isPaymentPartial
+              ? "Your booking is reserved with 25% advance payment. Complete remaining payment before pickup."
+              : "Your booking is created. Complete payment to confirm your booking."}
           </p>
         </div>
+        
+        {/* Payment Status Alert */}
+        {isPaymentPartial && (
+          <Card className="mb-6 border-2 border-blue-500 bg-blue-50">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-start space-x-3">
+                <Info className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 mb-2 text-sm sm:text-base">
+                    Remaining Payment Required
+                  </h3>
+                  <div className="space-y-2 text-xs sm:text-sm text-blue-800">
+                    <div className="flex justify-between items-center">
+                      <span>Total Amount:</span>
+                      <span className="font-semibold">{formatCurrency(totalAmount)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Paid ({partialPaymentPercentage}%):</span>
+                      <span className="font-semibold text-green-600">{formatCurrency(paidAmount)}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-t border-blue-200">
+                      <span className="font-bold">Remaining ({100 - partialPaymentPercentage}%):</span>
+                      <span className="font-bold text-blue-900 text-base sm:text-lg">{formatCurrency(remainingAmount)}</span>
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white h-10 sm:h-12 text-sm sm:text-base font-semibold"
+                    asChild
+                  >
+                    <Link href={`/payment/${booking._id}`}>
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Pay Remaining {formatCurrency(remainingAmount)}
+                    </Link>
+                  </Button>
+                  <p className="text-xs text-blue-700 text-center mt-2">
+                    💡 Pay remaining amount anytime before your booking date
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Booking Card - Mobile First */}
         <Card className="mb-4 sm:mb-6 shadow-xl border-2 border-green-200">
@@ -827,6 +885,17 @@ export default function BookingConfirmedPage() {
 
         {/* Action Buttons - Mobile Optimized */}
         <div className="space-y-3">
+          {isPaymentPartial && (
+            <Button
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white h-12 sm:h-14 text-base sm:text-lg font-semibold"
+              asChild
+            >
+              <Link href={`/payment/${booking._id}`}>
+                <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                Complete Remaining Payment
+              </Link>
+            </Button>
+          )}
           <Button
             className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white h-12 sm:h-14 text-base sm:text-lg font-semibold"
             asChild

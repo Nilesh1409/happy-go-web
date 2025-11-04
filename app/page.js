@@ -712,7 +712,7 @@ export default function HomePage() {
       <Footer />
 
       {/* Bottom Navigation for Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden z-40">
+      {/* <div className="fixed bottom-0 left-0 right-0 bg-white border-t md:hidden z-40">
         <div className="grid grid-cols-5 py-2">
           <Link
             href="/"
@@ -750,7 +750,8 @@ export default function HomePage() {
             <span className="text-xs mt-1">Profile</span>
           </Link>
         </div>
-      </div>
+      </div> */}
+      <Footer />
     </div>
   );
 }

@@ -22,7 +22,7 @@ import {
 import { apiService } from "@/lib/api";
 import { toast } from "@/lib/toast";
 
-export default function PaymentPage() {
+export default function HostelPaymentPage() {
   const params = useParams();
   const router = useRouter();
   
@@ -349,9 +349,9 @@ export default function PaymentPage() {
               </p>
               <Button
                 className="bg-[#F47B20] hover:bg-[#E06A0F]"
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/hostels")}
               >
-                Back to Home
+                Back to Search
               </Button>
             </CardContent>
           </Card>
@@ -388,7 +388,7 @@ export default function PaymentPage() {
               <p>
                 Payment already completed. You can view your booking details{" "}
                 <a
-                  href={`/bookings`}
+                  href={`/booking/confirmed/${booking._id}`}
                   className="underline font-semibold"
                 >
                   here
@@ -875,3 +875,4 @@ export default function PaymentPage() {
     </div>
   );
 }
+
