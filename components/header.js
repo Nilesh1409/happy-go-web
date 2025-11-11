@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Phone, Mail, Menu, X, User } from "lucide-react";
 import Image from "next/image";
@@ -8,6 +9,7 @@ import Link from "next/link";
 import { apiService } from "@/lib/api";
 
 export default function Header() {
+  const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -19,6 +21,17 @@ export default function Header() {
       setUser(userData);
     }
   }, []);
+
+  // Helper function to check if link is active
+  const isActive = (path) => {
+    if (path === "/") {
+      return pathname === "/" || pathname?.startsWith("/search") || pathname?.startsWith("/bike");
+    }
+    if (path === "/hostels") {
+      return pathname?.startsWith("/hostels");
+    }
+    return pathname?.startsWith(path);
+  };
 
   const handleLogout = () => {
     // Use the safe logout method from API service
@@ -106,31 +119,51 @@ export default function Header() {
             <nav className="hidden lg:flex items-center space-x-6 xl:space-x-8">
               <Link
                 href="/"
-                className="text-[#F47B20] font-medium hover:text-[#E06A0F] transition-colors whitespace-nowrap"
+                className={`font-medium transition-colors whitespace-nowrap ${
+                  isActive("/") 
+                    ? "text-[#F47B20] font-semibold" 
+                    : "text-gray-600 hover:text-[#F47B20]"
+                }`}
               >
                 Bike Rental
               </Link>
               <Link
                 href="/products"
-                className="text-gray-600 hover:text-[#F47B20] transition-colors whitespace-nowrap"
+                className={`transition-colors whitespace-nowrap ${
+                  isActive("/products") 
+                    ? "text-[#F47B20] font-semibold" 
+                    : "text-gray-600 hover:text-[#F47B20]"
+                }`}
               >
                 Products
               </Link>
               <Link
                 href="/hostels"
-                className="text-gray-600 hover:text-[#F47B20] transition-colors whitespace-nowrap"
+                className={`transition-colors whitespace-nowrap ${
+                  isActive("/hostels") 
+                    ? "text-[#F47B20] font-semibold" 
+                    : "text-gray-600 hover:text-[#F47B20]"
+                }`}
               >
                 Hostels
               </Link>
               <Link
                 href="/refer-earn"
-                className="text-gray-600 hover:text-[#F47B20] transition-colors whitespace-nowrap"
+                className={`transition-colors whitespace-nowrap ${
+                  isActive("/refer-earn") 
+                    ? "text-[#F47B20] font-semibold" 
+                    : "text-gray-600 hover:text-[#F47B20]"
+                }`}
               >
                 Refer & Earn
               </Link>
               <Link
                 href="/about"
-                className="text-gray-600 hover:text-[#F47B20] transition-colors whitespace-nowrap"
+                className={`transition-colors whitespace-nowrap ${
+                  isActive("/about") 
+                    ? "text-[#F47B20] font-semibold" 
+                    : "text-gray-600 hover:text-[#F47B20]"
+                }`}
               >
                 About
               </Link>
@@ -275,35 +308,55 @@ export default function Header() {
             <div className="space-y-1 mb-4">
               <Link
                 href="/"
-                className="block py-3 px-2 text-[#F47B20] font-medium rounded-lg hover:bg-orange-50 transition-colors"
+                className={`block py-3 px-2 rounded-lg transition-colors ${
+                  isActive("/") 
+                    ? "text-[#F47B20] font-semibold bg-orange-50" 
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Bike Rental
               </Link>
               <Link
                 href="/products"
-                className="block py-3 px-2 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className={`block py-3 px-2 rounded-lg transition-colors ${
+                  isActive("/products") 
+                    ? "text-[#F47B20] font-semibold bg-orange-50" 
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Products
               </Link>
               <Link
                 href="/hostels"
-                className="block py-3 px-2 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className={`block py-3 px-2 rounded-lg transition-colors ${
+                  isActive("/hostels") 
+                    ? "text-[#F47B20] font-semibold bg-orange-50" 
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Hostels
               </Link>
               <Link
                 href="/refer-earn"
-                className="block py-3 px-2 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className={`block py-3 px-2 rounded-lg transition-colors ${
+                  isActive("/refer-earn") 
+                    ? "text-[#F47B20] font-semibold bg-orange-50" 
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Refer & Earn
               </Link>
               <Link
                 href="/about"
-                className="block py-3 px-2 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className={`block py-3 px-2 rounded-lg transition-colors ${
+                  isActive("/about") 
+                    ? "text-[#F47B20] font-semibold bg-orange-50" 
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 About

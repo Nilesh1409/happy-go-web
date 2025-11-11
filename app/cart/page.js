@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   Gift,
   Loader2,
+  BedDouble,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -82,11 +83,9 @@ function CartPageContent() {
     try {
       setLoading(true);
 
-      // Get search parameters for cart loading
-      const params = getSearchParams();
-      console.log("🛒 Cart Load - Sending to API:", params);
-
-      const response = await apiService.getCart(params);
+      // Backend now returns the most recently updated active cart automatically
+      // No need to send query parameters
+      const response = await apiService.getCart();
       setCart(response.data);
       setHelmetQuantity(response.data?.helmetDetails?.quantity || 0);
     } catch (error) {
@@ -134,18 +133,18 @@ function CartPageContent() {
 
       const params = {
         quantity: newQuantity,
-        startDate: formatCartDate(cart?.startDate),
-        endDate: formatCartDate(cart?.endDate),
-        startTime: cart?.startTime || "",
-        endTime: cart?.endTime || "",
+        startDate: formatCartDate(cart?.bikeDates?.startDate),
+        endDate: formatCartDate(cart?.bikeDates?.endDate),
+        startTime: cart?.bikeDates?.startTime || "",
+        endTime: cart?.bikeDates?.endTime || "",
       };
 
       console.log("🪖 Helmet Update - Using Cart Data:", {
         cartDates: {
-          startDate: cart?.startDate,
-          endDate: cart?.endDate,
-          startTime: cart?.startTime,
-          endTime: cart?.endTime,
+          startDate: cart?.bikeDates?.startDate,
+          endDate: cart?.bikeDates?.endDate,
+          startTime: cart?.bikeDates?.startTime,
+          endTime: cart?.bikeDates?.endTime,
         },
         urlParams: {
           startDate: searchParams.get("startDate"),
@@ -194,18 +193,21 @@ function CartPageContent() {
         return;
       }
 
-      // Validate cart has items
-      if (!cart || !cart.items || cart.items.length === 0) {
+      // Validate cart has items (check both bikeItems and hostelItems)
+      const bikeItems = cart.bikeItems || [];
+      const hostelItems = cart.hostelItems || [];
+      
+      if (!cart || (bikeItems.length === 0 && hostelItems.length === 0)) {
         setError("Your cart is empty");
         return;
       }
 
-      // Validate required booking fields
+      // Validate required booking fields (from bikeDates)
       if (
-        !cart.startDate ||
-        !cart.endDate ||
-        !cart.startTime ||
-        !cart.endTime
+        !cart.bikeDates?.startDate ||
+        !cart.bikeDates?.endDate ||
+        !cart.bikeDates?.startTime ||
+        !cart.bikeDates?.endTime
       ) {
         setError(
           "Missing booking dates or times. Please refresh and try again."
@@ -232,17 +234,17 @@ function CartPageContent() {
       // Prepare booking data according to API documentation
       const bookingData = {
         bookingType: "bike",
-        bikeItems: cart.items.map((item) => ({
+        bikeItems: bikeItems.map((item) => ({
           bike: item.bike.id || item.bike._id,
           quantity: item.quantity,
           kmOption: item.kmOption,
           pricePerUnit: item.pricePerUnit,
           totalPrice: item.totalPrice,
         })),
-        startDate: formatDate(cart.startDate),
-        endDate: formatDate(cart.endDate),
-        startTime: cart.startTime,
-        endTime: cart.endTime,
+        startDate: formatDate(cart.bikeDates.startDate),
+        endDate: formatDate(cart.bikeDates.endDate),
+        startTime: cart.bikeDates.startTime,
+        endTime: cart.bikeDates.endTime,
         helmetQuantity: cart.helmetDetails?.quantity || 0,
         priceDetails: {
           basePrice: cart.pricing.subtotal - (cart.helmetDetails?.charges || 0),
@@ -311,7 +313,11 @@ function CartPageContent() {
     );
   }
 
-  if (!cart || !cart.items || cart.items.length === 0) {
+  const bikeItems = cart?.bikeItems || [];
+  const hostelItems = cart?.hostelItems || [];
+  const hasItems = bikeItems.length > 0 || hostelItems.length > 0;
+
+  if (!cart || !hasItems) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
@@ -378,7 +384,7 @@ function CartPageContent() {
             <div className="flex items-center">
               <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-[#F47B20]" />
               <span className="font-semibold text-gray-900 text-sm sm:text-base">
-                {cart.items.reduce((sum, item) => sum + item.quantity, 0)} Items
+                {bikeItems.reduce((sum, item) => sum + item.quantity, 0)} Items
                 <span className="hidden sm:inline"> in Cart</span>
               </span>
             </div>
@@ -401,11 +407,11 @@ function CartPageContent() {
               <CardHeader className="pb-3 sm:pb-6">
                 <CardTitle className="text-base sm:text-lg text-[#F47B20] flex items-center">
                   <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                  Your Bikes ({cart.items.length})
+                  Your Bikes ({bikeItems.length})
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {cart.items.map((item) => (
+                {bikeItems.map((item) => (
                   <div key={item._id} className="border rounded-lg p-3">
                     <div className="flex gap-3">
                       {/* Bike Image */}
@@ -519,6 +525,129 @@ function CartPageContent() {
                 ))}
               </CardContent>
             </Card>
+
+            {/* Promotional Banner - Book Hostel with Bike */}
+            {bikeItems.length > 0 && hostelItems.length === 0 && (
+              <Card className="shadow-lg border-2 border-[#F47B20] bg-gradient-to-r from-orange-50 to-amber-50 cursor-pointer hover:shadow-xl transition-all duration-300"
+                onClick={() => {
+                  // Get bike dates from cart
+                  const startDate = cart.bikeDates?.startDate;
+                  const endDate = cart.bikeDates?.endDate;
+                  
+                  if (startDate && endDate) {
+                    // Format dates to YYYY-MM-DD (remove time if present)
+                    const formatDateOnly = (dateString) => {
+                      if (!dateString) return "";
+                      // Handle both "YYYY-MM-DD" and ISO format "YYYY-MM-DDTHH:mm:ss"
+                      return dateString.split("T")[0];
+                    };
+                    
+                    // Add 1 day to bike drop date for hostel checkout
+                    const addOneDay = (dateString) => {
+                      const date = new Date(dateString);
+                      date.setDate(date.getDate() + 1);
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const day = String(date.getDate()).padStart(2, "0");
+                      return `${year}-${month}-${day}`;
+                    };
+                    
+                    const checkIn = formatDateOnly(startDate);
+                    const checkOut = addOneDay(endDate); // Bike drop date + 1 day
+                    
+                    // Navigate to hostel search with bike dates (date only, no time)
+                    router.push(`/hostels/search?location=Chikkamagaluru&checkIn=${checkIn}&checkOut=${checkOut}&people=1&stayType=hostel`);
+                  } else {
+                    // If no dates, just go to hostel home page
+                    router.push('/hostels');
+                  }
+                }}
+              >
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-4">
+                    {/* Icon Section */}
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#F47B20] rounded-full flex items-center justify-center">
+                        <BedDouble className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                      </div>
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-[#F47B20]" />
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                          Special Offer!
+                        </h3>
+                      </div>
+                      <p className="text-sm sm:text-base text-gray-700 mb-1">
+                        <span className="font-semibold text-[#F47B20]">Book Hostel & Bike Together</span> to get an extra <span className="font-bold text-[#F47B20]">10% discount</span> on total amount
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        Click here to explore hostels for your travel dates
+                      </p>
+                    </div>
+
+                    {/* Arrow Icon */}
+                    <div className="flex-shrink-0 hidden sm:block">
+                      <ArrowLeft className="w-6 h-6 text-[#F47B20] rotate-180" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Hostels Section */}
+            {hostelItems.length > 0 && (
+              <Card className="shadow-lg">
+                <CardHeader className="pb-3 sm:pb-6">
+                  <CardTitle className="text-base sm:text-lg text-[#F47B20] flex items-center">
+                    <BedDouble className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    Your Hostels ({hostelItems.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {hostelItems.map((item) => (
+                    <div key={item._id} className="border rounded-lg p-3">
+                      <div className="flex gap-3">
+                        {/* Hostel Image */}
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                          <Image
+                            src={item.hostel.images?.[0] || "/assets/happygo.jpeg"}
+                            alt={item.hostel.name}
+                            width={64}
+                            height={64}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Hostel Details */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-sm truncate">
+                            {item.hostel.name}
+                          </h3>
+                          <p className="text-xs text-gray-600">{item.roomType}</p>
+                          <p className="text-xs text-gray-500 mb-2">
+                            {item.mealOption === "bedOnly" ? "Bed Only" :
+                             item.mealOption === "bedAndBreakfast" ? "Bed & Breakfast" :
+                             "Bed + Breakfast + Dinner"}
+                          </p>
+
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs text-gray-600">
+                              {item.quantity} bed(s) × {item.numberOfNights} night(s)
+                            </div>
+                            <div className="font-semibold text-[#F47B20]">
+                              ₹{item.totalPrice?.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Helmet Section */}
             <Card className="shadow-lg">
@@ -683,7 +812,7 @@ function CartPageContent() {
                 <Button
                   className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white h-12 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={proceedToCheckout}
-                  disabled={loading || !cart?.items?.length}
+                  disabled={loading || !hasItems}
                 >
                   {loading ? (
                     <div className="flex items-center justify-center">
@@ -709,28 +838,60 @@ function CartPageContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Pickup:</span>
-                  <span className="font-medium text-right">
-                    {new Date(cart.startDate).toLocaleDateString()}
-                    <br />
-                    {cart.startTime}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Dropoff:</span>
-                  <span className="font-medium text-right">
-                    {new Date(cart.endDate).toLocaleDateString()}
-                    <br />
-                    {cart.endTime}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Bikes:</span>
-                  <span className="font-medium">
-                    {cart.items.reduce((sum, item) => sum + item.quantity, 0)}
-                  </span>
-                </div>
+                {/* Bike Dates */}
+                {bikeItems.length > 0 && cart.bikeDates?.startDate && (
+                  <>
+                    <div className="font-semibold text-[#F47B20] text-xs mb-2">BIKE RENTAL</div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Pickup:</span>
+                      <span className="font-medium text-right">
+                        {new Date(cart.bikeDates.startDate).toLocaleDateString()}
+                        <br />
+                        {cart.bikeDates.startTime}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Dropoff:</span>
+                      <span className="font-medium text-right">
+                        {new Date(cart.bikeDates.endDate).toLocaleDateString()}
+                        <br />
+                        {cart.bikeDates.endTime}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total Bikes:</span>
+                      <span className="font-medium">
+                        {bikeItems.reduce((sum, item) => sum + item.quantity, 0)}
+                      </span>
+                    </div>
+                  </>
+                )}
+                
+                {/* Hostel Dates */}
+                {hostelItems.length > 0 && cart.hostelDates?.checkIn && (
+                  <>
+                    {bikeItems.length > 0 && <div className="border-t pt-3 mt-3" />}
+                    <div className="font-semibold text-[#F47B20] text-xs mb-2">HOSTEL STAY</div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Check-in:</span>
+                      <span className="font-medium">
+                        {new Date(cart.hostelDates.checkIn).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Check-out:</span>
+                      <span className="font-medium">
+                        {new Date(cart.hostelDates.checkOut).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total Beds:</span>
+                      <span className="font-medium">
+                        {hostelItems.reduce((sum, item) => sum + item.quantity, 0)}
+                      </span>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>

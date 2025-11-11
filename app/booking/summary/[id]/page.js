@@ -154,8 +154,8 @@ function BookingSummaryPageContent() {
 
       const response = await apiService.createBooking(bookingData);
 
-      // Navigate to booking confirmation
-      window.location.href = `/booking/confirmed/${response.data._id}`;
+      // Navigate to payment page to select payment option (25% or 100%)
+      window.location.href = `/payment/${response.data._id}`;
     } catch (error) {
       setError(error.message || "Booking failed. Please try again.");
     } finally {

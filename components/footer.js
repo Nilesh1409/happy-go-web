@@ -110,9 +110,9 @@ export default function Footer() {
             <Calendar className="w-5 h-5" />
             <span className="text-xs mt-1">Bookings</span>
           </Link>
-          <Link href="/products" className="flex flex-col items-center py-2 text-gray-600">
+          <Link href="/hostels" className="flex flex-col items-center py-2 text-gray-600">
             <Building2 className="w-5 h-5" />
-            <span className="text-xs mt-1">Products</span>
+            <span className="text-xs mt-1">Hostel</span>
           </Link>
           <Link href="/refer-earn" className="flex flex-col items-center py-2 text-gray-600">
             <Gift className="w-5 h-5" />

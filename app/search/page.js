@@ -463,14 +463,9 @@ function SearchPageContent() {
         return;
       }
 
-      const params = {
-        startDate: formatDateForAPI(searchData.startDate),
-        endDate: formatDateForAPI(searchData.endDate),
-        startTime: searchData.startTime,
-        endTime: searchData.endTime,
-      };
-
-      const response = await apiService.getCart(params);
+      // Backend now returns the most recently updated active cart automatically
+      // No need to send query parameters
+      const response = await apiService.getCart();
       if (response.success) {
         setCart(response.data);
         // Count total items in cart
