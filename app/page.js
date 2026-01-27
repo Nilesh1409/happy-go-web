@@ -622,7 +622,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             <Card className="text-center hover:shadow-lg transition-shadow">
               <CardContent className="p-6 sm:p-8">
                 <Bike className="w-12 h-12 sm:w-16 sm:h-16 text-[#F47B20] mx-auto mb-4" />
@@ -648,33 +648,16 @@ export default function HomePage() {
                   Comfortable stays at great locations
                 </p>
                 <Button
-                  className="mt-4 bg-transparent"
-                  variant="outline"
+                  className="mt-4 bg-[#F47B20] hover:bg-[#e56a1c] text-white font-semibold py-2.5 sm:py-3 rounded-lg transition-all duration-200"
+                  variant="default"
                   asChild
                 >
-                  <Link href="/hostels">Coming Soon</Link>
+                  <Link href="/hostels">Book Hostels now</Link>
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-lg transition-shadow">
-              <CardContent className="p-6 sm:p-8">
-                <Gift className="w-12 h-12 sm:w-16 sm:h-16 text-[#F47B20] mx-auto mb-4" />
-                <h3 className="text-lg sm:text-xl font-semibold mb-2">
-                  Products
-                </h3>
-                <p className="text-gray-600 text-sm sm:text-base mb-4">
-                  Quality products for your journey
-                </p>
-                <Button
-                  className="mt-4 bg-transparent"
-                  variant="outline"
-                  asChild
-                >
-                  <Link href="/products">Coming Soon</Link>
-                </Button>
-              </CardContent>
-            </Card>
+            
           </div>
         </div>
       </section>

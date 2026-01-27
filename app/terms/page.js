@@ -270,10 +270,97 @@ export default function TermsPage() {
               </div>
             </section>
 
+            {/* Rental Rules & Restrictions */}
+            <section>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                9. Rental Rules & Restrictions
+              </h2>
+              <div className="space-y-4">
+                <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-4">
+                  <p className="text-gray-700">
+                    <span className="font-semibold text-blue-800">Travel Zone:</span> Travelling is restricted to only Chikmagalur and surrounding areas
+                  </p>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-red-800 mb-2 flex items-start">
+                      <span className="text-red-500 mr-2">⚠️</span>
+                      Cancellation Policy
+                    </h3>
+                    <p className="text-red-700 text-sm">
+                      Amount will NOT be refunded if booking is cancelled
+                    </p>
+                  </div>
+
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-orange-800 mb-2 flex items-start">
+                      <span className="text-orange-500 mr-2">⏰</span>
+                      Late Night Charges
+                    </h3>
+                    <p className="text-orange-700 text-sm">
+                      ₹200 per scooty per hour after 8:00 PM
+                    </p>
+                  </div>
+
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-purple-800 mb-2 flex items-start">
+                      <span className="text-purple-500 mr-2">🔑</span>
+                      Key Related Charges
+                    </h3>
+                    <ul className="text-purple-700 text-sm space-y-1">
+                      <li>• Loss of key: ₹1,250</li>
+                      <li>• Duplicate key delivery: Extra charges apply</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h3 className="font-semibold text-yellow-800 mb-2 flex items-start">
+                      <span className="text-yellow-500 mr-2">🚨</span>
+                      Triple Ride Fine
+                    </h3>
+                    <p className="text-yellow-700 text-sm">
+                      Triple riding will be fined ₹2,000
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                  <h3 className="font-semibold text-gray-900 mb-4">
+                    Damage & Maintenance Charges
+                  </h3>
+                  <ul className="space-y-3 text-gray-700">
+                    <li className="flex items-start">
+                      <span className="text-[#F47B20] mr-2 font-bold">•</span>
+                      <span>Damage to scooty & helmet will be completely charged to the customer</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-[#F47B20] mr-2 font-bold">•</span>
+                      <span>All damages will be charged as per company exclusive showroom rates only</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-[#F47B20] mr-2 font-bold">•</span>
+                      <span>Tyre puncture costs will be borne by customers</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h3 className="font-semibold text-green-800 mb-2 flex items-start">
+                    <span className="text-green-500 mr-2">📞</span>
+                    Return Policy
+                  </h3>
+                  <p className="text-green-700 text-sm">
+                    Inform us 10 minutes prior to returning the scooty
+                  </p>
+                </div>
+              </div>
+            </section>
+
             {/* Liability Waiver */}
             <section>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                9. Assumption of Risk & Liability Waiver
+                10. Assumption of Risk & Liability Waiver
               </h2>
               <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                 <p className="text-red-700 leading-relaxed font-medium">

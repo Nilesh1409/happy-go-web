@@ -127,7 +127,7 @@ export default function Header() {
               >
                 Bike Rental
               </Link>
-              <Link
+              {/* <Link
                 href="/products"
                 className={`transition-colors whitespace-nowrap ${
                   isActive("/products") 
@@ -136,7 +136,7 @@ export default function Header() {
                 }`}
               >
                 Products
-              </Link>
+              </Link> */}
               <Link
                 href="/hostels"
                 className={`transition-colors whitespace-nowrap ${
@@ -317,7 +317,7 @@ export default function Header() {
               >
                 Bike Rental
               </Link>
-              <Link
+              {/* <Link
                 href="/products"
                 className={`block py-3 px-2 rounded-lg transition-colors ${
                   isActive("/products") 
@@ -327,7 +327,7 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Products
-              </Link>
+              </Link> */}
               <Link
                 href="/hostels"
                 className={`block py-3 px-2 rounded-lg transition-colors ${

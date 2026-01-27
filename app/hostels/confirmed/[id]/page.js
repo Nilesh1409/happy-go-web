@@ -61,8 +61,9 @@ export default function HostelBookingConfirmedPage() {
   };
 
   const handleCopyBookingId = () => {
-    if (booking?._id) {
-      navigator.clipboard.writeText(booking._id);
+    const bookingId = booking?.bookings?.[0]?.id || params.id;
+    if (bookingId) {
+      navigator.clipboard.writeText(bookingId);
       setCopied(true);
       toast.success("Copied!", "Booking ID copied to clipboard");
       setTimeout(() => setCopied(false), 2000);
@@ -70,9 +71,10 @@ export default function HostelBookingConfirmedPage() {
   };
 
   const handleShare = async () => {
+    const hostelName = booking?.bookings?.[0]?.hostel?.name || "hostel";
     const shareData = {
       title: "My Hostel Booking Confirmed",
-      text: `Booking confirmed at ${booking.hotel?.name || "hostel"}!`,
+      text: `Booking confirmed at ${hostelName}!`,
       url: window.location.href,
     };
 
@@ -90,7 +92,8 @@ export default function HostelBookingConfirmedPage() {
   };
 
   const handlePayRemaining = () => {
-    router.push(`/hostels/payment/${booking._id}`);
+    const bookingId = booking?.bookings?.[0]?.id || params.id;
+    router.push(`/hostels/payment/${bookingId}`);
   };
 
   const formatDate = (dateString) => {
@@ -156,7 +159,11 @@ export default function HostelBookingConfirmedPage() {
 
   const isPaymentCompleted = booking.paymentStatus === "completed";
   const isPartiallyPaid = booking.paymentStatus === "partial";
-  const remainingAmount = booking.paymentDetails?.remainingAmount || 0;
+  const remainingAmount = booking.paymentSummary?.remainingAmount || 0;
+  
+  // Get first booking for display
+  const hostelBooking = booking.bookings?.[0];
+  const hostelData = hostelBooking?.hostel;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -181,7 +188,7 @@ export default function HostelBookingConfirmedPage() {
             {/* Booking ID */}
             <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-lg">
               <span className="text-sm font-medium">Booking ID:</span>
-              <code className="text-sm font-mono">{booking._id}</code>
+              <code className="text-sm font-mono">{hostelBooking?.id || params.id}</code>
               <button
                 onClick={handleCopyBookingId}
                 className="text-[#F47B20] hover:text-[#E06A0F]"
@@ -208,7 +215,7 @@ export default function HostelBookingConfirmedPage() {
                   </h3>
                   <p className="text-sm text-yellow-800 mb-4">
                     You have paid 25% (₹
-                    {(booking.paymentDetails?.paidAmount || 0).toFixed(2)}). Please
+                    {(booking.paymentSummary?.paidAmount || 0).toFixed(2)}). Please
                     complete the remaining payment of{" "}
                     <span className="font-bold">₹{remainingAmount.toFixed(2)}</span>{" "}
                     before check-in.
@@ -234,41 +241,47 @@ export default function HostelBookingConfirmedPage() {
                 <h2 className="text-2xl font-bold mb-6">Booking Details</h2>
 
                 {/* Hostel Info */}
-                {booking.hotel && (
+                {hostelData && (
                   <div className="flex gap-4 mb-6">
                     <img
-                      src={booking.hotel.images?.[0] || "/assets/happygo.jpeg"}
-                      alt={booking.hotel.name}
+                      src={hostelData.images?.[0] || "/assets/happygo.jpeg"}
+                      alt={hostelData.name}
                       className="w-32 h-32 rounded-lg object-cover"
                     />
                     <div className="flex-1">
                       <h3 className="text-xl font-bold mb-2">
-                        {booking.hotel.name}
+                        {hostelData.name}
                       </h3>
                       <p className="text-gray-600 flex items-center mb-2">
                         <MapPin className="w-4 h-4 mr-2" />
-                        {booking.hotel.address || booking.hotel.location}
+                        {hostelData.address || hostelData.location}
                       </p>
+                      {hostelData.rating && (
+                        <div className="flex items-center gap-1 mb-2">
+                          <span className="text-yellow-500">★</span>
+                          <span className="text-sm font-medium">{hostelData.rating}</span>
+                        </div>
+                      )}
                       
                       {/* Contact Info */}
-                      {booking.hotel.contactInfo && (
+                      {hostelData.contact && (
                         <div className="space-y-1">
-                          {booking.hotel.contactInfo.phone && (
+                          {hostelData.contact.phone && (
                             <a
-                              href={`tel:${booking.hotel.contactInfo.phone}`}
+                              href={`tel:${hostelData.contact.phone}`}
                               className="flex items-center text-sm text-[#F47B20] hover:underline"
                             >
                               <Phone className="w-4 h-4 mr-2" />
-                              {booking.hotel.contactInfo.phone}
+                              {hostelData.contact.phone}
                             </a>
                           )}
-                          {booking.hotel.contactInfo.email && (
+                          {hostelData.contact.email && (
                             <a
-                              href={`mailto:${booking.hotel.contactInfo.email}`}
+                              href={`mailto:${hostelData.contact.email}`}
                               className="flex items-center text-sm text-[#F47B20] hover:underline"
                             >
                               <Mail className="w-4 h-4 mr-2" />
-                              {booking.hotel.contactInfo.email}
+                              {hostelData.contact.email}
                             </a>
                           )}
                         </div>
@@ -283,31 +296,34 @@ export default function HostelBookingConfirmedPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Room Type</p>
-                    <p className="font-medium">{booking.roomType}</p>
+                    <p className="font-medium">{hostelData?.roomType || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Stay Type</p>
+                    <p className="text-sm text-gray-600 mb-1">Meal Option</p>
                     <Badge variant="secondary" className="capitalize">
-                      {booking.hotelDetails?.stayType || "Hostel"}
+                      {hostelData?.mealOption === "bedOnly" ? "Bed Only" :
+                       hostelData?.mealOption === "bedAndBreakfast" ? "Bed & Breakfast" :
+                       hostelData?.mealOption === "bedBreakfastAndDinner" ? "Bed + Breakfast + Dinner" :
+                       "N/A"}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Number of Guests</p>
+                    <p className="text-sm text-gray-600 mb-1">Number of Beds</p>
                     <p className="font-medium flex items-center gap-1">
                       <Users className="w-4 h-4" />
-                      {booking.numberOfPeople} Guest(s)
+                      {hostelData?.beds || 1} Bed(s)
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Booking Status</p>
                     <Badge
                       className={
-                        booking.bookingStatus === "confirmed"
+                        booking.status === "confirmed"
                           ? "bg-green-100 text-green-800"
                           : "bg-yellow-100 text-yellow-800"
                       }
                     >
-                      {booking.bookingStatus}
+                      {booking.status}
                     </Badge>
                   </div>
                 </div>
@@ -321,12 +337,10 @@ export default function HostelBookingConfirmedPage() {
                     <div className="flex items-start gap-3">
                       <Calendar className="w-5 h-5 text-[#F47B20] mt-1" />
                       <div>
-                        <p className="font-semibold">{formatDate(booking.startDate)}</p>
+                        <p className="font-semibold">{formatDate(hostelBooking?.dates?.checkIn)}</p>
                         <p className="text-sm text-gray-600 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {booking.hotelDetails?.checkInTime ||
-                            booking.hotel?.checkInTime ||
-                            "1:00 PM"}
+                          {hostelData?.checkInTime || "1:00 PM"}
                         </p>
                       </div>
                     </div>
@@ -336,11 +350,16 @@ export default function HostelBookingConfirmedPage() {
                     <div className="flex items-start gap-3">
                       <Calendar className="w-5 h-5 text-gray-600 mt-1" />
                       <div>
-                        <p className="font-semibold">{formatDate(booking.endDate)}</p>
+                        <p className="font-semibold">{formatDate(hostelBooking?.dates?.checkOut)}</p>
                         <p className="text-sm text-gray-600 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {booking.hotel?.checkOutTime || "10:00 AM"}
+                          {hostelData?.checkOutTime || "10:00 AM"}
                         </p>
+                        {hostelBooking?.dates?.nights && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {hostelBooking.dates.nights} night(s)
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -354,22 +373,22 @@ export default function HostelBookingConfirmedPage() {
                 <h2 className="text-xl font-bold mb-4">Guest Information</h2>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {booking.guestDetails?.name && (
+                  {booking.guest?.name && (
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Name</p>
-                      <p className="font-medium">{booking.guestDetails.name}</p>
+                      <p className="font-medium">{booking.guest.name}</p>
                     </div>
                   )}
-                  {booking.guestDetails?.email && (
+                  {booking.guest?.email && (
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Email</p>
-                      <p className="font-medium">{booking.guestDetails.email}</p>
+                      <p className="font-medium">{booking.guest.email}</p>
                     </div>
                   )}
-                  {booking.guestDetails?.mobile && (
+                  {booking.guest?.phone && (
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Mobile</p>
-                      <p className="font-medium">{booking.guestDetails.mobile}</p>
+                      <p className="font-medium">{booking.guest.phone}</p>
                     </div>
                   )}
                 </div>
@@ -454,23 +473,14 @@ export default function HostelBookingConfirmedPage() {
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Base Price</span>
                     <span className="font-medium">
-                      ₹{(booking.priceDetails?.basePrice || 0).toFixed(2)}
+                      ₹{(hostelBooking?.priceBreakdown?.basePrice || 0).toFixed(2)}
                     </span>
                   </div>
 
-                  {booking.priceDetails?.discount > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Discount</span>
-                      <span className="font-medium text-green-600">
-                        - ₹{booking.priceDetails.discount.toFixed(2)}
-                      </span>
-                    </div>
-                  )}
-
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Taxes</span>
+                    <span className="text-gray-600">GST ({hostelBooking?.priceBreakdown?.gstPercentage || 5}%)</span>
                     <span className="font-medium">
-                      + ₹{(booking.priceDetails?.taxes || 0).toFixed(2)}
+                      + ₹{(hostelBooking?.priceBreakdown?.gst || 0).toFixed(2)}
                     </span>
                   </div>
 
@@ -479,7 +489,7 @@ export default function HostelBookingConfirmedPage() {
                   <div className="flex justify-between">
                     <span className="font-semibold">Total Amount</span>
                     <span className="font-semibold">
-                      ₹{(booking.priceDetails?.totalAmount || 0).toFixed(2)}
+                      ₹{(booking.paymentSummary?.totalAmount || 0).toFixed(2)}
                     </span>
                   </div>
 
@@ -488,7 +498,7 @@ export default function HostelBookingConfirmedPage() {
                   <div className="flex justify-between text-sm text-green-600">
                     <span>Paid Amount</span>
                     <span className="font-medium">
-                      ₹{(booking.paymentDetails?.paidAmount || 0).toFixed(2)}
+                      ₹{(booking.paymentSummary?.paidAmount || 0).toFixed(2)}
                     </span>
                   </div>
 
