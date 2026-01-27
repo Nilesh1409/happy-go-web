@@ -416,7 +416,7 @@ export default function HostelBookingSummaryPage() {
                       <Input
                         id="firstName"
                         type="text"
-                        placeholder="Nick"
+                        placeholder="Enter first name"
                         value={guestDetails.name.split(" ")[0] || ""}
                         onChange={(e) => {
                           const lastName = guestDetails.name.split(" ").slice(1).join(" ");
@@ -437,7 +437,7 @@ export default function HostelBookingSummaryPage() {
                       <Input
                         id="lastName"
                         type="text"
-                        placeholder="Nick"
+                        placeholder="Enter last name"
                         value={guestDetails.name.split(" ").slice(1).join(" ") || ""}
                         onChange={(e) => {
                           const firstName = guestDetails.name.split(" ")[0] || "";
@@ -465,7 +465,7 @@ export default function HostelBookingSummaryPage() {
                         <Input
                           id="mobile"
                           type="tel"
-                          placeholder="9876543210"
+                          placeholder="Enter 10-digit mobile number"
                           value={guestDetails.mobile}
                           onChange={(e) =>
                             handleInputChange("mobile", e.target.value)
@@ -489,7 +489,7 @@ export default function HostelBookingSummaryPage() {
                       <Input
                         id="email"
                         type="email"
-                        placeholder="nilushtiwari70547@gmail.com"
+                        placeholder="Enter your email address"
                         value={guestDetails.email}
                         onChange={(e) =>
                           handleInputChange("email", e.target.value)
@@ -510,7 +510,7 @@ export default function HostelBookingSummaryPage() {
                   </Label>
                   <Textarea
                     id="specialRequests"
-                    placeholder="Any special requirements or preferences..."
+                    placeholder="Enter any special requirements or preferences..."
                     value={guestDetails.specialRequests}
                     onChange={(e) =>
                       handleInputChange("specialRequests", e.target.value)

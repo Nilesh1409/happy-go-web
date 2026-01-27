@@ -59,6 +59,8 @@ export default function HostelPaymentPage() {
       
       // Load the booking details from API
       const response = await apiService.getBookingDetails(params.id);
+      // console.log("📋 Booking Details Response:", response);
+      
       if (response.success && response.data) {
         setBooking(response.data);
         
@@ -66,19 +68,39 @@ export default function HostelPaymentPage() {
         if (!storedCartData) {
           const apiData = response.data;
           
-          // Construct cart payment data from API response
+          console.log("🔍 Raw API Data:", JSON.stringify(apiData, null, 2));
+          console.log("📊 API Bookings:", apiData.bookings);
+          
+          // Construct cart payment data from API response - PRESERVE ALL BOOKING DATA
           const constructedCartData = {
             paymentGroupId: apiData.paymentGroupId,
             totalAmount: apiData.paymentSummary?.totalAmount || 0,
             partialAmount: apiData.paymentSummary?.partialAmount || 0,
             remainingAmount: apiData.paymentSummary?.remainingAmount || 0,
-            bookings: apiData.bookings || [],
-            razorpay: apiData.razorpay || null, // Will need to create order on payment
+            bookings: (apiData.bookings || []).map(booking => ({
+              id: booking.id,
+              type: booking.type,
+              breakdown: {
+                basePrice: booking.priceBreakdown?.basePrice || 0,
+                gst: booking.priceBreakdown?.gst || 0,
+                gstPercentage: booking.priceBreakdown?.gstPercentage || 5,
+                totalAmount: booking.priceBreakdown?.totalAmount || 0,
+              },
+              ...booking // Include all other booking data
+            })),
+            razorpay: apiData.razorpay || null,
           };
+          
+          console.log("💰 Constructed Cart Payment Data:", JSON.stringify(constructedCartData, null, 2));
+          console.log("📦 Bookings with breakdown:", constructedCartData.bookings.map(b => ({
+            type: b.type,
+            breakdown: b.breakdown
+          })));
           
           setCartPaymentData(constructedCartData);
         } else {
           const parsedData = JSON.parse(storedCartData);
+          console.log("💳 Using stored cart data:", parsedData);
           setCartPaymentData(parsedData);
         }
       }
@@ -640,7 +662,7 @@ export default function HostelPaymentPage() {
                                 <span className="text-gray-600">
                                   {bookingItem.type === 'bike' ? '🏍️ Bike Rental' : '🏨 Hostel Stay'}
                                 </span>
-                                <span className="font-medium">₹{bookingItem.priceBreakdown?.totalAmount?.toFixed(2)}</span>
+                                <span className="font-medium">₹{bookingItem.breakdown?.totalAmount?.toFixed(2)}</span>
                               </div>
                             ))}
                           </div>
@@ -763,39 +785,58 @@ export default function HostelPaymentPage() {
 
                 {cartPaymentData && (
                   <div className="space-y-3 mb-6">
+                    {/* Debug - Log cart payment data */}
+                    {(() => {
+                      console.log("🛒 Full cartPaymentData:", cartPaymentData);
+                      console.log("📦 Bookings array:", cartPaymentData.bookings);
+                      return null;
+                    })()}
+                    
                     {/* Individual Items */}
-                    {cartPaymentData.bookings?.map((item, idx) => (
-                      <div key={idx} className="pb-3 border-b">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-medium text-sm">
-                            {item.type === 'bike' ? '🏍️ Bike Rental' : '🏨 Hostel Stay'}
-                          </span>
+                    {cartPaymentData.bookings?.map((item, idx) => {
+                      // console.log(`💰 Item ${idx}:`, JSON.stringify(item, null, 2));
+                      // console.log(`📊 Price Breakdown ${idx}:`, item.breakdown);
+                      
+                      const basePrice = item.breakdown?.basePrice || 0;
+                      const gst = item.breakdown?.gst || 0;
+                      const gstPercentage = item.breakdown?.gstPercentage || 5;
+                      const totalAmount = item.breakdown?.totalAmount || 0;
+                      
+                      console.log(`✅ Extracted values ${idx}:`, { basePrice, gst, gstPercentage, totalAmount });
+
+                      return (
+                        <div key={idx} className="pb-3 border-b">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="font-medium text-sm">
+                              {item.type === 'bike' ? '🏍️ Bike Rental' : '🏨 Hostel Stay'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">Base Price</span>
+                            <span className="font-medium">
+                              ₹{basePrice.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-600">GST ({gstPercentage}%)</span>
+                            <span className="font-medium">
+                              + ₹{gst.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm font-semibold mt-1">
+                            <span>Subtotal</span>
+                            <span>₹{totalAmount.toFixed(2)}</span>
+                          </div>
                         </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">Base Price</span>
-                          <span className="font-medium">
-                            ₹{item.priceBreakdown?.basePrice?.toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">GST ({item.priceBreakdown?.gstPercentage || 5}%)</span>
-                          <span className="font-medium">
-                            + ₹{item.priceBreakdown?.gst?.toFixed(2)}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm font-semibold mt-1">
-                          <span>Subtotal</span>
-                          <span>₹{item.priceBreakdown?.totalAmount?.toFixed(2)}</span>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     <Separator />
 
                     <div className="flex justify-between">
                       <span className="font-semibold">Total Amount</span>
                       <span className="font-semibold">
-                        ₹{cartPaymentData.totalAmount?.toFixed(2)}
+                        ₹{(cartPaymentData.totalAmount || 0).toFixed(2)}
                       </span>
                     </div>
 
