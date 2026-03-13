@@ -56,7 +56,7 @@ export default function ReferEarnPage() {
     if (referralData?.referralCode) {
       const shareData = {
         title: "Join Happy Go",
-        text: `Use my referral code ${referralData.referralCode} and get ₹500 off on your first booking!`,
+        text: `Use my referral code ${referralData.referralCode} and get ₹100 off on your first booking!`,
         url: `${window.location.origin}/register?ref=${referralData.referralCode}`,
       };
 
@@ -186,7 +186,7 @@ export default function ReferEarnPage() {
             </div>
 
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3">
-              Earn ₹500 for Every Friend!
+              Earn ₹100 for Every Friend!
             </h2>
             <p className="text-base sm:text-lg opacity-90 mb-6 sm:mb-8 leading-relaxed max-w-2xl mx-auto">
               Invite your friends to Happy Go and earn rewards when they
@@ -305,7 +305,7 @@ export default function ReferEarnPage() {
                   Friend Signs Up
                 </h3>
                 <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                  Your friend signs up using your referral code and gets ₹500
+                  Your friend signs up using your referral code and gets ₹100
                   off
                 </p>
               </div>
@@ -318,7 +318,7 @@ export default function ReferEarnPage() {
                   You Earn Rewards
                 </h3>
                 <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
-                  Earn ₹500 when your friend completes their first booking
+                  Earn ₹100 when your friend completes their first booking
                 </p>
               </div>
             </div>

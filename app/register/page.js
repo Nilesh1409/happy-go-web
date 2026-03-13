@@ -603,7 +603,7 @@ function RegisterPageContent() {
 
                   {!formData.referralCode && (
                     <p className="text-xs text-gray-500 mt-1">
-                      Have a referral code? Enter it to get ₹500 off your first
+                      Have a referral code? Enter it to get ₹100 off your first
                       booking!
                     </p>
                   )}
