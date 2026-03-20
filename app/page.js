@@ -21,6 +21,7 @@ import {
 import Link from "next/link";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import Popup from "@/components/Popup";
 import ModernDateTimePicker from "@/components/modern-date-time-picker";
 import { apiService } from "@/lib/api";
 import { adjustDrop } from "@/lib/date-time";
@@ -263,6 +264,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Popup />
       <Header />
 
       {/* Hero Section */}
