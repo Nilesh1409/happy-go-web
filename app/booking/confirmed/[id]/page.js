@@ -32,6 +32,7 @@ import { useParams } from "next/navigation";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { apiService } from "@/lib/api";
+import AadhaarVerificationModal from "@/components/aadhar-verification-modal";
 import { toast } from "@/lib/toast";
 
 // Utility functions for robust data handling
@@ -124,6 +125,7 @@ export default function BookingConfirmedPage() {
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
@@ -131,8 +133,16 @@ export default function BookingConfirmedPage() {
   useEffect(() => {
     if (params?.id) {
       loadBookingDetails();
+      // Show verification modal after 3 seconds if booking is confirmed
+      const timer = setTimeout(() => {
+        if (booking?.bookingStatus === "confirmed") {
+          setShowVerificationModal(true);
+        }
+      }, 3000);
+
+      return () => clearTimeout(timer);
     }
-  }, [params?.id]);
+  }, [params?.id, booking?.bookingStatus]);
 
   const loadBookingDetails = async () => {
     try {
@@ -800,6 +810,10 @@ export default function BookingConfirmedPage() {
                   </div>
                   <div className="flex items-start">
                     <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                    <span>Complete Aadhaar verification if prompted</span>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="w-2 h-2 bg-orange-500 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                     <span>Arrive 15 minutes before pickup time</span>
                   </div>
                 </div>
@@ -955,6 +969,14 @@ export default function BookingConfirmedPage() {
         </Card>
       </div>
 
+      {/* Aadhaar Verification Modal */}
+      {showVerificationModal && (
+        <AadhaarVerificationModal
+          isOpen={showVerificationModal}
+          onClose={() => setShowVerificationModal(false)}
+          bookingId={booking._id}
+        />
+      )}
 
       <Footer />
     </div>
