@@ -1,10 +1,8 @@
 "use client";
 
 import type React from "react";
-
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -14,8 +12,8 @@ import {
   Clock,
   AlertCircle,
   Loader2,
-  FileText,
   Camera,
+  ExternalLink,
 } from "lucide-react";
 
 interface AadhaarVerificationModalProps {
@@ -24,185 +22,183 @@ interface AadhaarVerificationModalProps {
   bookingId: string;
 }
 
-// Cashfree API configuration
-const CASHFREE_CONFIG = {
-  baseURL: "https://sandbox.cashfree.com/verification",
-  clientId: process.env.NEXT_PUBLIC_CASHFREE_CLIENT_ID || "your-client-id",
-  clientSecret:
-    process.env.NEXT_PUBLIC_CASHFREE_CLIENT_SECRET || "your-client-secret",
+type Step = "intro" | "loading" | "digilocker" | "completing" | "dl" | "completed";
+
+type VerifiedData = {
+  maskedNumber: string;
+  name: string;
+  dob: string;
+  gender: string;
+  address: { full: string };
 };
+
+// Same redirect URL used in the mobile app
+const REDIRECT_URL = "https://happygorentals.com/aadhaar-verified";
+
+const authHeader = () => ({
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+});
 
 export default function AadhaarVerificationModal({
   isOpen,
   onClose,
   bookingId,
 }: AadhaarVerificationModalProps) {
-  const [step, setStep] = useState("intro"); // 'intro', 'aadhaar', 'otp', 'dl', 'completed'
-  const [aadhaarNumber, setAadhaarNumber] = useState("");
-  const [otp, setOtp] = useState("");
-  const [refId, setRefId] = useState("");
+  const [step, setStep] = useState<Step>("intro");
   const [dlFile, setDlFile] = useState<File | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [dlLoading, setDlLoading] = useState(false);
   const [error, setError] = useState("");
-  const [aadhaarData, setAadhaarData] = useState(null);
+  const [verifiedData, setVerifiedData] = useState<VerifiedData | null>(null);
 
-  // Cashfree API call to generate Aadhaar OTP
-  const generateAadhaarOTP = async (aadhaarNumber: string) => {
-    const response = await fetch(
-      `${CASHFREE_CONFIG.baseURL}/offline-aadhaar/otp`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-client-id": CASHFREE_CONFIG.clientId,
-          "x-client-secret": CASHFREE_CONFIG.clientSecret,
-        },
-        body: JSON.stringify({
-          aadhaar_number: aadhaarNumber,
-        }),
-      }
-    );
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const digilockerWindowRef = useRef<Window | null>(null);
 
-    if (!response.ok) {
-      throw new Error("Failed to generate OTP");
+  const stopPolling = useCallback(() => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
     }
+  }, []);
 
-    return response.json();
-  };
-
-  // Cashfree API call to verify Aadhaar OTP
-  const verifyAadhaarOTP = async (otp: string, refId: string) => {
-    const response = await fetch(
-      `${CASHFREE_CONFIG.baseURL}/offline-aadhaar/verify`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-client-id": CASHFREE_CONFIG.clientId,
-          "x-client-secret": CASHFREE_CONFIG.clientSecret,
-        },
-        body: JSON.stringify({
-          otp: otp,
-          ref_id: refId,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to verify OTP");
+  // Cleanup on unmount or modal close
+  useEffect(() => {
+    if (!isOpen) {
+      stopPolling();
+      digilockerWindowRef.current?.close();
     }
+    return () => {
+      stopPolling();
+      digilockerWindowRef.current?.close();
+    };
+  }, [isOpen, stopPolling]);
 
-    return response.json();
-  };
-
-  const handleAadhaarSubmit = async () => {
-    if (!aadhaarNumber || aadhaarNumber.length !== 12) {
-      setError("Please enter a valid 12-digit Aadhaar number");
-      return;
-    }
-
-    setLoading(true);
+  // ── Step 1: Initiate DigiLocker via backend ───────────────────────────────────
+  const handleInitiate = async () => {
+    setStep("loading");
     setError("");
-
     try {
-      const response = await generateAadhaarOTP(aadhaarNumber);
+      const res = await fetch("/api/verification/aadhaar/initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeader() },
+        body: JSON.stringify({ redirect_url: REDIRECT_URL, user_flow: "signup" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to initiate verification");
 
-      if (response.status === "SUCCESS") {
-        setRefId(response.ref_id.toString());
-        setStep("otp");
-      } else {
-        setError(response.message || "Failed to generate OTP");
+      const popup = window.open(
+        data.data.digilocker_url,
+        "digilocker_verify",
+        "width=600,height=700,scrollbars=yes,resizable=yes"
+      );
+      if (!popup) {
+        throw new Error(
+          "Popup was blocked by your browser. Please allow popups for this site and try again."
+        );
       }
-    } catch (error: any) {
-      setError(error.message || "Failed to generate OTP. Please try again.");
-    } finally {
-      setLoading(false);
+      digilockerWindowRef.current = popup;
+      setStep("digilocker");
+      startPolling();
+    } catch (err: any) {
+      setStep("intro");
+      setError(err.message || "Failed to start verification. Please try again.");
     }
   };
 
-  const handleOTPVerification = async () => {
-    if (!otp || otp.length !== 6) {
-      setError("Please enter a valid 6-digit OTP");
-      return;
-    }
+  // ── Step 2: Poll /status until AUTHENTICATED ─────────────────────────────────
+  const startPolling = () => {
+    let attempts = 0;
+    const MAX_ATTEMPTS = 30; // 30 × 2s = 60 seconds
 
-    setLoading(true);
-    setError("");
+    pollIntervalRef.current = setInterval(async () => {
+      attempts += 1;
 
-    try {
-      const response = await verifyAadhaarOTP(otp, refId);
+      // User manually closed the popup
+      if (digilockerWindowRef.current?.closed) {
+        stopPolling();
+        setStep("intro");
+        setError("Verification window was closed. Please try again.");
+        return;
+      }
 
-      if (response.status === "VALID") {
-        setAadhaarData(response);
+      try {
+        const res = await fetch("/api/verification/aadhaar/status", {
+          headers: authHeader(),
+        });
+        const data = await res.json();
+        const status: string = data.data?.status;
 
-        // Save Aadhaar data to your backend
-        try {
-          const saveResponse = await fetch(
-            `/api/bookings/${bookingId}/aadhaar`,
-            {
+        if (status === "AUTHENTICATED") {
+          stopPolling();
+          digilockerWindowRef.current?.close();
+          // Inline complete to avoid stale closure
+          setStep("completing");
+          try {
+            const completeRes = await fetch("/api/verification/aadhaar/complete", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
-              },
-              body: JSON.stringify({
-                aadhaarNumber,
-                verificationData: response,
-              }),
-            }
-          );
-
-          if (!saveResponse.ok) {
-            console.warn("Failed to save Aadhaar data to backend");
+              headers: { "Content-Type": "application/json", ...authHeader() },
+              body: JSON.stringify({}),
+            });
+            const completeData = await completeRes.json();
+            if (!completeRes.ok)
+              throw new Error(completeData.message || "Failed to complete verification");
+            setVerifiedData(completeData.data);
+            setStep("dl");
+          } catch (err: any) {
+            setStep("intro");
+            setError(err.message || "Failed to fetch Aadhaar details. Please try again.");
           }
-        } catch (saveError) {
-          console.warn("Failed to save Aadhaar data:", saveError);
+        } else if (status === "EXPIRED") {
+          stopPolling();
+          digilockerWindowRef.current?.close();
+          setStep("intro");
+          setError("Verification session expired. Please try again.");
+        } else if (status === "CONSENT_DENIED") {
+          stopPolling();
+          digilockerWindowRef.current?.close();
+          setStep("intro");
+          setError(
+            "Aadhaar consent was denied. Please try again and approve the sharing request in DigiLocker."
+          );
+        } else if (attempts >= MAX_ATTEMPTS) {
+          stopPolling();
+          digilockerWindowRef.current?.close();
+          setStep("intro");
+          setError("Verification timed out. Please try again.");
         }
-
-        setStep("dl");
-      } else {
-        setError(response.message || "OTP verification failed");
+        // PENDING → keep polling
+      } catch {
+        if (attempts >= MAX_ATTEMPTS) {
+          stopPolling();
+          setStep("intro");
+          setError("Verification failed. Please try again.");
+        }
       }
-    } catch (error: any) {
-      setError(error.message || "OTP verification failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    }, 2000);
   };
 
+  // ── DL Upload ─────────────────────────────────────────────────────────────────
   const handleDLUpload = async () => {
     if (!dlFile) {
       setError("Please upload your driving license");
       return;
     }
-
-    setLoading(true);
+    setDlLoading(true);
     setError("");
-
     try {
       const formData = new FormData();
       formData.append("dlImage", dlFile);
       formData.append("bookingId", bookingId);
-
-      const response = await fetch("/api/verification/driving-license", {
+      const res = await fetch("/api/verification/driving-license", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: authHeader(),
         body: formData,
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to upload driving license");
-      }
-
+      if (!res.ok) throw new Error("Failed to upload driving license");
       setStep("completed");
-    } catch (error: any) {
-      setError(
-        error.message || "Failed to upload driving license. Please try again."
-      );
+    } catch (err: any) {
+      setError(err.message || "Failed to upload driving license. Please try again.");
     } finally {
-      setLoading(false);
+      setDlLoading(false);
     }
   };
 
@@ -218,79 +214,81 @@ export default function AadhaarVerificationModal({
     }
   };
 
-  const formatAadhaarNumber = (value: string) => {
-    const cleaned = value.replace(/\D/g, "");
-    const match = cleaned.match(/^(\d{0,4})(\d{0,4})(\d{0,4})$/);
-    if (match) {
-      return [match[1], match[2], match[3]].filter(Boolean).join(" ");
-    }
-    return cleaned;
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] max-w-md mx-auto p-0 gap-0 max-h-[90vh] overflow-y-auto">
+
+        {/* ── Intro ── */}
         {step === "intro" && (
           <Card className="border-0 shadow-none">
             <CardHeader className="text-center pb-3 px-4 pt-6">
-              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-[#F47B20] to-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              <div className="w-16 h-16 bg-gradient-to-br from-[#F47B20] to-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Shield className="w-8 h-8 text-white" />
               </div>
-              <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900">
+              <DialogTitle className="text-xl font-bold text-gray-900">
                 Verify Your Identity
               </DialogTitle>
-              <p className="text-gray-600 text-xs sm:text-sm">
-                Complete verification for faster bike pickup on arrival
+              <p className="text-gray-600 text-sm">
+                Secure verification via DigiLocker — government-approved platform
               </p>
             </CardHeader>
             <CardContent className="space-y-4 px-4 pb-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
+
               <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                <h4 className="font-semibold text-green-800 mb-2 text-sm">
-                  Benefits of Verification:
-                </h4>
-                <ul className="text-xs sm:text-sm text-green-700 space-y-1">
-                  <li>• Skip document verification at pickup</li>
+                <h4 className="font-semibold text-green-800 mb-2 text-sm">Benefits:</h4>
+                <ul className="text-xs text-green-700 space-y-1">
+                  <li>• Skip document check at pickup</li>
                   <li>• Faster bike handover process</li>
-                  <li>• Enhanced security for your booking</li>
+                  <li>• Enhanced booking security</li>
                 </ul>
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-blue-600 font-bold text-xs sm:text-sm">1</span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-medium text-xs sm:text-sm">
-                      Aadhaar Verification
+                {[
+                  {
+                    num: "1",
+                    title: "Aadhaar via DigiLocker",
+                    desc: "Log in with your Aadhaar-linked mobile OTP & approve consent",
+                  },
+                  {
+                    num: "2",
+                    title: "Upload Driving License",
+                    desc: "Clear photo of your DL — front side",
+                  },
+                ].map((s) => (
+                  <div key={s.num} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                    <div className="w-8 h-8 bg-[#F47B20] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-white font-bold text-sm">{s.num}</span>
                     </div>
-                    <div className="text-xs text-gray-600">Verify with OTP</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-blue-600 font-bold text-xs sm:text-sm">2</span>
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-medium text-xs sm:text-sm">Driving License</div>
-                    <div className="text-xs text-gray-600">
-                      Upload clear photo
+                    <div>
+                      <div className="font-medium text-sm">{s.title}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">{s.desc}</div>
                     </div>
                   </div>
-                </div>
+                ))}
               </div>
 
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 text-sm h-10" 
-                  onClick={onClose}
-                >
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+                <Shield className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-amber-800">
+                  We never receive your raw Aadhaar number. Your data is encrypted and handled
+                  securely through Cashfree's bank-grade verification service.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" className="flex-1 h-10 text-sm" onClick={onClose}>
                   Skip for Now
                 </Button>
                 <Button
-                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white text-sm h-10"
-                  onClick={() => setStep("aadhaar")}
+                  className="flex-1 h-10 text-sm bg-[#F47B20] hover:bg-[#E06A0F] text-white"
+                  onClick={handleInitiate}
                 >
                   Start Verification
                 </Button>
@@ -299,267 +297,161 @@ export default function AadhaarVerificationModal({
           </Card>
         )}
 
-        {step === "aadhaar" && (
+        {/* ── Initiating ── */}
+        {step === "loading" && (
           <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-3 px-4 pt-6">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-              </div>
-              <DialogTitle className="text-lg font-bold">
-                Enter Aadhaar Number
-              </DialogTitle>
-              <p className="text-gray-600 text-xs sm:text-sm">
-                We'll send an OTP to your registered mobile number
+            <CardContent className="p-10 text-center space-y-4">
+              <Loader2 className="w-12 h-12 animate-spin text-[#F47B20] mx-auto" />
+              <p className="text-sm font-medium text-gray-700">Opening DigiLocker…</p>
+              <p className="text-xs text-gray-500">
+                Please wait while we prepare your verification session
               </p>
-            </CardHeader>
-            <CardContent className="space-y-4 px-4 pb-6">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs sm:text-sm flex items-start">
-                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
+            </CardContent>
+          </Card>
+        )}
 
+        {/* ── DigiLocker popup open / polling ── */}
+        {step === "digilocker" && (
+          <Card className="border-0 shadow-none">
+            <CardContent className="p-8 text-center space-y-5">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
+                <ExternalLink className="w-8 h-8 text-blue-600" />
+              </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Aadhaar Number
-                </label>
-                <Input
-                  type="text"
-                  placeholder="0000 0000 0000"
-                  value={formatAadhaarNumber(aadhaarNumber)}
-                  onChange={(e) => {
-                    const cleaned = e.target.value.replace(/\D/g, "");
-                    if (cleaned.length <= 12) {
-                      setAadhaarNumber(cleaned);
-                    }
-                  }}
-                  className="text-center text-base sm:text-lg tracking-widest font-mono h-12"
-                  maxLength={14}
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Enter your 12-digit Aadhaar number
+                <p className="text-base font-bold text-gray-900">DigiLocker Opened</p>
+                <p className="text-sm text-gray-500 mt-1 leading-relaxed">
+                  Complete the Aadhaar verification in the popup window. This dialog will
+                  update automatically once you approve consent.
                 </p>
               </div>
-
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <div className="flex items-start space-x-2">
-                  <Shield className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-                  <div className="text-xs text-yellow-800">
-                    <p className="font-medium mb-1">Your data is secure</p>
-                    <p>
-                      We use Cashfree's secure verification service with
-                      bank-grade encryption
-                    </p>
-                  </div>
-                </div>
+              <div className="flex items-center justify-center gap-2 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+                <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
+                <span className="text-xs text-blue-700">
+                  Waiting for your consent confirmation…
+                </span>
               </div>
-
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 text-sm h-10"
-                  onClick={() => setStep("intro")}
-                  disabled={loading}
-                >
-                  Back
-                </Button>
-                <Button
-                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white text-sm h-10"
-                  onClick={handleAadhaarSubmit}
-                  disabled={loading || aadhaarNumber.length !== 12}
-                >
-                  {loading ? (
-                    <div className="flex items-center">
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      <span className="text-xs sm:text-sm">Sending OTP...</span>
-                    </div>
-                  ) : (
-                    "Send OTP"
-                  )}
-                </Button>
+              <div className="flex items-center gap-2 text-xs text-gray-400 justify-center">
+                <Clock className="w-3.5 h-3.5" />
+                <span>Session valid for 10 minutes</span>
               </div>
+              <Button
+                variant="outline"
+                className="w-full h-10 text-sm"
+                onClick={() => {
+                  stopPolling();
+                  digilockerWindowRef.current?.close();
+                  setStep("intro");
+                  setError("");
+                }}
+              >
+                Cancel
+              </Button>
             </CardContent>
           </Card>
         )}
 
-        {step === "otp" && (
+        {/* ── Completing ── */}
+        {step === "completing" && (
           <Card className="border-0 shadow-none">
-            <CardHeader className="text-center pb-3 px-4 pt-6">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
-              </div>
-              <DialogTitle className="text-lg font-bold">Enter OTP</DialogTitle>
-              <p className="text-gray-600 text-xs sm:text-sm">
-                Enter the 6-digit OTP sent to your registered mobile number
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4 px-4 pb-6">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs sm:text-sm flex items-start">
-                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium mb-2">OTP</label>
-                <Input
-                  type="text"
-                  placeholder="000000"
-                  value={otp}
-                  onChange={(e) => {
-                    const cleaned = e.target.value.replace(/\D/g, "");
-                    if (cleaned.length <= 6) {
-                      setOtp(cleaned);
-                    }
-                  }}
-                  className="text-center text-lg sm:text-xl tracking-widest font-mono h-12"
-                  maxLength={6}
-                />
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center text-xs sm:text-sm text-blue-800">
-                  <Clock className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span>OTP is valid for 10 minutes</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 text-sm h-10"
-                  onClick={() => setStep("aadhaar")}
-                  disabled={loading}
-                >
-                  Back
-                </Button>
-                <Button
-                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white text-sm h-10"
-                  onClick={handleOTPVerification}
-                  disabled={loading || otp.length !== 6}
-                >
-                  {loading ? (
-                    <div className="flex items-center">
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      <span className="text-xs sm:text-sm">Verifying...</span>
-                    </div>
-                  ) : (
-                    "Verify OTP"
-                  )}
-                </Button>
-              </div>
+            <CardContent className="p-10 text-center space-y-4">
+              <Loader2 className="w-12 h-12 animate-spin text-[#F47B20] mx-auto" />
+              <p className="text-sm font-medium text-gray-700">Fetching your Aadhaar details…</p>
             </CardContent>
           </Card>
         )}
 
+        {/* ── DL Upload ── */}
         {step === "dl" && (
           <Card className="border-0 shadow-none">
             <CardHeader className="text-center pb-3 px-4 pt-6">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Camera className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Camera className="w-6 h-6 text-purple-600" />
               </div>
-              <DialogTitle className="text-lg font-bold">
-                Upload Driving License
-              </DialogTitle>
-              <p className="text-gray-600 text-xs sm:text-sm">
-                Upload a clear photo of your driving license
-              </p>
+              <DialogTitle className="text-lg font-bold">Upload Driving License</DialogTitle>
+              <p className="text-gray-600 text-sm">Upload a clear photo of your driving license</p>
             </CardHeader>
             <CardContent className="space-y-4 px-4 pb-6">
-              {aadhaarData && (
+              {verifiedData && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <div className="flex items-center mb-2">
-                    <CheckCircle className="w-4 h-4 text-green-600 mr-2 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm font-medium text-green-800">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    <span className="text-sm font-semibold text-green-800">
                       Aadhaar Verified Successfully
                     </span>
                   </div>
                   <p className="text-xs text-green-700">
-                    Name: {aadhaarData.name}
+                    Name: {verifiedData.name} &nbsp;·&nbsp; Aadhaar: {verifiedData.maskedNumber}
                   </p>
                 </div>
               )}
 
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-xs sm:text-sm flex items-start">
-                  <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Driving License Photo
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 sm:p-6 text-center hover:border-[#F47B20] transition-colors relative">
-                  {dlFile ? (
-                    <div className="space-y-2">
-                      <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-500 mx-auto" />
-                      <p className="text-xs sm:text-sm font-medium break-all">{dlFile.name}</p>
-                      <p className="text-xs text-gray-500">
-                        {(dlFile.size / 1024 / 1024).toFixed(2)} MB
-                      </p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setDlFile(null)}
-                        className="text-xs h-8"
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Upload className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto" />
-                      <p className="text-xs sm:text-sm text-gray-600">
-                        Click to upload or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        PNG, JPG up to 5MB
-                      </p>
-                    </div>
-                  )}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                </div>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-[#F47B20] transition-colors relative cursor-pointer">
+                {dlFile ? (
+                  <div className="space-y-2">
+                    <CheckCircle className="w-8 h-8 text-green-500 mx-auto" />
+                    <p className="text-sm font-medium break-all">{dlFile.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {(dlFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDlFile(null)}
+                      className="text-xs h-8"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto" />
+                    <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                    <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
               </div>
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                <h4 className="text-xs sm:text-sm font-medium text-yellow-800 mb-1">
-                  Photo Guidelines:
-                </h4>
-                <ul className="text-xs text-yellow-700 space-y-1">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <h4 className="text-xs font-medium text-amber-800 mb-1">Photo Guidelines:</h4>
+                <ul className="text-xs text-amber-700 space-y-1">
                   <li>• Ensure all text is clearly visible</li>
                   <li>• No glare or shadows on the document</li>
                   <li>• Take photo in good lighting</li>
                 </ul>
               </div>
 
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2">
+              <div className="flex gap-3 pt-2">
                 <Button
                   variant="outline"
-                  className="flex-1 text-sm h-10"
-                  onClick={() => setStep("otp")}
-                  disabled={loading}
+                  className="flex-1 h-10 text-sm"
+                  onClick={() => setStep("completed")}
+                  disabled={dlLoading}
                 >
-                  Back
+                  Skip for Now
                 </Button>
                 <Button
-                  className="flex-1 bg-[#F47B20] hover:bg-[#E06A0F] text-white text-sm h-10"
+                  className="flex-1 h-10 text-sm bg-[#F47B20] hover:bg-[#E06A0F] text-white"
                   onClick={handleDLUpload}
-                  disabled={loading || !dlFile}
+                  disabled={dlLoading || !dlFile}
                 >
-                  {loading ? (
-                    <div className="flex items-center">
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                      <span className="text-xs sm:text-sm">Uploading...</span>
-                    </div>
+                  {dlLoading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Uploading…
+                    </span>
                   ) : (
                     "Upload License"
                   )}
@@ -569,33 +461,42 @@ export default function AadhaarVerificationModal({
           </Card>
         )}
 
+        {/* ── Completed ── */}
         {step === "completed" && (
           <Card className="border-0 shadow-none">
-            <CardContent className="p-4 sm:p-8 text-center">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-white" />
+            <CardContent className="p-8 text-center space-y-4">
+              <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle className="w-10 h-10 text-white" />
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-green-600 mb-2">
-                Verification Complete!
-              </h2>
-              <p className="text-gray-600 mb-6 text-sm sm:text-base">
-                Your documents have been verified successfully. You can now
-                enjoy faster pickup at our location!
-              </p>
+              <div>
+                <h2 className="text-2xl font-bold text-green-600">Verification Complete!</h2>
+                <p className="text-gray-600 text-sm mt-1">
+                  Your documents have been verified. Enjoy faster pickup at our location!
+                </p>
+              </div>
 
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-6">
-                <h4 className="font-semibold text-green-800 mb-2 text-sm sm:text-base">
-                  What's Next?
-                </h4>
-                <ul className="text-xs sm:text-sm text-green-700 space-y-1 text-left">
+              {verifiedData && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-left space-y-2">
+                  <InfoRow label="Name" value={verifiedData.name} />
+                  {verifiedData.dob && <InfoRow label="DOB" value={verifiedData.dob} />}
+                  {verifiedData.gender && <InfoRow label="Gender" value={verifiedData.gender} />}
+                  {verifiedData.maskedNumber && (
+                    <InfoRow label="Aadhaar" value={verifiedData.maskedNumber} />
+                  )}
+                </div>
+              )}
+
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-left">
+                <h4 className="font-semibold text-green-800 mb-2 text-sm">What's Next?</h4>
+                <ul className="text-xs text-green-700 space-y-1">
                   <li>• Arrive at pickup location at scheduled time</li>
-                  <li>• Show booking confirmation</li>
-                  <li>• Quick verification and bike handover</li>
+                  <li>• Show your booking confirmation</li>
+                  <li>• Quick handover — no extra paperwork</li>
                 </ul>
               </div>
 
               <Button
-                className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white h-10 sm:h-11"
+                className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white h-11"
                 onClick={onClose}
               >
                 Continue to Booking
@@ -605,5 +506,14 @@ export default function AadhaarVerificationModal({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between items-center text-sm py-1">
+      <span className="text-gray-500">{label}</span>
+      <span className="font-medium text-gray-900">{value}</span>
+    </div>
   );
 }

@@ -334,7 +334,7 @@ function BookingSummaryPageContent() {
               />
               <label htmlFor="terms" className="text-sm">
                 I agree to the{" "}
-                <Link href="/terms" className="text-[#F47B20] underline">
+                <Link href="https://happygorentals.com/terms" target="_blank" rel="noopener noreferrer" className="text-[#F47B20] underline">
                   Terms & Conditions
                 </Link>{" "}
                 and{" "}

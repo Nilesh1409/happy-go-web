@@ -1366,7 +1366,7 @@ function BikeDetailsPageContent() {
                         className="text-sm sm:text-sm font-medium text-yellow-800 cursor-pointer block"
                       >
                         I agree to the{" "}
-                        <Link href="/terms" className="underline">
+                        <Link href="https://happygorentals.com/terms" target="_blank" rel="noopener noreferrer" className="underline">
                           Terms
                         </Link>
                         {" & "}

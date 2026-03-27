@@ -878,7 +878,7 @@ export default function HostelPaymentPage() {
                           className="text-xs leading-tight cursor-pointer"
                         >
                           I accept the{" "}
-                          <a href="/terms" className="text-[#F47B20] underline">
+                          <a href="https://happygorentals.com/terms" target="_blank" rel="noopener noreferrer" className="text-[#F47B20] underline">
                             terms and conditions
                           </a>{" "}
                           to proceed with payment
