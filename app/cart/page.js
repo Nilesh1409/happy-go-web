@@ -222,6 +222,7 @@ function CartPageContent() {
         return;
       }
 
+
       setLoading(true);
       setError("");
 
@@ -897,6 +898,7 @@ function CartPageContent() {
           </div>
         </div>
       </div>
+
 
       <Footer />
     </div>

@@ -281,6 +281,18 @@ function SearchPageContent() {
     const isSameDay = pickupDate.toDateString() === dropoffDate.toDateString();
     if (!dropoffTime) {
       dropoffTime = isSameDay ? add30Minutes(pickupTime) : "20:00";
+    } else if (isSameDay) {
+      // Always validate same-day times even when dropoffTime came from URL/storage
+      // (e.g. stored dropoff "20:00" becomes invalid when current pickup slot is "22:00")
+      const startMins =
+        parseInt(pickupTime.split(":")[0]) * 60 +
+        parseInt(pickupTime.split(":")[1]);
+      const endMins =
+        parseInt(dropoffTime.split(":")[0]) * 60 +
+        parseInt(dropoffTime.split(":")[1]);
+      if (startMins >= endMins) {
+        dropoffTime = add30Minutes(pickupTime);
+      }
     }
 
     if (!location) {
@@ -374,11 +386,32 @@ function SearchPageContent() {
       setLoading(true);
       setError(null);
 
+      // Auto-fix: if pickup >= dropoff on the same day, push dropoff 30 min after pickup
+      let effectiveEndTime = searchData.endTime;
+      const isSameDaySearch =
+        searchData.startDate &&
+        searchData.endDate &&
+        formatDateForAPI(searchData.startDate) ===
+          formatDateForAPI(searchData.endDate);
+      if (isSameDaySearch && searchData.startTime && searchData.endTime) {
+        const startMins =
+          parseInt(searchData.startTime.split(":")[0]) * 60 +
+          parseInt(searchData.startTime.split(":")[1]);
+        const endMins =
+          parseInt(searchData.endTime.split(":")[0]) * 60 +
+          parseInt(searchData.endTime.split(":")[1]);
+        if (startMins >= endMins) {
+          effectiveEndTime = add30Minutes(searchData.startTime);
+          // Update state so the UI reflects the corrected time
+          setSearchData((prev) => ({ ...prev, endTime: effectiveEndTime }));
+        }
+      }
+
       const params = {
         startDate: formatDateForAPI(searchData.startDate),
         endDate: formatDateForAPI(searchData.endDate),
         startTime: searchData.startTime,
-        endTime: searchData.endTime,
+        endTime: effectiveEndTime,
         location: searchData.location,
       };
 
