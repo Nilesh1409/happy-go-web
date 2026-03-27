@@ -650,7 +650,7 @@ export default function HostelBookingSummaryPage() {
                       className="text-xs leading-tight cursor-pointer"
                     >
                       I agree to the{" "}
-                      <a href="/terms" className="text-[#F47B20] underline">
+                      <a href="https://happygorentals.com/terms" target="_blank" rel="noopener noreferrer" className="text-[#F47B20] underline">
                         Terms and Conditions
                       </a>{" "}
                       and certify all the guests are{" "}
