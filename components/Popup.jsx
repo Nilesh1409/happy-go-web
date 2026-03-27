@@ -9,7 +9,7 @@ import { apiService } from "@/lib/api";
 const STORAGE_KEY = "happygo_landing_popup_seen";
 
 export default function Popup() {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [data, setData] = useState({
     title: "Welcome to HappyGo",
     message: "We are a team of bike enthusiasts who are passionate about providing the best bike rental experience to our customers.",
@@ -18,23 +18,34 @@ export default function Popup() {
     ctaText: "Explore Bikes",
     showOnce: true,
   });
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-
-    const seen = localStorage.getItem(STORAGE_KEY);
-    if (seen === "true") {
-      setLoading(false);
-      return;
-    }
 
     const fetchPopup = async () => {
       try {
         const res = await apiService.getPopup();
         if (res?.success && res?.data) {
-          setData(res.data);
-          setOpen(true);
+          const isShowOnce = res.data.show === "once";
+          const seen = localStorage.getItem(STORAGE_KEY);
+
+          setData({
+            ...data,
+            title: res.data.title || data.title,
+            message: res.data.description || data.message,
+            imageUrl: res.data.imageUrl || data.imageUrl,
+            ctaText: res.data.ctaText || data.ctaText,
+            ctaLink: res.data.ctaLink || data.ctaLink,
+            showOnce: isShowOnce,
+          });
+
+          // Only skip if it's "show once" AND has been seen
+          if (isShowOnce && seen === "true") {
+            setOpen(false);
+          } else {
+            setOpen(true);
+          }
         }
       } catch (err) {
         console.warn("Popup fetch failed:", err);
@@ -43,7 +54,7 @@ export default function Popup() {
       }
     };
 
-    //fetchPopup();
+    fetchPopup();
   }, []);
 
   const handleClose = () => {

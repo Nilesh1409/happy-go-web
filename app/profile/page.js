@@ -55,7 +55,9 @@ export default function ProfilePage() {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
+      console.log("Fetching user profile");
       const response = await apiService.getUserProfile();
+      console.log("response", response);
       setUser(response.data);
       setFormData({
         name: response.data.name || "",
@@ -97,13 +99,14 @@ export default function ProfilePage() {
       setUploadingDL(true);
       setError("");
       setSuccess("");
-
+      console.log("dlFile", dlFile);
       const response = await apiService.uploadDLImage(dlFile);
+      console.log("response", response);
       setSuccess("Driving license uploaded successfully!");
       setDlFile(null);
 
       // Refresh profile to get updated DL info
-      await fetchUserProfile();
+      // await fetchUserProfile();
     } catch (error) {
       setError(error.message || "Failed to upload driving license");
     } finally {
@@ -408,12 +411,40 @@ export default function ProfilePage() {
                       <CheckCircle className="w-5 h-5 mr-2" />
                       <span className="font-medium">Verified</span>
                     </div>
-                    <p className="text-sm text-gray-600">
-                      Aadhaar: {user.aadhaar.maskedNumber}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Name: {user.aadhaar.name}
-                    </p>
+                    <div className="bg-green-50 rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500 font-medium">Aadhaar</span>
+                        <span className="text-gray-900 font-mono">{user.aadhaar.maskedNumber}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500 font-medium">Name</span>
+                        <span className="text-gray-900">{user.aadhaar.name}</span>
+                      </div>
+                      {user.aadhaar.dob && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500 font-medium">DOB</span>
+                          <span className="text-gray-900">{user.aadhaar.dob}</span>
+                        </div>
+                      )}
+                      {user.aadhaar.gender && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500 font-medium">Gender</span>
+                          <span className="text-gray-900">{user.aadhaar.gender === "M" ? "Male" : user.aadhaar.gender === "F" ? "Female" : user.aadhaar.gender}</span>
+                        </div>
+                      )}
+                      {user.aadhaar.careOf && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500 font-medium">Care Of</span>
+                          <span className="text-gray-900 text-right max-w-[60%]">{user.aadhaar.careOf}</span>
+                        </div>
+                      )}
+                      {user.aadhaar.address?.split?.state && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500 font-medium">State</span>
+                          <span className="text-gray-900">{user.aadhaar.address.split.state}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -442,6 +473,14 @@ export default function ProfilePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* Hidden file input always present */}
+                <input
+                  id="dl-upload"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
                 {user?.dlImageKey ? (
                   <div className="space-y-3">
                     <div className="flex items-center text-green-600">
@@ -449,17 +488,18 @@ export default function ProfilePage() {
                       <span className="font-medium">Uploaded</span>
                     </div>
                     {user.dlImageUrl && (
-                      <div className="mt-3">
+                      <div className="mt-2">
                         <img
-                          src={user.dlImageUrl || "/placeholder.svg"}
+                          src={user.dlImageUrl}
                           alt="Driving License"
-                          className="w-full h-32 object-cover rounded-lg border"
+                          className="w-full h-36 object-cover rounded-lg border"
                         />
                       </div>
                     )}
                     <Button
                       variant="outline"
                       size="sm"
+                      className="w-full"
                       onClick={() =>
                         document.getElementById("dl-upload").click()
                       }
@@ -467,51 +507,60 @@ export default function ProfilePage() {
                       <Upload className="w-4 h-4 mr-2" />
                       Update License
                     </Button>
+                    {dlFile && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600">
+                          Selected: {dlFile.name}
+                        </p>
+                        <Button
+                          onClick={handleDLUpload}
+                          disabled={uploadingDL}
+                          className="w-full"
+                        >
+                          {uploadingDL ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          ) : (
+                            <Upload className="w-4 h-4 mr-2" />
+                          )}
+                          Upload New License
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <p className="text-sm text-gray-600">
                       Upload your driving license image for verification.
                     </p>
-                    <div className="space-y-3">
-                      <input
-                        id="dl-upload"
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                      <Button
-                        variant="outline"
-                        onClick={() =>
-                          document.getElementById("dl-upload").click()
-                        }
-                        className="w-full"
-                      >
-                        <Camera className="w-4 h-4 mr-2" />
-                        Choose File
-                      </Button>
-
-                      {dlFile && (
-                        <div className="space-y-2">
-                          <p className="text-sm text-gray-600">
-                            Selected: {dlFile.name}
-                          </p>
-                          <Button
-                            onClick={handleDLUpload}
-                            disabled={uploadingDL}
-                            className="w-full"
-                          >
-                            {uploadingDL ? (
-                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                            ) : (
-                              <Upload className="w-4 h-4 mr-2" />
-                            )}
-                            Upload License
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        document.getElementById("dl-upload").click()
+                      }
+                      className="w-full"
+                    >
+                      <Camera className="w-4 h-4 mr-2" />
+                      Choose File
+                    </Button>
+                    {dlFile && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600">
+                          Selected: {dlFile.name}
+                        </p>
+                        <Button
+                          onClick={handleDLUpload}
+                          disabled={uploadingDL}
+                          className="w-full"
+                        >
+                          {uploadingDL ? (
+                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          ) : (
+                            <Upload className="w-4 h-4 mr-2" />
+                          )}
+                          Upload License
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>

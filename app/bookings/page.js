@@ -626,17 +626,6 @@ export default function BookingsPage() {
                               asChild
                               className="w-full text-xs"
                             >
-                              <Link href="/booking/verify">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Verify
-                              </Link>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                              className="w-full text-xs"
-                            >
                               <a href="tel:+919008022800">
                                 <Phone className="w-3 h-3 mr-1" />
                                 Support
@@ -795,12 +784,6 @@ export default function BookingsPage() {
                               </Button>
                             )}
                             
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href="/booking/verify">
-                                <CheckCircle className="w-4 h-4 mr-1" />
-                                Verify
-                              </Link>
-                            </Button>
                             <Button variant="outline" size="sm" asChild>
                               <a href="tel:+919008022800">
                                 <Phone className="w-4 h-4 mr-1" />
@@ -1024,17 +1007,6 @@ export default function BookingsPage() {
                               variant="outline"
                               size="sm"
                               asChild
-                              className="text-xs"
-                            >
-                              <Link href="/booking/verify">
-                                <CheckCircle className="w-3 h-3 mr-1" />
-                                Verify
-                              </Link>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
                               className={`text-xs ${booking.paymentStatus === "pending" ? "col-span-2" : ""}`}
                             >
                               <a href="tel:+919008022800">
@@ -1227,12 +1199,6 @@ export default function BookingsPage() {
                               </Button>
                             )}
 
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href="/booking/verify">
-                                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                                Verify
-                              </Link>
-                            </Button>
                             <Button variant="outline" size="sm" asChild>
                               <a href="tel:+919008022800">
                                 <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />

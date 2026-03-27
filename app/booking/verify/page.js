@@ -6,14 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, ArrowLeft, UploadCloud, Smartphone } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/lib/toast";
+import { apiService } from "@/lib/api";
+import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 export default function BookingVerify() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Steps: 1 = Aadhaar Entry, 2 = OTP Verification, 3 = DL Details & Upload
-  const [step, setStep] = useState(1);
+  // Steps: 1 = Aadhaar Entry, 3 = DL Details & Upload
+  const [step, setStep] = useState(searchParams.get("step") ? parseInt(searchParams.get("step")) : 1);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -34,27 +38,26 @@ export default function BookingVerify() {
     }
   };
 
-  const handleSendOTP = async (e) => {
+  const handleInitiateDigiLocker = async (e) => {
     e.preventDefault();
-
-    if (!formData.fullName) {
-      toast.error("Validation Error", "Full Name is required.");
-      return;
-    }
-
-    if (!/^\d{12}$/.test(formData.aadhaarNumber)) {
-      toast.error("Validation Error", "Aadhaar Number must be 12 digits.");
-      return;
-    }
 
     setLoading(true);
     try {
-      // Simulate sending OTP
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast.success("OTP Sent", "An OTP has been sent to your Aadhaar linked mobile number (Dummy).");
-      setStep(2);
+      sessionStorage.setItem("aadhaar_return_url", "/booking/verify?step=3");
+      const payload = {
+        user_flow: "signup",
+        redirect_url: window.location.origin + "/aadhaar-verified",
+      };
+
+      const response = await apiService.initiateAadhaarVerification(payload);
+
+      if (response && response.digilocker_url) {
+        window.location.href = response.digilocker_url;
+      } else {
+        toast.error("Error", "Failed to initialize verification. Please try again.");
+      }
     } catch (error) {
-      toast.error("Error", "Failed to send OTP. Please try again.");
+      toast.error("Error", error.message || "Failed to initialize verification.");
     } finally {
       setLoading(false);
     }
@@ -133,16 +136,15 @@ export default function BookingVerify() {
 
           {/* Description */}
           <CardDescription>
-            {step === 1 && "Step 1/3: Verify your Aadhaar details."}
-            {step === 2 && "Step 2/3: Enter OTP sent to registered mobile."}
-            {step === 3 && "Step 3/3: Upload Driving License for final verification."}
+            {step === 1 && "Step 1/2: Verify your Aadhaar details via DigiLocker."}
+            {step === 3 && "Step 2/2: Upload Driving License for final verification."}
           </CardDescription>
 
           {/* Progress Bar */}
           <div className="w-full bg-gray-200 h-2 rounded-full">
             <div
               className="bg-[#F47B20] h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(step / 3) * 100}%` }}
+              style={{ width: step === 1 ? '50%' : '100%' }}
             ></div>
           </div>
 
@@ -150,49 +152,28 @@ export default function BookingVerify() {
 
         <CardContent>
           {step === 1 && (
-            <form onSubmit={handleSendOTP} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-sm font-medium">Full Name (As per Aadhaar)</Label>
-                <Input
-                  id="fullName"
-                  placeholder="John Doe"
-                  value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="aadhaarNumber" className="text-sm font-medium">Aadhaar Number</Label>
-                <Input
-                  id="aadhaarNumber"
-                  type="text"
-                  placeholder="12-digit Aadhaar Number"
-                  maxLength={12}
-                  value={formData.aadhaarNumber}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "");
-                    setFormData({ ...formData, aadhaarNumber: val });
-                  }}
-                />
+            <form onSubmit={handleInitiateDigiLocker} className="space-y-4 text-center">
+              <div className="bg-blue-50 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 border border-blue-100 mb-4">
+                <p className="text-sm text-gray-700">
+                  We use <span className="font-semibold">DigiLocker</span> to securely verify your Aadhaar details. You will be redirected to the DigiLocker website.
+                </p>
               </div>
 
               <div className="pt-4">
                 <Button
                   type="submit"
                   className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white shadow-md hover:shadow-lg transition-all"
-                  disabled={loading || formData.aadhaarNumber.length < 12}
+                  disabled={loading}
                 >
                   {loading ? (
                     <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
-                      Sending OTP...
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Initiating...
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
                       <Smartphone className="w-5 h-5" />
-                      Send OTP
+                      Verify Aadhaar via DigiLocker
                     </span>
                   )}
                 </Button>
