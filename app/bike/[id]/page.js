@@ -23,7 +23,6 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import LoginModal from "@/components/login-modal";
-import AadhaarVerificationModal from "@/components/aadhar-verification-modal";
 import ModernDateTimePicker from "@/components/modern-date-time-picker";
 import { apiService } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -125,7 +124,6 @@ function BikeDetailsPageContent() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showAadhaarModal, setShowAadhaarModal] = useState(false);
   const [helmetQuantity, setHelmetQuantity] = useState(1);
 
   // Initialize selectedKmOption from URL params
@@ -670,17 +668,6 @@ function BikeDetailsPageContent() {
       isLoginInProgress.current = true;
       setShowLoginModal(true);
       return;
-    }
-
-    // Check KYC status before proceeding
-    try {
-      const profileRes = await apiService.getUserProfile();
-      if (profileRes.data?.kycStatus?.aadhaar !== "verified") {
-        setShowAadhaarModal(true);
-        return;
-      }
-    } catch (err) {
-      console.error("Failed to verify KYC status:", err);
     }
 
     await proceedWithBooking();
@@ -1450,13 +1437,6 @@ function BikeDetailsPageContent() {
         onLoginSuccess={handleLoginSuccess}
         proceedWithBooking={proceedWithBooking}
       />
-
-      {showAadhaarModal && (
-        <AadhaarVerificationModal
-          isOpen={showAadhaarModal}
-          onClose={() => setShowAadhaarModal(false)}
-        />
-      )}
 
       <Footer />
     </div>
