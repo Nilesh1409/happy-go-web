@@ -99,7 +99,7 @@ export default function ProfilePage() {
       setSuccess("");
 
       const response = await apiService.uploadDLImage(dlFile);
-      setSuccess("Driving license uploaded successfully!");
+      setSuccess(response?.message || "Driving license updated successfully!");
       setDlFile(null);
 
       // Refresh profile to get updated DL info
@@ -442,13 +442,21 @@ export default function ProfilePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {/* Hidden file input always present so both branches can trigger it */}
+                <input
+                  id="dl-upload"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
                 {user?.dlImageKey ? (
                   <div className="space-y-3">
                     <div className="flex items-center text-green-600">
                       <CheckCircle className="w-5 h-5 mr-2" />
                       <span className="font-medium">Uploaded</span>
                     </div>
-                    {user.dlImageUrl && (
+                    {user.dlImageUrl && !dlFile && (
                       <div className="mt-3">
                         <img
                           src={user.dlImageUrl || "/placeholder.svg"}
@@ -457,16 +465,46 @@ export default function ProfilePage() {
                         />
                       </div>
                     )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        document.getElementById("dl-upload").click()
-                      }
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Update License
-                    </Button>
+                    {dlFile ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600">
+                          Selected: {dlFile.name}
+                        </p>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={handleDLUpload}
+                            disabled={uploadingDL}
+                            className="flex-1"
+                          >
+                            {uploadingDL ? (
+                              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                            ) : (
+                              <Upload className="w-4 h-4 mr-2" />
+                            )}
+                            {uploadingDL ? "Uploading..." : "Confirm Update"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDlFile(null)}
+                            disabled={uploadingDL}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          document.getElementById("dl-upload").click()
+                        }
+                      >
+                        <Upload className="w-4 h-4 mr-2" />
+                        Update License
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -474,13 +512,6 @@ export default function ProfilePage() {
                       Upload your driving license image for verification.
                     </p>
                     <div className="space-y-3">
-                      <input
-                        id="dl-upload"
-                        type="file"
-                        accept="image/*,.pdf"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
                       <Button
                         variant="outline"
                         onClick={() =>
