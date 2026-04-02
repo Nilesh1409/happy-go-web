@@ -14,12 +14,18 @@ import {
   Loader2,
   Camera,
   ExternalLink,
+  RefreshCw,
 } from "lucide-react";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 interface AadhaarVerificationModalProps {
   isOpen: boolean;
   onClose: () => void;
   bookingId: string;
+  /** Pass "dl" to open directly on the DL upload step (e.g. for updating an existing DL) */
+  initialStep?: Step;
 }
 
 type Step = "intro" | "loading" | "digilocker" | "completing" | "dl" | "completed";
@@ -36,15 +42,16 @@ type VerifiedData = {
 const REDIRECT_URL = "https://happygorentals.com/aadhaar-verified";
 
 const authHeader = () => ({
-  Authorization: `Bearer ${localStorage.getItem("token")}`,
+  Authorization: `Bearer ${typeof window !== "undefined" ? localStorage.getItem("token") : ""}`,
 });
 
 export default function AadhaarVerificationModal({
   isOpen,
   onClose,
   bookingId,
+  initialStep = "intro",
 }: AadhaarVerificationModalProps) {
-  const [step, setStep] = useState<Step>("intro");
+  const [step, setStep] = useState<Step>(initialStep);
   const [dlFile, setDlFile] = useState<File | null>(null);
   const [dlLoading, setDlLoading] = useState(false);
   const [error, setError] = useState("");
@@ -59,6 +66,15 @@ export default function AadhaarVerificationModal({
       pollIntervalRef.current = null;
     }
   }, []);
+
+  // Reset to initialStep whenever the modal is opened
+  useEffect(() => {
+    if (isOpen) {
+      setStep(initialStep);
+      setError("");
+      setDlFile(null);
+    }
+  }, [isOpen, initialStep]);
 
   // Cleanup on unmount or modal close
   useEffect(() => {
@@ -77,7 +93,7 @@ export default function AadhaarVerificationModal({
     setStep("loading");
     setError("");
     try {
-      const res = await fetch("/api/verification/aadhaar/initiate", {
+      const res = await fetch(`${API_BASE_URL}/api/verification/aadhaar/initiate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader() },
         body: JSON.stringify({ redirect_url: REDIRECT_URL, user_flow: "signup" }),
@@ -121,7 +137,7 @@ export default function AadhaarVerificationModal({
       }
 
       try {
-        const res = await fetch("/api/verification/aadhaar/status", {
+        const res = await fetch(`${API_BASE_URL}/api/verification/aadhaar/status`, {
           headers: authHeader(),
         });
         const data = await res.json();
@@ -133,7 +149,7 @@ export default function AadhaarVerificationModal({
           // Inline complete to avoid stale closure
           setStep("completing");
           try {
-            const completeRes = await fetch("/api/verification/aadhaar/complete", {
+            const completeRes = await fetch(`${API_BASE_URL}/api/verification/aadhaar/complete`, {
               method: "POST",
               headers: { "Content-Type": "application/json", ...authHeader() },
               body: JSON.stringify({}),
@@ -188,7 +204,7 @@ export default function AadhaarVerificationModal({
       const formData = new FormData();
       formData.append("dlImage", dlFile);
       formData.append("bookingId", bookingId);
-      const res = await fetch("/api/verification/driving-license", {
+      const res = await fetch(`${API_BASE_URL}/api/verification/driving-license`, {
         method: "POST",
         headers: authHeader(),
         body: formData,
@@ -495,12 +511,26 @@ export default function AadhaarVerificationModal({
                 </ul>
               </div>
 
-              <Button
-                className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white h-11"
-                onClick={onClose}
-              >
-                Continue to Booking
-              </Button>
+              <div className="flex flex-col gap-2 w-full">
+                <Button
+                  className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white h-11"
+                  onClick={onClose}
+                >
+                  Continue to Booking
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full h-10 text-sm gap-2"
+                  onClick={() => {
+                    setDlFile(null);
+                    setError("");
+                    setStep("dl");
+                  }}
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Update Driving License
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}

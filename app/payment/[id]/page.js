@@ -294,10 +294,12 @@ export default function PaymentPage() {
             : "Your booking has been confirmed!"
         );
 
-        // Navigate to bookings page
+        // Redirect to the confirmed booking page
+        // Use first booking ID from the booking data, fallback to params.id
+        const confirmedBookingId = booking?.bookings?.[0]?.id || params.id;
         setTimeout(() => {
-          router.push("/bookings");
-        }, 2000);
+          router.push(`/booking/confirmed/${confirmedBookingId}`);
+        }, 1500);
       } else {
         throw new Error(response.message || "Payment verification failed");
       }

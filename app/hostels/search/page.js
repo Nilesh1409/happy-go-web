@@ -47,29 +47,29 @@ import { toast } from "@/lib/toast";
 // First image will be shown as large image, next 4 as small grid
 const STATIC_HIGHLIGHT_IMAGES = [
   {
-    url: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=800",
-    title: "Main Character Vibes Only",
-    subtitle: "goSTOPS Goa Baga"
+    url: "/assets/hostel.webp",
+    title: "Happy Go Hostels — Coming Soon",
+    subtitle: "Chikkamagaluru"
   },
   {
-    url: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800",
-    title: "Vibrant Common Areas",
-    subtitle: "Where Stories Unfold"
+    url: "/hostel.jpg",
+    title: "Cozy Stays, Great Vibes",
+    subtitle: "Happy Go Hospitality"
   },
   {
-    url: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800",
-    title: "Workspace So Cute",
-    subtitle: "Get Work Done"
+    url: "/assets/hostel.webp",
+    title: "Your Home Away From Home",
+    subtitle: "Comfort & Community"
   },
   {
-    url: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800",
-    title: "The Kind Of Crazy Views That Heal",
-    subtitle: "Nature Therapy"
+    url: "/hostel.jpg",
+    title: "Explore More, Spend Less",
+    subtitle: "Budget-Friendly Stays"
   },
   {
-    url: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=800",
-    title: "Chill, Vibe, With A View",
-    subtitle: "Unwind & Connect"
+    url: "/assets/hostel.webp",
+    title: "More Hostels Coming Soon",
+    subtitle: "Stay Tuned"
   }
 ];
 
@@ -478,6 +478,7 @@ function HostelSearchContent() {
                 src={STATIC_HIGHLIGHT_IMAGES[0]?.url}
                 alt={STATIC_HIGHLIGHT_IMAGES[0]?.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => { e.currentTarget.src = "/assets/happygo.jpeg"; }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
@@ -504,6 +505,7 @@ function HostelSearchContent() {
                     src={image.url}
                     alt={image.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => { e.currentTarget.src = "/assets/happygo.jpeg"; }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-2 text-white">
