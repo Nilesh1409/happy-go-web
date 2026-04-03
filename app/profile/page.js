@@ -21,6 +21,7 @@ import {
   Save,
   X,
 } from "lucide-react";
+import Link from "next/link";
 import { apiService } from "@/lib/api";
 import AadhaarVerificationModal from "@/components/aadhar-verification-modal";
 
@@ -548,6 +549,21 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
           </div>
+        </div>
+      </div>
+
+      {/* Legal Links */}
+      <div className="max-w-4xl mx-auto px-4 pb-4">
+        <div className="flex items-center justify-center gap-6 text-sm text-gray-500">
+          <Link href="/privacy" className="hover:text-[#F47B20] transition-colors flex items-center gap-1">
+            <Shield className="w-3.5 h-3.5" />
+            Privacy Policy
+          </Link>
+          <span className="text-gray-300">|</span>
+          <Link href="/terms" className="hover:text-[#F47B20] transition-colors flex items-center gap-1">
+            <FileText className="w-3.5 h-3.5" />
+            Terms &amp; Conditions
+          </Link>
         </div>
       </div>
 
