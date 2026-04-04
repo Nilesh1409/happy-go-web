@@ -619,18 +619,30 @@ export default function BookingsPage() {
                                 </Link>
                               </Button>
                             )}
-                            
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                              className="w-full text-xs"
-                            >
-                              <a href="tel:+919008022800">
-                                <Phone className="w-3 h-3 mr-1" />
-                                Support
-                              </a>
-                            </Button>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="text-xs"
+                              >
+                                <Link href={`/booking/confirmed/${booking.bookings[0]._id}`}>
+                                  View Details
+                                </Link>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className="text-xs"
+                              >
+                                <a href="tel:+919008022800">
+                                  <Phone className="w-3 h-3 mr-1" />
+                                  Support
+                                </a>
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -783,7 +795,14 @@ export default function BookingsPage() {
                                 </Link>
                               </Button>
                             )}
-                            
+
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/booking/confirmed/${booking.bookings[0]._id}`}>
+                                View Details
+                                <ArrowRight className="w-4 h-4 ml-1" />
+                              </Link>
+                            </Button>
+
                             <Button variant="outline" size="sm" asChild>
                               <a href="tel:+919008022800">
                                 <Phone className="w-4 h-4 mr-1" />
