@@ -93,7 +93,7 @@ export default function AadhaarVerificationModal({
     setStep("loading");
     setError("");
     try {
-      const res = await fetch(`${API_BASE_URL}/api/verification/aadhaar/initiate`, {
+      const res = await fetch(`${API_BASE_URL}/verification/aadhaar/initiate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeader() },
         body: JSON.stringify({ redirect_url: REDIRECT_URL, user_flow: "signup" }),
@@ -137,7 +137,7 @@ export default function AadhaarVerificationModal({
       }
 
       try {
-        const res = await fetch(`${API_BASE_URL}/api/verification/aadhaar/status`, {
+        const res = await fetch(`${API_BASE_URL}/verification/aadhaar/status`, {
           headers: authHeader(),
         });
         const data = await res.json();
@@ -149,7 +149,7 @@ export default function AadhaarVerificationModal({
           // Inline complete to avoid stale closure
           setStep("completing");
           try {
-            const completeRes = await fetch(`${API_BASE_URL}/api/verification/aadhaar/complete`, {
+            const completeRes = await fetch(`${API_BASE_URL}/verification/aadhaar/complete`, {
               method: "POST",
               headers: { "Content-Type": "application/json", ...authHeader() },
               body: JSON.stringify({}),
@@ -204,7 +204,7 @@ export default function AadhaarVerificationModal({
       const formData = new FormData();
       formData.append("dlImage", dlFile);
       formData.append("bookingId", bookingId);
-      const res = await fetch(`${API_BASE_URL}/api/verification/driving-license`, {
+      const res = await fetch(`${API_BASE_URL}/verification/driving-license`, {
         method: "POST",
         headers: authHeader(),
         body: formData,
