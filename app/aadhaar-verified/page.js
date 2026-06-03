@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiService } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,51 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 
 export default function AadhaarVerifiedPage() {
+  return (
+    <Suspense fallback={<AadhaarVerifiedLoading />}>
+      <AadhaarVerifiedContent />
+    </Suspense>
+  );
+}
+
+function AadhaarVerifiedLoading() {
+  return (
+    <AadhaarVerifiedShell>
+      <div className="flex flex-col items-center py-6">
+        <Loader2 className="w-12 h-12 animate-spin text-[#F47B20] mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">
+          Loading Verification...
+        </h3>
+        <p className="text-sm text-gray-500">
+          Please wait while we prepare your Aadhaar verification status.
+        </p>
+      </div>
+    </AadhaarVerifiedShell>
+  );
+}
+
+function AadhaarVerifiedShell({ children }) {
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Header />
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader className="text-center pb-2 pt-6">
+            <CardTitle className="text-xl font-bold">
+              Aadhaar Verification
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 px-6 pb-8 text-center">
+            {children}
+          </CardContent>
+        </Card>
+      </div>
+      <Footer />
+    </div>
+  );
+}
+
+function AadhaarVerifiedContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const verificationId = searchParams.get("verification_id");
@@ -94,69 +139,54 @@ export default function AadhaarVerifiedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md shadow-lg">
-          <CardHeader className="text-center pb-2 pt-6">
-            <CardTitle className="text-xl font-bold">
-              Aadhaar Verification
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 px-6 pb-8 text-center">
-            {status === "polling" && (
-              <div className="flex flex-col items-center py-6">
-                <Loader2 className="w-12 h-12 animate-spin text-[#F47B20] mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Verifying Please Wait...
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Please wait while we verify your Aadhaar with DigiLocker. This
-                  process typically takes a few seconds.
-                </p>
-              </div>
-            )}
+    <AadhaarVerifiedShell>
+      {status === "polling" && (
+        <div className="flex flex-col items-center py-6">
+          <Loader2 className="w-12 h-12 animate-spin text-[#F47B20] mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Verifying Please Wait...
+          </h3>
+          <p className="text-sm text-gray-500">
+            Please wait while we verify your Aadhaar with DigiLocker. This
+            process typically takes a few seconds.
+          </p>
+        </div>
+      )}
 
-            {status === "success" && (
-              <div className="flex flex-col items-center py-6">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle className="w-10 h-10 text-green-600" />
-                </div>
-                <h3 className="text-lg font-bold text-green-700 mb-2">
-                  Verification Successful!
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Your Aadhaar has been verified successfully. Redirecting you
-                  back...
-                </p>
-              </div>
-            )}
+      {status === "success" && (
+        <div className="flex flex-col items-center py-6">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <CheckCircle className="w-10 h-10 text-green-600" />
+          </div>
+          <h3 className="text-lg font-bold text-green-700 mb-2">
+            Verification Successful!
+          </h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Your Aadhaar has been verified successfully. Redirecting you back...
+          </p>
+        </div>
+      )}
 
-            {status === "error" && (
-              <div className="flex flex-col items-center py-6">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                  <AlertCircle className="w-10 h-10 text-red-600" />
-                </div>
-                <h3 className="text-lg font-bold text-red-700 mb-2">
-                  Verification Failed
-                </h3>
-                <p className="text-sm text-gray-600 mb-6">
-                  {errorMessage ||
-                    "We couldn't verify your Aadhaar at this time."}
-                </p>
-                <Button
-                  onClick={handleRetry}
-                  className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Try Again
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-      <Footer />
-    </div>
+      {status === "error" && (
+        <div className="flex flex-col items-center py-6">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+            <AlertCircle className="w-10 h-10 text-red-600" />
+          </div>
+          <h3 className="text-lg font-bold text-red-700 mb-2">
+            Verification Failed
+          </h3>
+          <p className="text-sm text-gray-600 mb-6">
+            {errorMessage || "We couldn't verify your Aadhaar at this time."}
+          </p>
+          <Button
+            onClick={handleRetry}
+            className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Try Again
+          </Button>
+        </div>
+      )}
+    </AadhaarVerifiedShell>
   );
 }

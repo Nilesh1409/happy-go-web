@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,9 +16,40 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "@/lib/toast";
 import { apiService } from "@/lib/api";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
 
 export default function BookingVerify() {
+  return (
+    <Suspense fallback={<BookingVerifyLoading />}>
+      <BookingVerifyContent />
+    </Suspense>
+  );
+}
+
+function BookingVerifyLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-lg shadow-lg">
+        <CardHeader className="space-y-4 pb-4">
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            Identity Verification
+          </CardTitle>
+          <CardDescription>Preparing verification details...</CardDescription>
+          <div className="w-full bg-gray-200 h-2 rounded-full">
+            <div className="bg-[#F47B20] h-2 rounded-full w-1/2"></div>
+          </div>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-[#F47B20] mb-4" />
+          <p className="text-sm text-gray-600">
+            Please wait while we load the verification form.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function BookingVerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
