@@ -23,6 +23,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
 import LoginModal from "@/components/login-modal";
+import AadhaarVerificationModal from "@/components/aadhar-verification-modal";
 import ModernDateTimePicker from "@/components/modern-date-time-picker";
 import { apiService } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -124,11 +125,12 @@ function BikeDetailsPageContent() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState("");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showAadhaarModal, setShowAadhaarModal] = useState(false);
   const [helmetQuantity, setHelmetQuantity] = useState(1);
 
   // Initialize selectedKmOption from URL params
   const [selectedKmOption, setSelectedKmOption] = useState(
-    searchParams.get("kmOption") || "limited"
+    searchParams.get("kmOption") || "limited",
   );
 
   // Parse dates from URL params with better error handling
@@ -196,8 +198,8 @@ function BikeDetailsPageContent() {
 
     const filteredParams = Object.fromEntries(
       Object.entries(searchParamsObj).filter(
-        ([_, value]) => value && value.trim() !== ""
-      )
+        ([_, value]) => value && value.trim() !== "",
+      ),
     );
 
     const queryString = new URLSearchParams(filteredParams).toString();
@@ -368,7 +370,7 @@ function BikeDetailsPageContent() {
 
           const response = await apiService.getBikeDetails(
             params.id,
-            queryParams
+            queryParams,
           );
           setBike(response.data);
 
@@ -396,7 +398,7 @@ function BikeDetailsPageContent() {
         setDebounceTimer(timer);
       }
     },
-    [params.id, bookingParams, selectedKmOption, debounceTimer]
+    [params.id, bookingParams, selectedKmOption, debounceTimer],
   );
 
   // Initial load
@@ -668,6 +670,17 @@ function BikeDetailsPageContent() {
       isLoginInProgress.current = true;
       setShowLoginModal(true);
       return;
+    }
+
+    // Check KYC status before proceeding
+    try {
+      const profileRes = await apiService.getUserProfile();
+      if (profileRes.data?.kycStatus?.aadhaar !== "verified") {
+        setShowAadhaarModal(true);
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to verify KYC status:", err);
     }
 
     await proceedWithBooking();
@@ -1048,7 +1061,7 @@ function BikeDetailsPageContent() {
                             className="w-8 h-8 p-0 rounded-full"
                             onClick={() =>
                               handleHelmetQuantityChange(
-                                Math.max(0, helmetQuantity - 1)
+                                Math.max(0, helmetQuantity - 1),
                               )
                             }
                             disabled={
@@ -1070,8 +1083,8 @@ function BikeDetailsPageContent() {
                               handleHelmetQuantityChange(
                                 Math.min(
                                   bike?.helmetInfo?.maxQuantity || 10,
-                                  helmetQuantity + 1
-                                )
+                                  helmetQuantity + 1,
+                                ),
                               )
                             }
                             disabled={
@@ -1366,7 +1379,7 @@ function BikeDetailsPageContent() {
                         className="text-sm sm:text-sm font-medium text-yellow-800 cursor-pointer block"
                       >
                         I agree to the{" "}
-                        <Link href="https://happygorentals.com/terms" target="_blank" rel="noopener noreferrer" className="underline">
+                        <Link href="/terms" className="underline">
                           Terms
                         </Link>
                         {" & "}
@@ -1437,6 +1450,13 @@ function BikeDetailsPageContent() {
         onLoginSuccess={handleLoginSuccess}
         proceedWithBooking={proceedWithBooking}
       />
+
+      {showAadhaarModal && (
+        <AadhaarVerificationModal
+          isOpen={showAadhaarModal}
+          onClose={() => setShowAadhaarModal(false)}
+        />
+      )}
 
       <Footer />
     </div>

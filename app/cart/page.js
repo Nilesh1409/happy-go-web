@@ -160,12 +160,12 @@ function CartPageContent() {
         `PUT /api/cart/helmets?startDate=${params.startDate}&endDate=${
           params.endDate
         }&startTime=${encodeURIComponent(
-          params.startTime
-        )}&endTime=${encodeURIComponent(params.endTime)}`
+          params.startTime,
+        )}&endTime=${encodeURIComponent(params.endTime)}`,
       );
       console.log(
         "🔍 Request body:",
-        JSON.stringify({ quantity: params.quantity }, null, 2)
+        JSON.stringify({ quantity: params.quantity }, null, 2),
       );
 
       const response = await apiService.updateHelmetQuantity(params);
@@ -196,7 +196,7 @@ function CartPageContent() {
       // Validate cart has items (check both bikeItems and hostelItems)
       const bikeItems = cart.bikeItems || [];
       const hostelItems = cart.hostelItems || [];
-      
+
       if (!cart || (bikeItems.length === 0 && hostelItems.length === 0)) {
         setError("Your cart is empty");
         return;
@@ -210,14 +210,14 @@ function CartPageContent() {
         !cart.bikeDates?.endTime
       ) {
         setError(
-          "Missing booking dates or times. Please refresh and try again."
+          "Missing booking dates or times. Please refresh and try again.",
         );
         return;
       }
 
       if (!cart.pricing) {
         setError(
-          "Pricing information is missing. Please refresh and try again."
+          "Pricing information is missing. Please refresh and try again.",
         );
         return;
       }
@@ -290,7 +290,7 @@ function CartPageContent() {
       setError(
         error.response?.data?.message ||
           error.message ||
-          "Failed to proceed to checkout"
+          "Failed to proceed to checkout",
       );
     } finally {
       setLoading(false);
@@ -439,15 +439,21 @@ function CartPageContent() {
                                   // Check if bike has pricePerDay structure
                                   if (item.bike?.pricePerDay) {
                                     // Try weekday first, then weekend
-                                    const weekdayLimit = item.bike.pricePerDay.weekday?.limitedKm?.kmLimit;
-                                    const weekendLimit = item.bike.pricePerDay.weekend?.limitedKm?.kmLimit;
+                                    const weekdayLimit =
+                                      item.bike.pricePerDay.weekday?.limitedKm
+                                        ?.kmLimit;
+                                    const weekendLimit =
+                                      item.bike.pricePerDay.weekend?.limitedKm
+                                        ?.kmLimit;
                                     return weekdayLimit || weekendLimit || 0;
                                   }
                                   // Fallback to item's kmLimit or 0
                                   return item.kmLimit || 0;
                                 };
                                 const kmLimit = getKmLimit();
-                                return kmLimit > 0 ? `${kmLimit} KM Limited` : "0 KM Limited";
+                                return kmLimit > 0
+                                  ? `${kmLimit} KM Limited`
+                                  : "0 KM Limited";
                               })()}
                         </p>
 
@@ -528,12 +534,13 @@ function CartPageContent() {
 
             {/* Promotional Banner - Book Hostel with Bike */}
             {bikeItems.length > 0 && hostelItems.length === 0 && (
-              <Card className="shadow-lg border-2 border-[#F47B20] bg-gradient-to-r from-orange-50 to-amber-50 cursor-pointer hover:shadow-xl transition-all duration-300"
+              <Card
+                className="shadow-lg border-2 border-[#F47B20] bg-gradient-to-r from-orange-50 to-amber-50 cursor-pointer hover:shadow-xl transition-all duration-300"
                 onClick={() => {
                   // Get bike dates from cart
                   const startDate = cart.bikeDates?.startDate;
                   const endDate = cart.bikeDates?.endDate;
-                  
+
                   if (startDate && endDate) {
                     // Format dates to YYYY-MM-DD (remove time if present)
                     const formatDateOnly = (dateString) => {
@@ -541,25 +548,30 @@ function CartPageContent() {
                       // Handle both "YYYY-MM-DD" and ISO format "YYYY-MM-DDTHH:mm:ss"
                       return dateString.split("T")[0];
                     };
-                    
+
                     // Add 1 day to bike drop date for hostel checkout
                     const addOneDay = (dateString) => {
                       const date = new Date(dateString);
                       date.setDate(date.getDate() + 1);
                       const year = date.getFullYear();
-                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      const month = String(date.getMonth() + 1).padStart(
+                        2,
+                        "0",
+                      );
                       const day = String(date.getDate()).padStart(2, "0");
                       return `${year}-${month}-${day}`;
                     };
-                    
+
                     const checkIn = formatDateOnly(startDate);
                     const checkOut = addOneDay(endDate); // Bike drop date + 1 day
-                    
+
                     // Navigate to hostel search with bike dates (date only, no time)
-                    router.push(`/hostels/search?location=Chikkamagaluru&checkIn=${checkIn}&checkOut=${checkOut}&people=1&stayType=hostel`);
+                    router.push(
+                      `/hostels/search?location=Chikkamagaluru&checkIn=${checkIn}&checkOut=${checkOut}&people=1&stayType=hostel`,
+                    );
                   } else {
                     // If no dates, just go to hostel home page
-                    router.push('/hostels');
+                    router.push("/hostels");
                   }
                 }}
               >
@@ -581,7 +593,14 @@ function CartPageContent() {
                         </h3>
                       </div>
                       <p className="text-sm sm:text-base text-gray-700 mb-1">
-                        <span className="font-semibold text-[#F47B20]">Book Hostel & Bike Together</span> to get an extra <span className="font-bold text-[#F47B20]">10% discount</span> on total amount
+                        <span className="font-semibold text-[#F47B20]">
+                          Book Hostel & Bike Together
+                        </span>{" "}
+                        to get an extra{" "}
+                        <span className="font-bold text-[#F47B20]">
+                          10% discount
+                        </span>{" "}
+                        on total amount
                       </p>
                       <p className="text-xs sm:text-sm text-gray-600">
                         Click here to explore hostels for your travel dates
@@ -613,7 +632,9 @@ function CartPageContent() {
                         {/* Hostel Image */}
                         <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
                           <Image
-                            src={item.hostel.images?.[0] || "/assets/happygo.jpeg"}
+                            src={
+                              item.hostel.images?.[0] || "/assets/happygo.jpeg"
+                            }
                             alt={item.hostel.name}
                             width={64}
                             height={64}
@@ -626,16 +647,21 @@ function CartPageContent() {
                           <h3 className="font-semibold text-gray-900 text-sm truncate">
                             {item.hostel.name}
                           </h3>
-                          <p className="text-xs text-gray-600">{item.roomType}</p>
+                          <p className="text-xs text-gray-600">
+                            {item.roomType}
+                          </p>
                           <p className="text-xs text-gray-500 mb-2">
-                            {item.mealOption === "bedOnly" ? "Bed Only" :
-                             item.mealOption === "bedAndBreakfast" ? "Bed & Breakfast" :
-                             "Bed + Breakfast + Dinner"}
+                            {item.mealOption === "bedOnly"
+                              ? "Bed Only"
+                              : item.mealOption === "bedAndBreakfast"
+                                ? "Bed & Breakfast"
+                                : "Bed + Breakfast + Dinner"}
                           </p>
 
                           <div className="flex items-center justify-between">
                             <div className="text-xs text-gray-600">
-                              {item.quantity} bed(s) × {item.numberOfNights} night(s)
+                              {item.quantity} bed(s) × {item.numberOfNights}{" "}
+                              night(s)
                             </div>
                             <div className="font-semibold text-[#F47B20]">
                               ₹{item.totalPrice?.toFixed(2)}
@@ -841,11 +867,15 @@ function CartPageContent() {
                 {/* Bike Dates */}
                 {bikeItems.length > 0 && cart.bikeDates?.startDate && (
                   <>
-                    <div className="font-semibold text-[#F47B20] text-xs mb-2">BIKE RENTAL</div>
+                    <div className="font-semibold text-[#F47B20] text-xs mb-2">
+                      BIKE RENTAL
+                    </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Pickup:</span>
                       <span className="font-medium text-right">
-                        {new Date(cart.bikeDates.startDate).toLocaleDateString()}
+                        {new Date(
+                          cart.bikeDates.startDate,
+                        ).toLocaleDateString()}
                         <br />
                         {cart.bikeDates.startTime}
                       </span>
@@ -861,33 +891,47 @@ function CartPageContent() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Total Bikes:</span>
                       <span className="font-medium">
-                        {bikeItems.reduce((sum, item) => sum + item.quantity, 0)}
+                        {bikeItems.reduce(
+                          (sum, item) => sum + item.quantity,
+                          0,
+                        )}
                       </span>
                     </div>
                   </>
                 )}
-                
+
                 {/* Hostel Dates */}
                 {hostelItems.length > 0 && cart.hostelDates?.checkIn && (
                   <>
-                    {bikeItems.length > 0 && <div className="border-t pt-3 mt-3" />}
-                    <div className="font-semibold text-[#F47B20] text-xs mb-2">HOSTEL STAY</div>
+                    {bikeItems.length > 0 && (
+                      <div className="border-t pt-3 mt-3" />
+                    )}
+                    <div className="font-semibold text-[#F47B20] text-xs mb-2">
+                      HOSTEL STAY
+                    </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Check-in:</span>
                       <span className="font-medium">
-                        {new Date(cart.hostelDates.checkIn).toLocaleDateString()}
+                        {new Date(
+                          cart.hostelDates.checkIn,
+                        ).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Check-out:</span>
                       <span className="font-medium">
-                        {new Date(cart.hostelDates.checkOut).toLocaleDateString()}
+                        {new Date(
+                          cart.hostelDates.checkOut,
+                        ).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Total Beds:</span>
                       <span className="font-medium">
-                        {hostelItems.reduce((sum, item) => sum + item.quantity, 0)}
+                        {hostelItems.reduce(
+                          (sum, item) => sum + item.quantity,
+                          0,
+                        )}
                       </span>
                     </div>
                   </>

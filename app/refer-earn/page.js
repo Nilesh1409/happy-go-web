@@ -64,7 +64,7 @@ export default function ReferEarnPage() {
         navigator.share(shareData);
       } else {
         const shareUrl = `https://wa.me/?text=${encodeURIComponent(
-          `${shareData.text} ${shareData.url}`
+          `${shareData.text} ${shareData.url}`,
         )}`;
         window.open(shareUrl, "_blank");
       }
@@ -387,8 +387,8 @@ export default function ReferEarnPage() {
                             referral.status === "completed"
                               ? "bg-green-100 text-green-800 hover:bg-green-100"
                               : referral.status === "pending"
-                              ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                              : "bg-red-100 text-red-800 hover:bg-red-100"
+                                ? "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
+                                : "bg-red-100 text-red-800 hover:bg-red-100"
                           }`}
                         >
                           {referral.status.charAt(0).toUpperCase() +

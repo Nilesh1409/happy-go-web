@@ -21,6 +21,7 @@ import {
 import Link from "next/link";
 import Header from "@/components/header";
 import Footer from "@/components/footer";
+import Popup from "@/components/Popup";
 import ModernDateTimePicker from "@/components/modern-date-time-picker";
 import { apiService } from "@/lib/api";
 import { adjustDrop } from "@/lib/date-time";
@@ -52,7 +53,7 @@ const getNextHalfHourBlock = () => {
   // Format as HH:MM
   return `${String(nextHours).padStart(2, "0")}:${String(nextMinutes).padStart(
     2,
-    "0"
+    "0",
   )}`;
 };
 
@@ -112,7 +113,7 @@ export default function HomePage() {
       pickupDate,
       pickupTime,
       dropoffDate,
-      dropoffTime
+      dropoffTime,
     );
 
     // Only update if anything actually changes
@@ -263,6 +264,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Popup />
       <Header />
 
       {/* Hero Section */}
@@ -337,7 +339,7 @@ export default function HomePage() {
                             ...prev,
                             pickupTime: false,
                           })),
-                        200
+                        200,
                       );
                     }}
                     onTimeSelected={() => {
@@ -352,7 +354,7 @@ export default function HomePage() {
                             ...prev,
                             dropoffDate: false,
                           })),
-                        200
+                        200,
                       );
                     }}
                     minDate={today}
@@ -382,7 +384,7 @@ export default function HomePage() {
                             ...prev,
                             dropoffTime: false,
                           })),
-                        200
+                        200,
                       );
                     }}
                     isDropOff={true}
@@ -656,8 +658,6 @@ export default function HomePage() {
                 </Button>
               </CardContent>
             </Card>
-
-            
           </div>
         </div>
       </section>
