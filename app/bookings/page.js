@@ -89,7 +89,7 @@ export default function BookingsPage() {
     } catch (error) {
       toast.error(
         "Extension failed",
-        error.message || "Failed to extend booking"
+        error.message || "Failed to extend booking",
       );
     } finally {
       setExtendLoading(false);
@@ -112,7 +112,7 @@ export default function BookingsPage() {
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
-  
+
   const getPaymentStatusColor = (status) => {
     switch (status) {
       case "completed":
@@ -163,13 +163,15 @@ export default function BookingsPage() {
         numberOfNights: booking.numberOfNights || 1,
       };
     }
-    
+
     // Bike booking (new structure with bike object directly)
     if (booking.bookingType === "bike" && booking.bike) {
       return {
         type: "bike",
         title: booking.bike?.title || "Bike Booking",
-        subtitle: booking.bike?.model ? `${booking.bike.brand} ${booking.bike.model}` : "",
+        subtitle: booking.bike?.model
+          ? `${booking.bike.brand} ${booking.bike.model}`
+          : "",
         images: booking.bike?.images || [],
         totalQuantity: 1,
         totalPrice: booking.priceDetails?.totalAmount || 0,
@@ -182,33 +184,35 @@ export default function BookingsPage() {
         endTime: booking.endTime,
       };
     }
-    
+
     // Bike booking (old structure with bikeItems array)
     if (booking.bikeItems && booking.bikeItems.length > 0) {
       const firstBike = booking.bikeItems[0];
       return {
         type: "bike",
         title: firstBike.bike?.title || `Bike ${firstBike.bike || "Unknown"}`,
-        subtitle: firstBike.bike?.model ? `${firstBike.bike.brand} ${firstBike.bike.model}` : "",
+        subtitle: firstBike.bike?.model
+          ? `${firstBike.bike.brand} ${firstBike.bike.model}`
+          : "",
         images: firstBike.bike?.images || [],
         totalQuantity: booking.bikeItems.reduce(
           (sum, item) => sum + item.quantity,
-          0
+          0,
         ),
         totalPrice: booking.bikeItems.reduce(
           (sum, item) => sum + item.totalPrice,
-          0
+          0,
         ),
         location: "",
-        kmLimit: firstBike.kmOption === "unlimited" ? "Unlimited" : "Limited",
-        isUnlimited: firstBike.kmOption === "unlimited",
+        kmLimit: firstBike.kmOption === "unlimited" ? "120 KM" : "Limited",
+        isUnlimited: firstBike.kmOption === "120 KM",
         startDate: booking.startDate,
         endDate: booking.endDate,
         startTime: booking.startTime,
         endTime: booking.endTime,
       };
     }
-    
+
     return {
       type: "unknown",
       title: "Unknown Booking",
@@ -219,10 +223,10 @@ export default function BookingsPage() {
       location: "",
     };
   };
-  
+
   // Keep old function for compatibility
   const getBikeInfo = getBookingInfo;
-  
+
   // Helper function to get correct booking detail URL
   const getBookingDetailUrl = (booking) => {
     if (booking.bookingType === "hostel") {
@@ -234,21 +238,27 @@ export default function BookingsPage() {
   const filteredBookings = bookings.filter((booking) => {
     const matchesStatus =
       filterStatus === "all" || booking.bookingStatus === filterStatus;
-    
+
     // Handle search for combined bookings
     if (booking.isCombined) {
       const matchesSearch =
-        booking.paymentGroupId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.bookings.some(item => {
+        booking.paymentGroupId
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        booking.bookings.some((item) => {
           if (item.bookingType === "bike") {
-            return item.bikeItems?.[0]?.bike?.title?.toLowerCase().includes(searchTerm.toLowerCase());
+            return item.bikeItems?.[0]?.bike?.title
+              ?.toLowerCase()
+              .includes(searchTerm.toLowerCase());
           } else {
-            return item.hostel?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+            return item.hostel?.name
+              ?.toLowerCase()
+              .includes(searchTerm.toLowerCase());
           }
         });
       return matchesStatus && matchesSearch;
     }
-    
+
     // Handle search for single bookings
     const bikeInfo = getBikeInfo(booking);
     const matchesSearch =
@@ -478,7 +488,7 @@ export default function BookingsPage() {
                             </Badge>
                             <Badge
                               className={`${getStatusColor(
-                                booking.bookingStatus
+                                booking.bookingStatus,
                               )} border text-xs`}
                             >
                               {getStatusIcon(booking.bookingStatus)}
@@ -488,12 +498,14 @@ export default function BookingsPage() {
                             </Badge>
                             <Badge
                               className={`${getPaymentStatusColor(
-                                booking.paymentStatus
+                                booking.paymentStatus,
                               )} border text-xs`}
                             >
                               <CreditCard className="w-3 h-3" />
                               <span className="ml-1 capitalize">
-                                {booking.paymentStatus === "partial" ? "25% Paid" : booking.paymentStatus}
+                                {booking.paymentStatus === "partial"
+                                  ? "25% Paid"
+                                  : booking.paymentStatus}
                               </span>
                             </Badge>
                           </div>
@@ -505,14 +517,22 @@ export default function BookingsPage() {
                         {/* Content */}
                         <div className="p-4 space-y-4">
                           <div className="text-sm">
-                            <p className="text-gray-600 mb-2">This booking includes:</p>
+                            <p className="text-gray-600 mb-2">
+                              This booking includes:
+                            </p>
                             <div className="space-y-2">
                               {booking.bookings.map((item, idx) => (
-                                <div key={idx} className="flex items-start space-x-3 bg-gray-50 p-3 rounded-lg">
+                                <div
+                                  key={idx}
+                                  className="flex items-start space-x-3 bg-gray-50 p-3 rounded-lg"
+                                >
                                   <div className="w-16 h-12 bg-white rounded overflow-hidden flex-shrink-0">
                                     {item.bookingType === "bike" ? (
                                       <Image
-                                        src={item.bikeItems?.[0]?.bike?.images?.[0] || "/placeholder.svg"}
+                                        src={
+                                          item.bikeItems?.[0]?.bike
+                                            ?.images?.[0] || "/placeholder.svg"
+                                        }
                                         alt="Bike"
                                         width={64}
                                         height={48}
@@ -520,7 +540,10 @@ export default function BookingsPage() {
                                       />
                                     ) : (
                                       <Image
-                                        src={item.hostel?.images?.[0] || "/placeholder.svg"}
+                                        src={
+                                          item.hostel?.images?.[0] ||
+                                          "/placeholder.svg"
+                                        }
                                         alt="Hostel"
                                         width={64}
                                         height={48}
@@ -537,12 +560,14 @@ export default function BookingsPage() {
                                       )}
                                       <span className="font-semibold text-xs">
                                         {item.bookingType === "bike"
-                                          ? item.bikeItems?.[0]?.bike?.title || "Bike"
+                                          ? item.bikeItems?.[0]?.bike?.title ||
+                                            "Bike"
                                           : item.hostel?.name || "Hostel"}
                                       </span>
                                     </div>
                                     <p className="text-xs text-gray-600 mt-1">
-                                      ₹{item.priceDetails?.totalAmount?.toLocaleString()}
+                                      ₹
+                                      {item.priceDetails?.totalAmount?.toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
@@ -553,7 +578,9 @@ export default function BookingsPage() {
                           {/* Total Amount */}
                           <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-medium text-gray-700">Total Amount:</span>
+                              <span className="text-sm font-medium text-gray-700">
+                                Total Amount:
+                              </span>
                               <div className="flex items-center">
                                 <IndianRupee className="w-5 h-5 text-[#F47B20]" />
                                 <span className="font-bold text-xl text-[#F47B20]">
@@ -565,11 +592,17 @@ export default function BookingsPage() {
                               <>
                                 <div className="flex items-center justify-between text-xs text-gray-600">
                                   <span>Paid (25%):</span>
-                                  <span>₹{booking.combinedDetails.paidAmount?.toLocaleString()}</span>
+                                  <span>
+                                    ₹
+                                    {booking.combinedDetails.paidAmount?.toLocaleString()}
+                                  </span>
                                 </div>
                                 <div className="flex items-center justify-between text-xs text-gray-600 mt-1">
                                   <span>Remaining (75%):</span>
-                                  <span>₹{booking.combinedDetails.remainingAmount?.toLocaleString()}</span>
+                                  <span>
+                                    ₹
+                                    {booking.combinedDetails.remainingAmount?.toLocaleString()}
+                                  </span>
                                 </div>
                               </>
                             )}
@@ -583,11 +616,14 @@ export default function BookingsPage() {
                                 Start Date
                               </div>
                               <div className="font-medium">
-                                {new Date(booking.startDate).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric"
-                                })}
+                                {new Date(booking.startDate).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )}
                               </div>
                             </div>
                             <div className="space-y-1">
@@ -596,11 +632,14 @@ export default function BookingsPage() {
                                 End Date
                               </div>
                               <div className="font-medium">
-                                {new Date(booking.endDate).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric"
-                                })}
+                                {new Date(booking.endDate).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )}
                               </div>
                             </div>
                           </div>
@@ -613,7 +652,9 @@ export default function BookingsPage() {
                                 className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs"
                                 asChild
                               >
-                                <Link href={`/payment/${booking.bookings[0]._id}`}>
+                                <Link
+                                  href={`/payment/${booking.bookings[0]._id}`}
+                                >
                                   <CreditCard className="w-3 h-3 mr-1" />
                                   Complete Payment (75%)
                                 </Link>
@@ -627,7 +668,9 @@ export default function BookingsPage() {
                                 asChild
                                 className="text-xs"
                               >
-                                <Link href={`/booking/confirmed/${booking.bookings[0]._id}`}>
+                                <Link
+                                  href={`/booking/confirmed/${booking.bookings[0]._id}`}
+                                >
                                   View Details
                                 </Link>
                               </Button>
@@ -659,7 +702,7 @@ export default function BookingsPage() {
                                 </Badge>
                                 <Badge
                                   className={`${getStatusColor(
-                                    booking.bookingStatus
+                                    booking.bookingStatus,
                                   )} border`}
                                 >
                                   {getStatusIcon(booking.bookingStatus)}
@@ -669,21 +712,26 @@ export default function BookingsPage() {
                                 </Badge>
                                 <Badge
                                   className={`${getPaymentStatusColor(
-                                    booking.paymentStatus
+                                    booking.paymentStatus,
                                   )} border`}
                                 >
                                   <CreditCard className="w-4 h-4" />
                                   <span className="ml-1 capitalize">
-                                    {booking.paymentStatus === "partial" ? "25% Paid" : booking.paymentStatus}
+                                    {booking.paymentStatus === "partial"
+                                      ? "25% Paid"
+                                      : booking.paymentStatus}
                                   </span>
                                 </Badge>
                               </div>
                               <p className="text-sm text-gray-600">
-                                Payment Group ID: {booking.paymentGroupId.slice(-12)}
+                                Payment Group ID:{" "}
+                                {booking.paymentGroupId.slice(-12)}
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm text-gray-600 mb-1">Total Amount</p>
+                              <p className="text-sm text-gray-600 mb-1">
+                                Total Amount
+                              </p>
                               <div className="flex items-center">
                                 <IndianRupee className="w-6 h-6 text-[#F47B20]" />
                                 <span className="font-bold text-2xl text-[#F47B20]">
@@ -693,10 +741,12 @@ export default function BookingsPage() {
                               {booking.paymentStatus === "partial" && (
                                 <div className="mt-2 space-y-1">
                                   <p className="text-xs text-gray-600">
-                                    Paid: ₹{booking.combinedDetails.paidAmount?.toLocaleString()}
+                                    Paid: ₹
+                                    {booking.combinedDetails.paidAmount?.toLocaleString()}
                                   </p>
                                   <p className="text-xs text-gray-600">
-                                    Remaining: ₹{booking.combinedDetails.remainingAmount?.toLocaleString()}
+                                    Remaining: ₹
+                                    {booking.combinedDetails.remainingAmount?.toLocaleString()}
                                   </p>
                                 </div>
                               )}
@@ -706,12 +756,18 @@ export default function BookingsPage() {
                           {/* Items Grid */}
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             {booking.bookings.map((item, idx) => (
-                              <div key={idx} className="bg-gray-50 p-4 rounded-lg">
+                              <div
+                                key={idx}
+                                className="bg-gray-50 p-4 rounded-lg"
+                              >
                                 <div className="flex gap-4">
                                   <div className="w-24 h-20 bg-white rounded overflow-hidden flex-shrink-0">
                                     {item.bookingType === "bike" ? (
                                       <Image
-                                        src={item.bikeItems?.[0]?.bike?.images?.[0] || "/placeholder.svg"}
+                                        src={
+                                          item.bikeItems?.[0]?.bike
+                                            ?.images?.[0] || "/placeholder.svg"
+                                        }
                                         alt="Bike"
                                         width={96}
                                         height={80}
@@ -719,7 +775,10 @@ export default function BookingsPage() {
                                       />
                                     ) : (
                                       <Image
-                                        src={item.hostel?.images?.[0] || "/placeholder.svg"}
+                                        src={
+                                          item.hostel?.images?.[0] ||
+                                          "/placeholder.svg"
+                                        }
                                         alt="Hostel"
                                         width={96}
                                         height={80}
@@ -740,7 +799,8 @@ export default function BookingsPage() {
                                     </div>
                                     <h4 className="font-bold text-gray-900 mb-1">
                                       {item.bookingType === "bike"
-                                        ? item.bikeItems?.[0]?.bike?.title || "Bike"
+                                        ? item.bikeItems?.[0]?.bike?.title ||
+                                          "Bike"
                                         : item.hostel?.name || "Hostel"}
                                     </h4>
                                     {item.bookingType === "hostel" && (
@@ -749,7 +809,8 @@ export default function BookingsPage() {
                                       </p>
                                     )}
                                     <p className="text-sm font-semibold text-[#F47B20]">
-                                      ₹{item.priceDetails?.totalAmount?.toLocaleString()}
+                                      ₹
+                                      {item.priceDetails?.totalAmount?.toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
@@ -760,23 +821,33 @@ export default function BookingsPage() {
                           {/* Dates */}
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <p className="text-sm text-gray-500 mb-1">Start Date</p>
+                              <p className="text-sm text-gray-500 mb-1">
+                                Start Date
+                              </p>
                               <p className="font-medium">
-                                {new Date(booking.startDate).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric"
-                                })}
+                                {new Date(booking.startDate).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )}
                               </p>
                             </div>
                             <div>
-                              <p className="text-sm text-gray-500 mb-1">End Date</p>
+                              <p className="text-sm text-gray-500 mb-1">
+                                End Date
+                              </p>
                               <p className="font-medium">
-                                {new Date(booking.endDate).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric"
-                                })}
+                                {new Date(booking.endDate).toLocaleDateString(
+                                  "en-IN",
+                                  {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  },
+                                )}
                               </p>
                             </div>
                           </div>
@@ -789,7 +860,9 @@ export default function BookingsPage() {
                                 className="bg-blue-600 hover:bg-blue-700 text-white"
                                 asChild
                               >
-                                <Link href={`/payment/${booking.bookings[0]._id}`}>
+                                <Link
+                                  href={`/payment/${booking.bookings[0]._id}`}
+                                >
                                   <CreditCard className="w-4 h-4 mr-1" />
                                   Complete Payment (75%)
                                 </Link>
@@ -797,7 +870,9 @@ export default function BookingsPage() {
                             )}
 
                             <Button variant="outline" size="sm" asChild>
-                              <Link href={`/booking/confirmed/${booking.bookings[0]._id}`}>
+                              <Link
+                                href={`/booking/confirmed/${booking.bookings[0]._id}`}
+                              >
                                 View Details
                                 <ArrowRight className="w-4 h-4 ml-1" />
                               </Link>
@@ -816,7 +891,7 @@ export default function BookingsPage() {
                   </Card>
                 );
               }
-              
+
               const bikeInfo = getBikeInfo(booking);
 
               return (
@@ -832,7 +907,7 @@ export default function BookingsPage() {
                         <div className="flex items-center space-x-2">
                           <Badge
                             className={`${getStatusColor(
-                              booking.bookingStatus
+                              booking.bookingStatus,
                             )} border text-xs`}
                           >
                             {getStatusIcon(booking.bookingStatus)}
@@ -842,16 +917,21 @@ export default function BookingsPage() {
                           </Badge>
                           <Badge
                             className={`${getPaymentStatusColor(
-                              booking.paymentStatus
+                              booking.paymentStatus,
                             )} border text-xs`}
                           >
                             <CreditCard className="w-3 h-3" />
                             <span className="ml-1 capitalize">
-                              {booking.paymentStatus === "partial" ? "25% Paid" : booking.paymentStatus}
+                              {booking.paymentStatus === "partial"
+                                ? "25% Paid"
+                                : booking.paymentStatus}
                             </span>
                           </Badge>
                           {booking.paymentGroupId && (
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                            <Badge
+                              variant="outline"
+                              className="bg-blue-50 text-blue-700 border-blue-200 text-xs"
+                            >
                               Combined
                             </Badge>
                           )}
@@ -900,36 +980,43 @@ export default function BookingsPage() {
                           <div className="space-y-1">
                             <div className="flex items-center text-gray-500">
                               <Calendar className="w-3 h-3 mr-1" />
-                              {bikeInfo.type === "hostel" ? "Check-in" : "Pickup"}
+                              {bikeInfo.type === "hostel"
+                                ? "Check-in"
+                                : "Pickup"}
                             </div>
                             <div className="font-medium">
-                              {new Date(bikeInfo.type === "hostel" ? bikeInfo.checkIn : booking.startDate).toLocaleDateString(
-                                "en-IN",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                }
-                              )}
+                              {new Date(
+                                bikeInfo.type === "hostel"
+                                  ? bikeInfo.checkIn
+                                  : booking.startDate,
+                              ).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                              })}
                             </div>
-                            {bikeInfo.type !== "hostel" && booking.startTime && (
-                              <div className="text-gray-600">
-                                {booking.startTime}
-                              </div>
-                            )}
+                            {bikeInfo.type !== "hostel" &&
+                              booking.startTime && (
+                                <div className="text-gray-600">
+                                  {booking.startTime}
+                                </div>
+                              )}
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center text-gray-500">
                               <Calendar className="w-3 h-3 mr-1" />
-                              {bikeInfo.type === "hostel" ? "Check-out" : "Dropoff"}
+                              {bikeInfo.type === "hostel"
+                                ? "Check-out"
+                                : "Dropoff"}
                             </div>
                             <div className="font-medium">
-                              {new Date(bikeInfo.type === "hostel" ? bikeInfo.checkOut : booking.endDate).toLocaleDateString(
-                                "en-IN",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                }
-                              )}
+                              {new Date(
+                                bikeInfo.type === "hostel"
+                                  ? bikeInfo.checkOut
+                                  : booking.endDate,
+                              ).toLocaleDateString("en-IN", {
+                                day: "2-digit",
+                                month: "short",
+                              })}
                             </div>
                             {bikeInfo.type !== "hostel" && booking.endTime && (
                               <div className="text-gray-600">
@@ -944,23 +1031,31 @@ export default function BookingsPage() {
                           <div className="bg-blue-50 p-3 rounded-lg space-y-1">
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-600">Room Type:</span>
-                              <span className="font-medium">{bikeInfo.subtitle}</span>
+                              <span className="font-medium">
+                                {bikeInfo.subtitle}
+                              </span>
                             </div>
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-600">Meal:</span>
                               <span className="font-medium">
-                                {bikeInfo.mealOption === "bedOnly" ? "Bed Only" :
-                                 bikeInfo.mealOption === "bedAndBreakfast" ? "Bed & Breakfast" :
-                                 "Bed + Breakfast + Dinner"}
+                                {bikeInfo.mealOption === "bedOnly"
+                                  ? "Bed Only"
+                                  : bikeInfo.mealOption === "bedAndBreakfast"
+                                    ? "Bed & Breakfast"
+                                    : "Bed + Breakfast + Dinner"}
                               </span>
                             </div>
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-600">Beds:</span>
-                              <span className="font-medium">{bikeInfo.totalQuantity}</span>
+                              <span className="font-medium">
+                                {bikeInfo.totalQuantity}
+                              </span>
                             </div>
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-600">Nights:</span>
-                              <span className="font-medium">{bikeInfo.numberOfNights}</span>
+                              <span className="font-medium">
+                                {bikeInfo.numberOfNights}
+                              </span>
                             </div>
                           </div>
                         )}
@@ -970,12 +1065,16 @@ export default function BookingsPage() {
                           <div className="bg-orange-50 p-3 rounded-lg">
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-600">KM Limit:</span>
-                              <span className="font-medium">{bikeInfo.kmLimit}</span>
+                              <span className="font-medium">
+                                {bikeInfo.kmLimit}
+                              </span>
                             </div>
                             {booking.helmetDetails?.quantity > 0 && (
                               <div className="flex items-center justify-between text-xs mt-1">
                                 <span className="text-gray-600">Helmets:</span>
-                                <span className="font-medium">{booking.helmetDetails.quantity}</span>
+                                <span className="font-medium">
+                                  {booking.helmetDetails.quantity}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -995,7 +1094,7 @@ export default function BookingsPage() {
                               </Link>
                             </Button>
                           )}
-                          
+
                           {/* {booking.paymentStatus === "pending" && (
                             <Button
                               size="sm"
@@ -1008,7 +1107,7 @@ export default function BookingsPage() {
                               </Link>
                             </Button>
                           )} */}
-                          
+
                           <div className="grid grid-cols-2 gap-2">
                             {booking.paymentStatus !== "pending" && (
                               <Button
@@ -1076,7 +1175,7 @@ export default function BookingsPage() {
                             <div className="flex flex-wrap gap-2">
                               <Badge
                                 className={`${getStatusColor(
-                                  booking.bookingStatus
+                                  booking.bookingStatus,
                                 )} border text-xs sm:text-sm`}
                               >
                                 {getStatusIcon(booking.bookingStatus)}
@@ -1086,16 +1185,21 @@ export default function BookingsPage() {
                               </Badge>
                               <Badge
                                 className={`${getPaymentStatusColor(
-                                  booking.paymentStatus
+                                  booking.paymentStatus,
                                 )} border text-xs sm:text-sm`}
                               >
                                 <CreditCard className="w-3 h-3 sm:w-4 sm:h-4" />
                                 <span className="ml-1 capitalize">
-                                  {booking.paymentStatus === "partial" ? "25% Paid" : booking.paymentStatus}
+                                  {booking.paymentStatus === "partial"
+                                    ? "25% Paid"
+                                    : booking.paymentStatus}
                                 </span>
                               </Badge>
                               {booking.paymentGroupId && (
-                                <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs sm:text-sm">
+                                <Badge
+                                  variant="outline"
+                                  className="bg-blue-50 text-blue-700 border-blue-200 text-xs sm:text-sm"
+                                >
                                   Combined Payment
                                 </Badge>
                               )}
@@ -1105,31 +1209,43 @@ export default function BookingsPage() {
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
                             <div>
                               <p className="text-xs sm:text-sm text-gray-500 mb-1">
-                                {bikeInfo.type === "hostel" ? "Check-in Date" : "Pickup Date"}
+                                {bikeInfo.type === "hostel"
+                                  ? "Check-in Date"
+                                  : "Pickup Date"}
                               </p>
                               <p className="font-medium text-sm sm:text-base">
                                 {new Date(
-                                  bikeInfo.type === "hostel" ? bikeInfo.checkIn : booking.startDate
+                                  bikeInfo.type === "hostel"
+                                    ? bikeInfo.checkIn
+                                    : booking.startDate,
                                 ).toLocaleDateString()}
                               </p>
-                              {bikeInfo.type !== "hostel" && booking.startTime && (
-                                <p className="text-xs sm:text-sm text-gray-600">
-                                  {booking.startTime}
-                                </p>
-                              )}
+                              {bikeInfo.type !== "hostel" &&
+                                booking.startTime && (
+                                  <p className="text-xs sm:text-sm text-gray-600">
+                                    {booking.startTime}
+                                  </p>
+                                )}
                             </div>
                             <div>
                               <p className="text-xs sm:text-sm text-gray-500 mb-1">
-                                {bikeInfo.type === "hostel" ? "Check-out Date" : "Dropoff Date"}
+                                {bikeInfo.type === "hostel"
+                                  ? "Check-out Date"
+                                  : "Dropoff Date"}
                               </p>
                               <p className="font-medium text-sm sm:text-base">
-                                {new Date(bikeInfo.type === "hostel" ? bikeInfo.checkOut : booking.endDate).toLocaleDateString()}
+                                {new Date(
+                                  bikeInfo.type === "hostel"
+                                    ? bikeInfo.checkOut
+                                    : booking.endDate,
+                                ).toLocaleDateString()}
                               </p>
-                              {bikeInfo.type !== "hostel" && booking.endTime && (
-                                <p className="text-xs sm:text-sm text-gray-600">
-                                  {booking.endTime}
-                                </p>
-                              )}
+                              {bikeInfo.type !== "hostel" &&
+                                booking.endTime && (
+                                  <p className="text-xs sm:text-sm text-gray-600">
+                                    {booking.endTime}
+                                  </p>
+                                )}
                             </div>
                             <div>
                               <p className="text-xs sm:text-sm text-gray-500 mb-1">
@@ -1195,7 +1311,7 @@ export default function BookingsPage() {
                                 </Link>
                               </Button>
                             )}
-                            
+
                             {/* {booking.paymentStatus === "pending" && (
                               <Button
                                 size="sm"
@@ -1208,7 +1324,7 @@ export default function BookingsPage() {
                                 </Link>
                               </Button>
                             )} */}
-                            
+
                             {booking.paymentStatus !== "pending" && (
                               <Button variant="outline" size="sm" asChild>
                                 <Link href={getBookingDetailUrl(booking)}>

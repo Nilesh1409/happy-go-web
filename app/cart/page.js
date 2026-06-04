@@ -432,7 +432,7 @@ function CartPageContent() {
                         </h3>
                         <p className="text-xs text-gray-600 mb-3">
                           {item.kmOption === "unlimited"
-                            ? "Unlimited KM"
+                            ? "120 KM"
                             : (() => {
                                 // Get km limit from bike pricing structure similar to search page
                                 const getKmLimit = () => {
