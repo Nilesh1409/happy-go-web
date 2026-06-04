@@ -106,7 +106,7 @@ const getPricingOptions = (bike) => {
       type: "unlimited",
       price: bike.priceUnlimited.breakdown.subtotal,
       kmLimit: "Unlimited",
-      label: "Unlimited km",
+      label: "120 km",
       duration: bike.priceUnlimited.breakdown.duration,
     });
   }
@@ -1482,8 +1482,9 @@ function SearchPageContent() {
                             fill
                             className="object-contain transition-all duration-700 group-hover:scale-105"
                             onError={(e) => {
-                              e.target.src =
+                              e.currentTarget.src =
                                 "/placeholder.svg?height=300&width=400";
+                              e.currentTarget.onerror = null;
                             }}
                           />
 
