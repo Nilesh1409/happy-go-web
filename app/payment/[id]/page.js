@@ -25,7 +25,7 @@ import { toast } from "@/lib/toast";
 export default function PaymentPage() {
   const params = useParams();
   const router = useRouter();
-  
+
   const [booking, setBooking] = useState(null);
   const [cartPaymentData, setCartPaymentData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,16 +56,16 @@ export default function PaymentPage() {
 
       // Try to load from sessionStorage first (for cart bookings)
       const storedCartData = sessionStorage.getItem("cartPaymentData");
-      
+
       // Load the booking details from API
       const response = await apiService.getBookingDetails(params.id);
       if (response.success && response.data) {
         setBooking(response.data);
-        
+
         // If no stored cart data, use the API response to construct payment data
         if (!storedCartData) {
           const apiData = response.data;
-          
+
           // Construct cart payment data from API response
           const constructedCartData = {
             paymentGroupId: apiData.paymentGroupId,
@@ -75,7 +75,7 @@ export default function PaymentPage() {
             bookings: apiData.bookings || [],
             razorpay: apiData.razorpay || null, // Will need to create order on payment
           };
-          
+
           setCartPaymentData(constructedCartData);
         } else {
           const parsedData = JSON.parse(storedCartData);
@@ -93,14 +93,17 @@ export default function PaymentPage() {
 
   const getPaymentAmount = () => {
     if (!cartPaymentData || !booking) return 0;
-    
+
     const isPartiallyPaid = booking?.paymentStatus === "partial";
-    
+
     // If already partially paid, return remaining amount
     if (isPartiallyPaid) {
-      return booking.paymentSummary?.remainingAmount || cartPaymentData.remainingAmount;
+      return (
+        booking.paymentSummary?.remainingAmount ||
+        cartPaymentData.remainingAmount
+      );
     }
-    
+
     // Otherwise, return based on payment type selection
     if (paymentType === "full") {
       return cartPaymentData.totalAmount;
@@ -131,16 +134,18 @@ export default function PaymentPage() {
 
     try {
       const isPartiallyPaid = booking?.paymentStatus === "partial";
-      
+
       // Determine payment type and amount
       let apiPaymentType;
       let paymentAmount;
       let percentage;
-      
+
       if (isPartiallyPaid) {
         // Already partially paid, pay remaining 75%
         apiPaymentType = "remaining";
-        paymentAmount = booking.paymentSummary?.remainingAmount || cartPaymentData.remainingAmount;
+        paymentAmount =
+          booking.paymentSummary?.remainingAmount ||
+          cartPaymentData.remainingAmount;
         percentage = 75;
       } else if (paymentType === "full") {
         // Pay full 100%
@@ -153,7 +158,7 @@ export default function PaymentPage() {
         paymentAmount = cartPaymentData.partialAmount;
         percentage = 25;
       }
-      
+
       console.log("💰 Payment Details:", {
         totalAmount: cartPaymentData.totalAmount,
         partialAmount: cartPaymentData.partialAmount,
@@ -164,56 +169,60 @@ export default function PaymentPage() {
         isCombined: booking?.isCombined,
         isPartiallyPaid,
         paymentGroupId: booking?.paymentGroupId,
-        bookingId: params.id
+        bookingId: params.id,
       });
-      
+
       let orderId, backendAmount;
-      
+
       // Get booking ID (needed for verification)
       const bookingId = params.id;
-      
+
       // Check if this is a fresh cart booking with existing Razorpay order
-      const hasExistingRazorpayOrder = cartPaymentData?.razorpay?.orderId && !isPartiallyPaid;
-      
+      const hasExistingRazorpayOrder =
+        cartPaymentData?.razorpay?.orderId && !isPartiallyPaid;
+
       if (hasExistingRazorpayOrder) {
         // ✅ Use the Razorpay order from checkout (cart booking)
         orderId = cartPaymentData.razorpay.orderId;
         backendAmount = cartPaymentData.razorpay.amount;
-        
+
         console.log("✅ Using existing Razorpay order from checkout:", {
           orderId,
-          amount: backendAmount
+          amount: backendAmount,
         });
       } else {
         // ❌ Create a new payment order (for remaining payments or single bookings)
         console.log("🔄 Creating new payment order for:", {
           bookingId,
           apiPaymentType,
-          reason: isPartiallyPaid ? "Remaining payment" : "No existing order"
+          reason: isPartiallyPaid ? "Remaining payment" : "No existing order",
         });
-        
-        const orderResponse = await apiService.createBookingPayment(bookingId, apiPaymentType);
-        
+
+        const orderResponse = await apiService.createBookingPayment(
+          bookingId,
+          apiPaymentType,
+        );
+
         console.log("🔔 Backend Order Response:", orderResponse);
-        
+
         if (!orderResponse?.data?.id) {
           throw new Error("Failed to create payment order");
         }
-        
+
         orderId = orderResponse.data.id;
         backendAmount = orderResponse.data.amount;
       }
-      
+
       // Check if backend amount matches what we expect
       const expectedAmountInPaise = Math.round(paymentAmount * 100);
       if (backendAmount && backendAmount !== expectedAmountInPaise) {
         console.warn("⚠️ Amount Mismatch:", {
           expected: expectedAmountInPaise,
           received: backendAmount,
-          difference: backendAmount - expectedAmountInPaise
+          difference: backendAmount - expectedAmountInPaise,
         });
       }
-      
+
       const userData = apiService.safeLocalStorageGet("user", {});
 
       // Razorpay options - Use backend's amount
@@ -247,7 +256,10 @@ export default function PaymentPage() {
       razorpay.open();
     } catch (error) {
       console.error("Payment initialization failed:", error);
-      toast.error("Payment Failed", error.message || "Failed to initialize payment");
+      toast.error(
+        "Payment Failed",
+        error.message || "Failed to initialize payment",
+      );
       setPaymentLoading(false);
     }
   };
@@ -256,20 +268,25 @@ export default function PaymentPage() {
   const verifyPayment = async (paymentResponse, bookingId) => {
     try {
       // Check if this is a combined booking (cart payment)
-      const isCombinedBooking = booking?.paymentGroupId || cartPaymentData?.paymentGroupId;
-      
+      const isCombinedBooking =
+        booking?.paymentGroupId || cartPaymentData?.paymentGroupId;
+
       let response;
-      
+
       if (isCombinedBooking) {
         // Use cart verification API for combined bookings
         const verificationData = {
-          paymentGroupId: booking?.paymentGroupId || cartPaymentData?.paymentGroupId,
+          paymentGroupId:
+            booking?.paymentGroupId || cartPaymentData?.paymentGroupId,
           razorpay_order_id: paymentResponse.razorpay_order_id,
           razorpay_payment_id: paymentResponse.razorpay_payment_id,
           razorpay_signature: paymentResponse.razorpay_signature,
         };
-        
-        console.log("Verifying combined booking payment with data:", verificationData);
+
+        console.log(
+          "Verifying combined booking payment with data:",
+          verificationData,
+        );
         response = await apiService.verifyCartPayment(verificationData);
       } else {
         // Use single booking verification API
@@ -278,20 +295,26 @@ export default function PaymentPage() {
           razorpay_payment_id: paymentResponse.razorpay_payment_id,
           razorpay_signature: paymentResponse.razorpay_signature,
         };
-        
-        console.log("Verifying single booking payment with data:", verificationData);
-        response = await apiService.verifyBookingPayment(bookingId, verificationData);
+
+        console.log(
+          "Verifying single booking payment with data:",
+          verificationData,
+        );
+        response = await apiService.verifyBookingPayment(
+          bookingId,
+          verificationData,
+        );
       }
 
       if (response.success) {
         // Clear cart payment data
         sessionStorage.removeItem("cartPaymentData");
-        
+
         toast.success(
-          "Payment Successful!", 
-          isCombinedBooking 
-            ? "All your bookings have been confirmed!" 
-            : "Your booking has been confirmed!"
+          "Payment Successful!",
+          isCombinedBooking
+            ? "All your bookings have been confirmed!"
+            : "Your booking has been confirmed!",
         );
 
         // Redirect to the confirmed booking page
@@ -306,7 +329,10 @@ export default function PaymentPage() {
     } catch (error) {
       console.error("Payment verification failed:", error);
       setError(error.message || "Payment verification failed");
-      toast.error("Verification Failed", error.message || "Please contact support");
+      toast.error(
+        "Verification Failed",
+        error.message || "Please contact support",
+      );
     } finally {
       setPaymentLoading(false);
     }
@@ -369,7 +395,8 @@ export default function PaymentPage() {
 
   // Get the first booking for display
   const firstBooking = booking?.bookings?.[0];
-  const hasValidBooking = firstBooking && (firstBooking.hostel || firstBooking.bike);
+  const hasValidBooking =
+    firstBooking && (firstBooking.hostel || firstBooking.bike);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -389,10 +416,7 @@ export default function PaymentPage() {
               <CheckCircle className="w-5 h-5" />
               <p>
                 Payment already completed. You can view your booking details{" "}
-                <a
-                  href={`/bookings`}
-                  className="underline font-semibold"
-                >
+                <a href={`/bookings`} className="underline font-semibold">
                   here
                 </a>
                 .
@@ -426,7 +450,7 @@ export default function PaymentPage() {
                     {booking.bookings?.map((bookingItem, index) => (
                       <div key={bookingItem.id || index} className="space-y-4">
                         {index > 0 && <Separator />}
-                        
+
                         {/* Bike Booking */}
                         {bookingItem.type === "bike" && bookingItem.bike && (
                           <>
@@ -434,22 +458,38 @@ export default function PaymentPage() {
                               <span className="text-lg">🏍️</span>
                               <h3 className="font-bold text-lg">Bike Rental</h3>
                             </div>
-                            
+
                             {bookingItem.bike.items?.map((bikeItem, idx) => (
-                              <div key={idx} className="flex gap-4 bg-gray-50 rounded-lg p-3">
+                              <div
+                                key={idx}
+                                className="flex gap-4 bg-gray-50 rounded-lg p-3"
+                              >
                                 <img
-                                  src={bikeItem.images?.[0] || "/assets/happygo.jpeg"}
+                                  src={
+                                    bikeItem.images?.[0] ||
+                                    "/assets/happygo.jpeg"
+                                  }
                                   alt={bikeItem.name}
                                   className="w-20 h-20 rounded-lg object-cover"
                                 />
                                 <div className="flex-1">
                                   <h4 className="font-bold">{bikeItem.name}</h4>
-                                  <p className="text-sm text-gray-600">{bikeItem.brand} {bikeItem.model}</p>
+                                  <p className="text-sm text-gray-600">
+                                    {bikeItem.brand} {bikeItem.model}
+                                  </p>
                                   <div className="flex items-center gap-2 mt-1">
-                                    <Badge variant="outline" className="text-xs">
-                                      {bikeItem.kmOption === "unlimited" ? "Unlimited KM" : "Limited KM"}
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
+                                      {bikeItem.kmOption === "unlimited"
+                                        ? "120 KM"
+                                        : "Limited KM"}
                                     </Badge>
-                                    <Badge variant="outline" className="text-xs">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs"
+                                    >
                                       Qty: {bikeItem.quantity}
                                     </Badge>
                                   </div>
@@ -460,20 +500,28 @@ export default function PaymentPage() {
                             {bookingItem.dates && (
                               <div className="grid grid-cols-2 gap-4 mt-3">
                                 <div>
-                                  <p className="text-sm text-gray-600 mb-1">Pickup</p>
+                                  <p className="text-sm text-gray-600 mb-1">
+                                    Pickup
+                                  </p>
                                   <p className="font-medium flex items-center gap-1 text-sm">
                                     <Calendar className="w-4 h-4" />
                                     {formatDate(bookingItem.dates.pickupDate)}
                                   </p>
-                                  <p className="text-xs text-gray-500">{bookingItem.dates.pickupTime}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {bookingItem.dates.pickupTime}
+                                  </p>
                                 </div>
                                 <div>
-                                  <p className="text-sm text-gray-600 mb-1">Drop</p>
+                                  <p className="text-sm text-gray-600 mb-1">
+                                    Drop
+                                  </p>
                                   <p className="font-medium flex items-center gap-1 text-sm">
                                     <Calendar className="w-4 h-4" />
                                     {formatDate(bookingItem.dates.dropDate)}
                                   </p>
-                                  <p className="text-xs text-gray-500">{bookingItem.dates.dropTime}</p>
+                                  <p className="text-xs text-gray-500">
+                                    {bookingItem.dates.dropTime}
+                                  </p>
                                 </div>
                               </div>
                             )}
@@ -481,74 +529,108 @@ export default function PaymentPage() {
                         )}
 
                         {/* Hostel Booking */}
-                        {bookingItem.type === "hostel" && bookingItem.hostel && (
-                          <>
-                            <div className="flex items-center gap-2 mb-3">
-                              <span className="text-lg">🏨</span>
-                              <h3 className="font-bold text-lg">Hostel Stay</h3>
-                            </div>
+                        {bookingItem.type === "hostel" &&
+                          bookingItem.hostel && (
+                            <>
+                              <div className="flex items-center gap-2 mb-3">
+                                <span className="text-lg">🏨</span>
+                                <h3 className="font-bold text-lg">
+                                  Hostel Stay
+                                </h3>
+                              </div>
 
-                            <div className="flex gap-4 bg-gray-50 rounded-lg p-3">
-                              <img
-                                src={bookingItem.hostel.images?.[0] || "/assets/happygo.jpeg"}
-                                alt={bookingItem.hostel.name}
-                                className="w-20 h-20 rounded-lg object-cover"
-                              />
-                              <div className="flex-1">
-                                <h4 className="font-bold">{bookingItem.hostel.name}</h4>
-                                <p className="text-sm text-gray-600 flex items-center">
-                                  <MapPin className="w-3 h-3 mr-1" />
-                                  {bookingItem.hostel.location}
+                              <div className="flex gap-4 bg-gray-50 rounded-lg p-3">
+                                <img
+                                  src={
+                                    bookingItem.hostel.images?.[0] ||
+                                    "/assets/happygo.jpeg"
+                                  }
+                                  alt={bookingItem.hostel.name}
+                                  className="w-20 h-20 rounded-lg object-cover"
+                                />
+                                <div className="flex-1">
+                                  <h4 className="font-bold">
+                                    {bookingItem.hostel.name}
+                                  </h4>
+                                  <p className="text-sm text-gray-600 flex items-center">
+                                    <MapPin className="w-3 h-3 mr-1" />
+                                    {bookingItem.hostel.location}
+                                  </p>
+                                  {bookingItem.hostel.rating && (
+                                    <div className="flex items-center gap-1 mt-1">
+                                      <span className="text-yellow-500 text-sm">
+                                        ★
+                                      </span>
+                                      <span className="text-xs font-medium">
+                                        {bookingItem.hostel.rating}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="mt-2">
+                                <p className="text-sm text-gray-600 mb-1">
+                                  Room Type
                                 </p>
-                                {bookingItem.hostel.rating && (
-                                  <div className="flex items-center gap-1 mt-1">
-                                    <span className="text-yellow-500 text-sm">★</span>
-                                    <span className="text-xs font-medium">{bookingItem.hostel.rating}</span>
-                                  </div>
+                                <p className="font-medium text-sm">
+                                  {bookingItem.hostel.roomType}
+                                </p>
+                                {bookingItem.hostel.mealOption && (
+                                  <Badge
+                                    variant="outline"
+                                    className="mt-1 text-xs"
+                                  >
+                                    {bookingItem.hostel.mealOption === "bedOnly"
+                                      ? "Bed Only"
+                                      : bookingItem.hostel.mealOption ===
+                                          "bedAndBreakfast"
+                                        ? "Bed & Breakfast"
+                                        : "Bed + Breakfast + Dinner"}
+                                  </Badge>
                                 )}
                               </div>
-                            </div>
 
-                            <div className="mt-2">
-                              <p className="text-sm text-gray-600 mb-1">Room Type</p>
-                              <p className="font-medium text-sm">{bookingItem.hostel.roomType}</p>
-                              {bookingItem.hostel.mealOption && (
-                                <Badge variant="outline" className="mt-1 text-xs">
-                                  {bookingItem.hostel.mealOption === "bedOnly" ? "Bed Only" :
-                                   bookingItem.hostel.mealOption === "bedAndBreakfast" ? "Bed & Breakfast" :
-                                   "Bed + Breakfast + Dinner"}
-                                </Badge>
+                              {bookingItem.dates && (
+                                <div className="grid grid-cols-2 gap-4 mt-3">
+                                  <div>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                      Check-in
+                                    </p>
+                                    <p className="font-medium flex items-center gap-1 text-sm">
+                                      <Calendar className="w-4 h-4" />
+                                      {formatDate(bookingItem.dates.checkIn)}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                      Check-out
+                                    </p>
+                                    <p className="font-medium flex items-center gap-1 text-sm">
+                                      <Calendar className="w-4 h-4" />
+                                      {formatDate(bookingItem.dates.checkOut)}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                      Nights
+                                    </p>
+                                    <p className="font-medium text-sm">
+                                      {bookingItem.dates.nights} night(s)
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-gray-600 mb-1">
+                                      Beds
+                                    </p>
+                                    <p className="font-medium text-sm">
+                                      {bookingItem.hostel.beds || 1} bed(s)
+                                    </p>
+                                  </div>
+                                </div>
                               )}
-                            </div>
-
-                            {bookingItem.dates && (
-                              <div className="grid grid-cols-2 gap-4 mt-3">
-                                <div>
-                                  <p className="text-sm text-gray-600 mb-1">Check-in</p>
-                                  <p className="font-medium flex items-center gap-1 text-sm">
-                                    <Calendar className="w-4 h-4" />
-                                    {formatDate(bookingItem.dates.checkIn)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-gray-600 mb-1">Check-out</p>
-                                  <p className="font-medium flex items-center gap-1 text-sm">
-                                    <Calendar className="w-4 h-4" />
-                                    {formatDate(bookingItem.dates.checkOut)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-gray-600 mb-1">Nights</p>
-                                  <p className="font-medium text-sm">{bookingItem.dates.nights} night(s)</p>
-                                </div>
-                                <div>
-                                  <p className="text-sm text-gray-600 mb-1">Beds</p>
-                                  <p className="font-medium text-sm">{bookingItem.hostel.beds || 1} bed(s)</p>
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        )}
+                            </>
+                          )}
                       </div>
                     ))}
 
@@ -557,7 +639,9 @@ export default function PaymentPage() {
                     {/* Booking Status */}
                     <div className="flex items-center gap-4">
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">Booking Status</p>
+                        <p className="text-sm text-gray-600 mb-1">
+                          Booking Status
+                        </p>
                         <Badge
                           className={
                             booking.status === "confirmed"
@@ -569,14 +653,16 @@ export default function PaymentPage() {
                         </Badge>
                       </div>
                       <div>
-                        <p className="text-sm text-gray-600 mb-1">Payment Status</p>
+                        <p className="text-sm text-gray-600 mb-1">
+                          Payment Status
+                        </p>
                         <Badge
                           className={
                             isPaymentCompleted
                               ? "bg-green-100 text-green-800"
                               : isPartiallyPaid
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-yellow-100 text-yellow-800"
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-yellow-100 text-yellow-800"
                           }
                         >
                           {booking.paymentStatus}
@@ -600,7 +686,8 @@ export default function PaymentPage() {
                       <div className="flex items-center gap-2 text-blue-800 text-sm">
                         <CheckCircle className="w-4 h-4" />
                         <span className="font-semibold">
-                          ₹{booking.paymentSummary?.paidAmount?.toFixed(2)} already paid (25%)
+                          ₹{booking.paymentSummary?.paidAmount?.toFixed(2)}{" "}
+                          already paid (25%)
                         </span>
                       </div>
                     </div>
@@ -632,19 +719,29 @@ export default function PaymentPage() {
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-600 mb-3 ml-6">
-                          Reserve all {cartPaymentData.bookings?.length || 0} booking(s) with just 25% payment now. 
-                          Pay the remaining 75% anytime before pickup/check-in.
+                          Reserve all {cartPaymentData.bookings?.length || 0}{" "}
+                          booking(s) with just 25% payment now. Pay the
+                          remaining 75% anytime before pickup/check-in.
                         </p>
                         <div className="bg-white rounded-lg p-3 mb-2 ml-6">
                           <div className="space-y-1 text-sm">
-                            {cartPaymentData.bookings?.map((bookingItem, idx) => (
-                              <div key={idx} className="flex justify-between">
-                                <span className="text-gray-600">
-                                  {bookingItem.type === 'bike' ? '🏍️ Bike Rental' : '🏨 Hostel Stay'}
-                                </span>
-                                <span className="font-medium">₹{bookingItem.priceBreakdown?.totalAmount?.toFixed(2)}</span>
-                              </div>
-                            ))}
+                            {cartPaymentData.bookings?.map(
+                              (bookingItem, idx) => (
+                                <div key={idx} className="flex justify-between">
+                                  <span className="text-gray-600">
+                                    {bookingItem.type === "bike"
+                                      ? "🏍️ Bike Rental"
+                                      : "🏨 Hostel Stay"}
+                                  </span>
+                                  <span className="font-medium">
+                                    ₹
+                                    {bookingItem.priceBreakdown?.totalAmount?.toFixed(
+                                      2,
+                                    )}
+                                  </span>
+                                </div>
+                              ),
+                            )}
                           </div>
                         </div>
                         <div className="flex items-baseline gap-2 ml-6">
@@ -670,28 +767,44 @@ export default function PaymentPage() {
                           </Badge>
                         </div>
                         <p className="text-sm text-gray-600 mb-3">
-                          Complete your booking by paying the remaining amount before pickup/check-in.
+                          Complete your booking by paying the remaining amount
+                          before pickup/check-in.
                         </p>
                         <div className="bg-white rounded-lg p-3 mb-2">
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                              <span className="text-gray-600">Total Amount</span>
-                              <span className="font-medium">₹{cartPaymentData.totalAmount?.toFixed(2)}</span>
+                              <span className="text-gray-600">
+                                Total Amount
+                              </span>
+                              <span className="font-medium">
+                                ₹{cartPaymentData.totalAmount?.toFixed(2)}
+                              </span>
                             </div>
                             <div className="flex justify-between text-green-600">
                               <span>Already Paid (25%)</span>
-                              <span className="font-medium">- ₹{booking.paymentSummary?.paidAmount?.toFixed(2)}</span>
+                              <span className="font-medium">
+                                - ₹
+                                {booking.paymentSummary?.paidAmount?.toFixed(2)}
+                              </span>
                             </div>
                             <Separator />
                             <div className="flex justify-between font-semibold">
                               <span>Remaining Amount</span>
-                              <span>₹{booking.paymentSummary?.remainingAmount?.toFixed(2)}</span>
+                              <span>
+                                ₹
+                                {booking.paymentSummary?.remainingAmount?.toFixed(
+                                  2,
+                                )}
+                              </span>
                             </div>
                           </div>
                         </div>
                         <div className="flex items-baseline gap-2">
                           <span className="text-2xl font-bold text-[#F47B20]">
-                            ₹{booking.paymentSummary?.remainingAmount?.toFixed(2)}
+                            ₹
+                            {booking.paymentSummary?.remainingAmount?.toFixed(
+                              2,
+                            )}
                           </span>
                           <span className="text-sm text-gray-600">
                             (75% remaining)
@@ -722,7 +835,8 @@ export default function PaymentPage() {
                           </h3>
                         </div>
                         <p className="text-sm text-gray-600 mb-3 ml-6">
-                          Complete full payment now and you're all set! No remaining balance.
+                          Complete full payment now and you're all set! No
+                          remaining balance.
                         </p>
                         <div className="flex items-baseline gap-2 ml-6">
                           <span className="text-2xl font-bold text-[#F47B20]">
@@ -770,7 +884,9 @@ export default function PaymentPage() {
                       <div key={idx} className="pb-3 border-b">
                         <div className="flex justify-between items-center mb-2">
                           <span className="font-medium text-sm">
-                            {item.type === 'bike' ? '🏍️ Bike Rental' : '🏨 Hostel Stay'}
+                            {item.type === "bike"
+                              ? "🏍️ Bike Rental"
+                              : "🏨 Hostel Stay"}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
@@ -780,14 +896,18 @@ export default function PaymentPage() {
                           </span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">GST ({item.priceBreakdown?.gstPercentage || 5}%)</span>
+                          <span className="text-gray-600">
+                            GST ({item.priceBreakdown?.gstPercentage || 5}%)
+                          </span>
                           <span className="font-medium">
                             + ₹{item.priceBreakdown?.gst?.toFixed(2)}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm font-semibold mt-1">
                           <span>Subtotal</span>
-                          <span>₹{item.priceBreakdown?.totalAmount?.toFixed(2)}</span>
+                          <span>
+                            ₹{item.priceBreakdown?.totalAmount?.toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -805,10 +925,10 @@ export default function PaymentPage() {
 
                     <div className="flex justify-between items-baseline">
                       <span className="font-bold text-lg">
-                        {isPartiallyPaid 
-                          ? "Pay Now (75% Remaining)" 
-                          : paymentType === "partial" 
-                            ? "Pay Now (25%)" 
+                        {isPartiallyPaid
+                          ? "Pay Now (75% Remaining)"
+                          : paymentType === "partial"
+                            ? "Pay Now (25%)"
                             : "Pay Now (100%)"}
                       </span>
                       <span className="font-bold text-2xl text-[#F47B20]">
@@ -816,11 +936,18 @@ export default function PaymentPage() {
                       </span>
                     </div>
 
-                    {!isPartiallyPaid && paymentType === "partial" && cartPaymentData.remainingAmount > 0 && (
-                      <p className="text-xs text-gray-600 text-center">
-                        Remaining ₹{(cartPaymentData.totalAmount - cartPaymentData.partialAmount).toFixed(2)} due before service
-                      </p>
-                    )}
+                    {!isPartiallyPaid &&
+                      paymentType === "partial" &&
+                      cartPaymentData.remainingAmount > 0 && (
+                        <p className="text-xs text-gray-600 text-center">
+                          Remaining ₹
+                          {(
+                            cartPaymentData.totalAmount -
+                            cartPaymentData.partialAmount
+                          ).toFixed(2)}{" "}
+                          due before service
+                        </p>
+                      )}
                   </div>
                 )}
 
@@ -839,7 +966,12 @@ export default function PaymentPage() {
                           className="text-xs leading-tight cursor-pointer"
                         >
                           I accept the{" "}
-                          <a href="https://happygorentals.com/terms" target="_blank" rel="noopener noreferrer" className="text-[#F47B20] underline">
+                          <a
+                            href="https://happygorentals.com/terms"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#F47B20] underline"
+                          >
                             terms and conditions
                           </a>{" "}
                           to proceed with payment
