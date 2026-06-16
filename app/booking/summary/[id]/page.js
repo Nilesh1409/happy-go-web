@@ -12,6 +12,24 @@ import Header from "@/components/header";
 import Footer from "@/components/footer";
 import { apiService } from "@/lib/api";
 
+const getBikePricingCategory = (bike) =>
+  bike?.pricing?.isWeekendBooking ? "weekend" : "weekday";
+
+const getBikePricingOption = (bike, optionType) => {
+  const optionKey = optionType === "limited" ? "limitedKm" : "unlimited";
+  const pricingCategory = getBikePricingCategory(bike);
+
+  return (
+    bike?.pricePerDay?.[pricingCategory]?.[optionKey] || null
+  );
+};
+
+const getLimitedKmLimit = (bike) =>
+  bike?.pricing?.breakdown?.kmLimit ||
+  getBikePricingOption(bike, "limited")?.kmLimit ||
+  bike?.kmLimit?.limited ||
+  60;
+
 // Loading component for Suspense fallback
 function BookingSummaryPageSkeleton() {
   return (
@@ -63,7 +81,7 @@ function BookingSummaryPageContent() {
     try {
       const response = await apiService.getBikeDetails(
         params.id,
-        bookingParams
+        { ...bookingParams, kmOption }
       );
       setBike(response.data);
     } catch (error) {
@@ -97,10 +115,18 @@ function BookingSummaryPageContent() {
       Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24))
     );
 
-    const basePrice =
-      kmOption === "limited"
-        ? bike.pricePerDay.limitedKm?.price
-        : bike.pricePerDay.unlimited?.price;
+    if (bike.pricing?.breakdown) {
+      return {
+        basePrice: bike.pricing.breakdown.basePrice || 0,
+        days,
+        subtotal: bike.pricing.breakdown.subtotal || 0,
+        taxes: bike.pricing.breakdown.gst || 0,
+        total: bike.pricing.breakdown.total || bike.pricing.totalPrice || 0,
+      };
+    }
+
+    const pricingOption = getBikePricingOption(bike, kmOption);
+    const basePrice = pricingOption?.price || 0;
     const subtotal = basePrice * days;
     const taxes = Math.round(subtotal * 0.05); // 5% tax
     const total = subtotal + taxes;
@@ -146,7 +172,8 @@ function BookingSummaryPageContent() {
           totalAmount: pricing.total,
         },
         bikeDetails: {
-          kmLimit: 60,
+          kmLimit:
+            kmOption === "limited" ? getLimitedKmLimit(bike) : "Unlimited",
           isUnlimited: kmOption === "unlimited",
           additionalKmPrice: bike.additionalKmPrice || 4,
         },
@@ -281,7 +308,7 @@ function BookingSummaryPageContent() {
                     <span className="text-gray-600">KM Limit</span>
                     <span className="font-medium">
                       {kmOption === "limited"
-                        ? `${bike.kmLimit?.limited || 60} km`
+                        ? `${getLimitedKmLimit(bike)} km`
                         : "Unlimited km"}
                     </span>
                   </div>

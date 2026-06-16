@@ -507,8 +507,10 @@ export default function HomePage() {
                             ₹
                             {bike.priceLimited?.breakdown?.basePrice ||
                               bike.priceUnlimited?.breakdown?.basePrice ||
-                              bike.pricePerDay?.limitedKm?.price ||
-                              bike.pricePerDay?.unlimited?.price ||
+                              bike.pricePerDay?.weekday?.limitedKm?.price ||
+                              bike.pricePerDay?.weekday?.unlimited?.price ||
+                              bike.pricePerDay?.weekend?.limitedKm?.price ||
+                              bike.pricePerDay?.weekend?.unlimited?.price ||
                               500}
                           </span>
                           <span className="text-sm text-gray-600">

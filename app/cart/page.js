@@ -204,10 +204,11 @@ function CartPageContent() {
 
       // Validate required booking fields (from bikeDates)
       if (
-        !cart.bikeDates?.startDate ||
-        !cart.bikeDates?.endDate ||
-        !cart.bikeDates?.startTime ||
-        !cart.bikeDates?.endTime
+        bikeItems.length > 0 &&
+        (!cart.bikeDates?.startDate ||
+          !cart.bikeDates?.endDate ||
+          !cart.bikeDates?.startTime ||
+          !cart.bikeDates?.endTime)
       ) {
         setError(
           "Missing booking dates or times. Please refresh and try again.",
@@ -224,6 +225,39 @@ function CartPageContent() {
 
       setLoading(true);
       setError("");
+
+      if (hostelItems.length > 0) {
+        const response = await apiService.createCartBooking({
+          partialPaymentPercentage: 25,
+        });
+
+        if (response.success && response.data) {
+          const paymentData = {
+            paymentGroupId: response.data.paymentGroupId,
+            bookings: response.data.bookings,
+            originalTotalAmount: response.data.originalTotalAmount,
+            discount: response.data.discount,
+            appliedOffers: response.data.appliedOffers || [],
+            totalAmount: response.data.totalAmount,
+            partialAmount: response.data.partialAmount,
+            remainingAmount: response.data.remainingAmount,
+            razorpay: response.data.razorpay,
+          };
+          sessionStorage.setItem("cartPaymentData", JSON.stringify(paymentData));
+
+          const hostelBooking = response.data.bookings.find(
+            (booking) => booking.type === "hostel",
+          );
+          if (hostelBooking) {
+            router.push(`/hostels/payment/${hostelBooking.bookingId}`);
+          } else if (response.data.bookings[0]) {
+            router.push(`/payment/${response.data.bookings[0].bookingId}`);
+          }
+          return;
+        }
+
+        throw new Error(response.message || "Failed to create booking");
+      }
 
       // Format dates properly (remove time component)
       const formatDate = (dateString) => {
@@ -316,6 +350,7 @@ function CartPageContent() {
   const bikeItems = cart?.bikeItems || [];
   const hostelItems = cart?.hostelItems || [];
   const hasItems = bikeItems.length > 0 || hostelItems.length > 0;
+  const comboOfferPercentage = cart?.pricing?.comboDiscount?.percentage;
 
   if (!cart || !hasItems) {
     return (
@@ -598,7 +633,9 @@ function CartPageContent() {
                         </span>{" "}
                         to get an extra{" "}
                         <span className="font-bold text-[#F47B20]">
-                          10% discount
+                          {comboOfferPercentage
+                            ? `${comboOfferPercentage}% discount`
+                            : "combo discount"}
                         </span>{" "}
                         on total amount
                       </p>
@@ -779,6 +816,19 @@ function CartPageContent() {
                     </div>
                   )}
 
+                  {cart.pricing.comboDiscount?.amount > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>
+                        {cart.pricing.comboDiscount.label ||
+                          "Bike + Hostel Combo Discount"}{" "}
+                        ({cart.pricing.comboDiscount.percentage}%):
+                      </span>
+                      <span>
+                        -₹{cart.pricing.comboDiscount.amount.toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+
                   {cart.pricing.surgeMultiplier > 1 && (
                     <div className="flex justify-between text-orange-600">
                       <span>Peak Time Charges:</span>
@@ -830,6 +880,18 @@ function CartPageContent() {
                       <span className="text-xs sm:text-sm font-medium">
                         You saved ₹{cart.pricing.bulkDiscount.amount} with bulk
                         booking!
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {cart.pricing.comboDiscount?.amount > 0 && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center text-green-700">
+                      <Gift className="w-3 h-3 sm:w-4 sm:h-4 mr-2 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-medium">
+                        You saved ₹{cart.pricing.comboDiscount.amount} with the
+                        bike + hostel combo offer.
                       </span>
                     </div>
                   </div>

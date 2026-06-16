@@ -20,6 +20,9 @@ import {
   Phone,
   AlertCircle,
   CheckCircle,
+  Bike,
+  Gift,
+  ArrowRight,
 } from "lucide-react";
 import { apiService } from "@/lib/api";
 import { toast } from "@/lib/toast";
@@ -101,16 +104,25 @@ export default function HostelBookingSummaryPage() {
   const calculateCartTotals = () => {
     if (!cartData) return null;
 
-    // Calculate bike subtotal from bikeItems
-    const bikeSubtotal = cartData.bikeItems?.reduce((sum, item) => sum + (item.totalPrice || 0), 0) || 0;
-    
-    // Calculate hostel subtotal from hostelItems
-    const hostelSubtotal = cartData.hostelItems?.reduce((sum, item) => sum + (item.totalPrice || 0), 0) || 0;
-    
-    const subtotal = bikeSubtotal + hostelSubtotal;
+    const bikeSubtotal =
+      cartData.pricing?.bikeSubtotal ??
+      cartData.bikeItems?.reduce((sum, item) => sum + (item.totalPrice || 0), 0) ??
+      0;
+    const hostelSubtotal =
+      cartData.pricing?.hostelSubtotal ??
+      cartData.hostelItems?.reduce((sum, item) => sum + (item.totalPrice || 0), 0) ??
+      0;
+    const subtotal = cartData.pricing?.subtotal ?? bikeSubtotal + hostelSubtotal;
     const gstPercentage = cartData.pricing?.gstPercentage || 5;
-    const gst = subtotal * (gstPercentage / 100);
-    const total = subtotal + gst;
+    const gst =
+      cartData.pricing?.gst ?? subtotal * (gstPercentage / 100);
+    const comboDiscount = cartData.pricing?.comboDiscount || {
+      amount: 0,
+      percentage: 0,
+      isApplied: false,
+      label: "Bike + Hostel Combo Discount",
+    };
+    const total = cartData.pricing?.total ?? subtotal + gst;
 
     return {
       bikeSubtotal,
@@ -118,6 +130,7 @@ export default function HostelBookingSummaryPage() {
       subtotal,
       gst,
       gstPercentage,
+      comboDiscount,
       total
     };
   };
@@ -154,6 +167,36 @@ export default function HostelBookingSummaryPage() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
+  };
+
+  const formatDateForSearch = (dateString) => {
+    if (!dateString) return "";
+    return String(dateString).split("T")[0];
+  };
+
+  const handleAddBike = () => {
+    const pickupDate = formatDateForSearch(
+      cartData?.hostelDates?.checkIn || bookingData?.checkIn,
+    );
+    const dropoffDate = formatDateForSearch(
+      cartData?.hostelDates?.checkOut || bookingData?.checkOut || pickupDate,
+    );
+    const location = hostel?.location?.split(",")?.[0] || "Chikkamagaluru";
+
+    if (!pickupDate || !dropoffDate) {
+      router.push("/");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      pickupDate,
+      pickupTime: "08:00",
+      dropoffDate,
+      dropoffTime: "20:00",
+      location,
+    });
+
+    router.push(`/search?${params.toString()}`);
   };
 
   const handleProceedToPay = async () => {
@@ -196,6 +239,9 @@ export default function HostelBookingSummaryPage() {
         const paymentData = {
           paymentGroupId: response.data.paymentGroupId,
           bookings: response.data.bookings,
+          originalTotalAmount: response.data.originalTotalAmount,
+          discount: response.data.discount,
+          appliedOffers: response.data.appliedOffers || [],
           totalAmount: response.data.totalAmount,
           partialAmount: response.data.partialAmount,
           remainingAmount: response.data.remainingAmount,
@@ -282,6 +328,11 @@ export default function HostelBookingSummaryPage() {
     bedAndBreakfast: "Bed + Breakfast",
     bedBreakfastAndDinner: "Bed + Breakfast + Dinner",
   };
+  const hasBikeInCart = (cartData?.bikeItems || []).length > 0;
+  const hasHostelInCart =
+    (cartData?.hostelItems || []).length > 0 ||
+    (bookingData?.selectedRooms || []).length > 0;
+  const comboOfferPercentage = cartData?.pricing?.comboDiscount?.percentage;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -399,6 +450,52 @@ export default function HostelBookingSummaryPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Promotional Banner - Add Bike with Hostel */}
+            {hasHostelInCart && !hasBikeInCart && (
+              <Card
+                className="shadow-lg border-2 border-[#F47B20] bg-gradient-to-r from-orange-50 to-amber-50 cursor-pointer hover:shadow-xl transition-all duration-300"
+                onClick={handleAddBike}
+              >
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#F47B20] rounded-full flex items-center justify-center">
+                        <Bike className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-[#F47B20]" />
+                        <h3 className="text-base sm:text-lg font-bold text-gray-900">
+                          Special Offer!
+                        </h3>
+                      </div>
+                      <p className="text-sm sm:text-base text-gray-700 mb-1">
+                        <span className="font-semibold text-[#F47B20]">
+                          Add a Bike to This Hostel Stay
+                        </span>{" "}
+                        and get{" "}
+                        <span className="font-bold text-[#F47B20]">
+                          {comboOfferPercentage
+                            ? `${comboOfferPercentage}% off`
+                            : "a combo discount"}
+                        </span>{" "}
+                        on the total amount
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-600">
+                        Explore bikes for your selected travel dates
+                      </p>
+                    </div>
+
+                    <div className="flex-shrink-0 hidden sm:block">
+                      <ArrowRight className="w-6 h-6 text-[#F47B20]" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Guest Details Form */}
             <Card>
@@ -579,6 +676,18 @@ export default function HostelBookingSummaryPage() {
                               + ₹{calculatedTotals.gst.toFixed(2)}
                             </span>
                           </div>
+                          {calculatedTotals.comboDiscount?.amount > 0 && (
+                            <div className="flex justify-between text-sm text-green-600">
+                              <span>
+                                {calculatedTotals.comboDiscount.label ||
+                                  "Bike + Hostel Combo Discount"}{" "}
+                                ({calculatedTotals.comboDiscount.percentage}%)
+                              </span>
+                              <span className="font-medium">
+                                - ₹{calculatedTotals.comboDiscount.amount.toFixed(2)}
+                              </span>
+                            </div>
+                          )}
                           <Separator />
                           <div className="flex justify-between">
                             <span className="font-bold text-lg">Total:</span>
@@ -711,4 +820,3 @@ export default function HostelBookingSummaryPage() {
     </div>
   );
 }
-
