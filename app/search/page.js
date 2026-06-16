@@ -85,11 +85,15 @@ const getPricingOptions = (bike) => {
 
   // Limited km option - only if priceLimited exists and is not null
   if (bike?.priceLimited?.breakdown) {
-    const limitedKm = bike.priceLimited.breakdown.pricePerUnit
-      ? bike.pricePerDay?.limitedKm?.kmLimit ||
-        bike.pricePerDay?.weekday?.limitedKm?.kmLimit ||
-        60
-      : 60;
+    const pricingCategory =
+      bike.priceLimited.breakdown.type === "weekend" ? "weekend" : "weekday";
+    const fallbackCategory =
+      pricingCategory === "weekend" ? "weekday" : "weekend";
+    const limitedKm =
+      bike.priceLimited.breakdown.kmLimit ||
+      bike.pricePerDay?.[pricingCategory]?.limitedKm?.kmLimit ||
+      bike.pricePerDay?.[fallbackCategory]?.limitedKm?.kmLimit ||
+      60;
 
     options.push({
       type: "limited",

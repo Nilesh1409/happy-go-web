@@ -683,7 +683,7 @@ function HostelDetailsContent() {
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Discount</span>
                           <span className="font-medium text-green-600">
-                            - ₹{summary.discount.toFixed(2)}
+                            ₹{summary.discount.toFixed(2)}
                           </span>
                         </div>
                       )}

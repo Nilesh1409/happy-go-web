@@ -325,7 +325,7 @@ export default function BookingConfirmedPage() {
                 <div>
                   <p className="font-semibold text-orange-900 text-sm">Verify Your Identity</p>
                   <p className="text-xs text-orange-700 mt-0.5">
-                    Complete Aadhaar + DL verification for faster pickup — skip paperwork at the store.
+                    Aadhaar verification and driving license upload are mandatory for bike pickup.
                   </p>
                 </div>
               </div>
@@ -335,15 +335,7 @@ export default function BookingConfirmedPage() {
                   className="bg-[#F47B20] hover:bg-[#E06A0F] text-white text-xs h-9"
                   onClick={() => { setVerificationInitialStep("intro"); setShowVerificationModal(true); }}
                 >
-                  Verify Aadhaar
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-orange-400 text-orange-700 hover:bg-orange-100 text-xs h-9"
-                  onClick={() => { setVerificationInitialStep("dl"); setShowVerificationModal(true); }}
-                >
-                  Upload DL
+                  Complete Verification
                 </Button>
               </div>
             </div>
@@ -649,6 +641,7 @@ export default function BookingConfirmedPage() {
         onClose={() => setShowVerificationModal(false)}
         bookingId={params.id}
         initialStep={verificationInitialStep}
+        required
       />
 
       <Footer />
