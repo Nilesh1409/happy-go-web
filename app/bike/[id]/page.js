@@ -36,6 +36,18 @@ const formatDateForAPI = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+const getBikePricingCategory = (bike) =>
+  bike?.pricing?.isWeekendBooking ? "weekend" : "weekday";
+
+const getBikePricingOption = (bike, optionType) => {
+  const optionKey = optionType === "limited" ? "limitedKm" : "unlimited";
+  const pricingCategory = getBikePricingCategory(bike);
+
+  return (
+    bike?.pricePerDay?.[pricingCategory]?.[optionKey] || null
+  );
+};
+
 // Utility function to get next 30-minute time slot
 const getNext30MinBlock = () => {
   const now = new Date();
@@ -373,16 +385,27 @@ function BikeDetailsPageContent() {
             queryParams,
           );
           setBike(response.data);
-
-          // MODIFIED: Auto-select unlimited for weekend bookings if limited is currently selected, but not during login
+        } catch (error) {
           if (
-            response.data.pricing?.isWeekendBooking &&
             selectedKmOption === "limited" &&
+            queryParams.startDate &&
             !isLoginInProgress.current
           ) {
-            setSelectedKmOption("unlimited");
+            try {
+              const fallbackResponse = await apiService.getBikeDetails(
+                params.id,
+                { ...queryParams, kmOption: "unlimited" },
+              );
+              setBike(fallbackResponse.data);
+              setSelectedKmOption("unlimited");
+              return;
+            } catch (fallbackError) {
+              console.error(
+                "Failed to load bike details with unlimited option:",
+                fallbackError,
+              );
+            }
           }
-        } catch (error) {
           console.error("Failed to load bike details:", error);
           setError("Failed to load bike details. Please try again.");
         } finally {
@@ -692,6 +715,9 @@ function BikeDetailsPageContent() {
 
     try {
       const pricing = getPricingDisplay();
+      const limitedPricingOption = getBikePricingOption(bike, "limited");
+      const selectedKmLimit =
+        pricing.breakdown.kmLimit || limitedPricingOption?.kmLimit || 60;
 
       const bookingData = {
         bookingType: "bike",
@@ -712,7 +738,7 @@ function BikeDetailsPageContent() {
         bikeDetails: {
           kmLimit:
             selectedKmOption === "limited"
-              ? bike.pricePerDay?.limitedKm?.kmLimit || 60
+              ? selectedKmLimit
               : "Unlimited",
           isUnlimited: selectedKmOption === "unlimited",
           additionalKmPrice: bike.additionalKmPrice || 4,
@@ -812,6 +838,10 @@ function BikeDetailsPageContent() {
   }
 
   const pricing = getPricingDisplay();
+  const limitedPricingOption = getBikePricingOption(bike, "limited");
+  const unlimitedPricingOption = getBikePricingOption(bike, "unlimited");
+  const limitedKmLimit =
+    pricing.breakdown.kmLimit || limitedPricingOption?.kmLimit || 60;
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
 
@@ -944,8 +974,8 @@ function BikeDetailsPageContent() {
                         Choose KM Package
                       </h3>
                       <div className="flex gap-2 sm:gap-3">
-                        {bike.pricePerDay?.limitedKm?.isActive &&
-                          !pricing.isWeekendBooking && (
+                        {limitedPricingOption?.isActive &&
+                          limitedPricingOption?.price && (
                             <Button
                               variant={
                                 selectedKmOption === "limited"
@@ -962,19 +992,22 @@ function BikeDetailsPageContent() {
                             >
                               <div className="text-center">
                                 <div className="font-semibold text-sm sm:text-base">
-                                  {bike.pricePerDay.limitedKm.kmLimit || 60} km
+                                  {limitedPricingOption.kmLimit ||
+                                    limitedKmLimit}{" "}
+                                  km
                                 </div>
                                 <div className="text-xs opacity-80">
                                   Limited
                                 </div>
                                 <div className="text-xs font-medium">
-                                  ₹{bike.pricePerDay.limitedKm.price}/day
+                                  ₹{limitedPricingOption.price}/day
                                 </div>
                               </div>
                             </Button>
                           )}
 
-                        {bike.pricePerDay?.unlimited?.isActive && (
+                        {unlimitedPricingOption?.isActive &&
+                          unlimitedPricingOption?.price && (
                           <Button
                             variant={
                               selectedKmOption === "unlimited"
@@ -995,7 +1028,7 @@ function BikeDetailsPageContent() {
                               </div>
                               <div className="text-xs opacity-80">No limit</div>
                               <div className="text-xs font-medium">
-                                ₹{bike.pricePerDay.unlimited.price}/day
+                                ₹{unlimitedPricingOption.price}/day
                               </div>
                             </div>
                           </Button>
@@ -1301,7 +1334,7 @@ function BikeDetailsPageContent() {
                     </span>
                     <span className="font-semibold ml-4 sm:ml-0">
                       {selectedKmOption === "limited"
-                        ? `${bike.pricePerDay?.limitedKm?.kmLimit || 60} km`
+                        ? `${limitedKmLimit} km`
                         : "Unlimited"}
                     </span>
                   </div>

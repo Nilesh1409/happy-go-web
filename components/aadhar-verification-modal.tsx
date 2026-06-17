@@ -26,6 +26,8 @@ interface AadhaarVerificationModalProps {
   bookingId: string;
   /** Pass "dl" to open directly on the DL upload step (e.g. for updating an existing DL) */
   initialStep?: Step;
+  /** When true, users must complete Aadhaar + DL before the dialog can close. */
+  required?: boolean;
 }
 
 type Step = "intro" | "loading" | "digilocker" | "completing" | "dl" | "completed";
@@ -50,6 +52,7 @@ export default function AadhaarVerificationModal({
   onClose,
   bookingId,
   initialStep = "intro",
+  required = false,
 }: AadhaarVerificationModalProps) {
   const [step, setStep] = useState<Step>(initialStep);
   const [dlFile, setDlFile] = useState<File | null>(null);
@@ -231,8 +234,25 @@ export default function AadhaarVerificationModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] max-w-md mx-auto p-0 gap-0 max-h-[90vh] overflow-y-auto">
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (open) return;
+        if (!required || step === "completed") {
+          onClose();
+        }
+      }}
+    >
+      <DialogContent
+        className="w-[95vw] max-w-md mx-auto p-0 gap-0 max-h-[90vh] overflow-y-auto"
+        hideCloseButton={required}
+        onEscapeKeyDown={(event) => {
+          if (required && step !== "completed") event.preventDefault();
+        }}
+        onInteractOutside={(event) => {
+          if (required && step !== "completed") event.preventDefault();
+        }}
+      >
 
         {/* ── Intro ── */}
         {step === "intro" && (
@@ -245,7 +265,9 @@ export default function AadhaarVerificationModal({
                 Verify Your Identity
               </DialogTitle>
               <p className="text-gray-600 text-sm">
-                Secure verification via DigiLocker — government-approved platform
+                {required
+                  ? "Aadhaar verification and driving license upload are required for this booking."
+                  : "Secure verification via DigiLocker — government-approved platform"}
               </p>
             </CardHeader>
             <CardContent className="space-y-4 px-4 pb-6">
@@ -299,9 +321,11 @@ export default function AadhaarVerificationModal({
               </div>
 
               <div className="flex gap-3 pt-2">
-                <Button variant="outline" className="flex-1 h-10 text-sm" onClick={onClose}>
-                  Skip for Now
-                </Button>
+                {!required && (
+                  <Button variant="outline" className="flex-1 h-10 text-sm" onClick={onClose}>
+                    Skip for Now
+                  </Button>
+                )}
                 <Button
                   className="flex-1 h-10 text-sm bg-[#F47B20] hover:bg-[#E06A0F] text-white"
                   onClick={handleInitiate}
@@ -450,14 +474,16 @@ export default function AadhaarVerificationModal({
               </div>
 
               <div className="flex gap-3 pt-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-10 text-sm"
-                  onClick={() => setStep("completed")}
-                  disabled={dlLoading}
-                >
-                  Skip for Now
-                </Button>
+                {!required && (
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-10 text-sm"
+                    onClick={() => setStep("completed")}
+                    disabled={dlLoading}
+                  >
+                    Skip for Now
+                  </Button>
+                )}
                 <Button
                   className="flex-1 h-10 text-sm bg-[#F47B20] hover:bg-[#E06A0F] text-white"
                   onClick={handleDLUpload}
