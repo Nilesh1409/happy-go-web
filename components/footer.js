@@ -95,7 +95,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="border-t border-gray-800 pt-4 text-center text-xs text-gray-400">
-          <p>© 2024 <span className="text-[#F47B20]">Happy Go Bike Rentals</span> - All rights reserved.</p>
+          <p>© 2026 <span className="text-[#F47B20]">Happy Go Bike Rentals</span> - All rights reserved.</p>
         </div>
       </div>
 

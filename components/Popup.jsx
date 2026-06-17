@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { X, Bike } from "lucide-react";
+import { X, Bike, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiService } from "@/lib/api";
 
@@ -122,14 +122,27 @@ export default function Popup() {
         )}
 
         <div className="p-6 pt-4">
-          <Button
-            asChild
-            className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white font-semibold h-11 rounded-lg shadow-md"
-          >
-            <Link href={data.ctaLink || "/search"} onClick={handleCtaClick}>
-              {data.ctaText || "Explore Bikes"}
-            </Link>
-          </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button
+              asChild
+              className="w-full bg-[#F47B20] hover:bg-[#E06A0F] text-white font-semibold h-11 rounded-lg shadow-md"
+            >
+              <Link href={data.ctaLink || "/search"} onClick={handleCtaClick}>
+                <Bike className="h-4 w-4 mr-2" />
+                {data.ctaText || "Explore Bikes"}
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="w-full border-[#F47B20] text-[#F47B20] hover:bg-orange-50 font-semibold h-11 rounded-lg"
+            >
+              <Link href="/hostels" onClick={handleCtaClick}>
+                <Building2 className="h-4 w-4 mr-2" />
+                Explore Hostels
+              </Link>
+            </Button>
+          </div>
           <p className="text-center text-xs text-gray-500 mt-3">
             Anywhere Everytime
           </p>
