@@ -276,6 +276,15 @@ export default function ReferEarnPage() {
           </Card>
         </div>
 
+        {/* Wallet Info */}
+        <Card className="mb-6 border-orange-200 bg-orange-50">
+          <CardContent className="p-4 sm:p-6">
+            <p className="text-sm sm:text-base text-orange-800 leading-relaxed">
+              Your referral rewards are added to your wallet balance. Use the "Use wallet balance" option at checkout to get discounts on bike or hostel bookings.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* How it Works - Mobile Optimized */}
         <Card className="mb-6 border-0 shadow-lg">
           <CardHeader className="pb-4">

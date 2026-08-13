@@ -20,6 +20,7 @@ import {
   Edit3,
   Save,
   X,
+  Wallet,
 } from "lucide-react";
 import { apiService } from "@/lib/api";
 import AadhaarVerificationModal from "@/components/aadhar-verification-modal";
@@ -305,6 +306,18 @@ export default function ProfilePage() {
                     <code className="bg-gray-100 px-3 py-2 rounded font-mono text-sm">
                       {user?.referralCode}
                     </code>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Wallet Balance
+                  </label>
+                  <div className="flex items-center">
+                    <Wallet className="w-4 h-4 mr-2 text-[#F47B20]" />
+                    <p className="text-gray-900 font-bold">
+                      ₹{user?.walletBalance ?? 0}
+                    </p>
                   </div>
                 </div>
               </CardContent>

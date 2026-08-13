@@ -50,6 +50,8 @@ function CartPageContent() {
   const [updating, setUpdating] = useState({});
   const [error, setError] = useState("");
   const [helmetQuantity, setHelmetQuantity] = useState(0);
+  const [useWallet, setUseWallet] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
 
   // Helper function to get and validate search parameters
   const getSearchParams = () => {
@@ -98,6 +100,16 @@ function CartPageContent() {
 
   useEffect(() => {
     loadCart();
+    const loadWallet = async () => {
+      try {
+        const profileRes = await apiService.getUserProfile();
+        const profile = profileRes?.data || profileRes;
+        setWalletBalance(profile?.walletBalance ?? 0);
+      } catch (err) {
+        console.error("Failed to load wallet balance:", err);
+      }
+    };
+    loadWallet();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateQuantity = async (itemId, newQuantity) => {
@@ -229,6 +241,7 @@ function CartPageContent() {
       if (hostelItems.length > 0) {
         const response = await apiService.createCartBooking({
           partialPaymentPercentage: 25,
+          useWallet,
         });
 
         if (response.success && response.data) {
@@ -244,6 +257,13 @@ function CartPageContent() {
             razorpay: response.data.razorpay,
           };
           sessionStorage.setItem("cartPaymentData", JSON.stringify(paymentData));
+
+          // Wallet fully covered the booking - no Razorpay needed
+          if (!response.data.razorpay || !response.data.razorpay.orderId) {
+            const firstBooking = response.data.bookings?.[0];
+            router.push(`/booking/confirmed/${firstBooking?.bookingId ?? firstBooking?._id ?? response.data.paymentGroupId}`);
+            return;
+          }
 
           const hostelBooking = response.data.bookings.find(
             (booking) => booking.type === "hostel",
@@ -872,6 +892,21 @@ function CartPageContent() {
                     <span>₹{cart.pricing.total.toLocaleString()}</span>
                   </div>
                 </div>
+
+                {walletBalance > 0 && cart?.hostelItems?.length > 0 && (
+                  <div className="flex items-start gap-3 border border-[#F47B20]/30 rounded-lg p-3 mt-2 cursor-pointer hover:bg-orange-50 transition-colors">
+                    <input
+                      type="checkbox"
+                      id="useWallet"
+                      checked={useWallet}
+                      onChange={(e) => setUseWallet(e.target.checked)}
+                      className="mt-1 h-4 w-4 text-[#F47B20] border-gray-300 rounded focus:ring-[#F47B20]"
+                    />
+                    <label htmlFor="useWallet" className="text-sm text-gray-700 cursor-pointer flex-1">
+                      Use wallet balance: <span className="font-semibold text-[#F47B20]">₹{walletBalance.toLocaleString()}</span>
+                    </label>
+                  </div>
+                )}
 
                 {cart.pricing.bulkDiscount?.amount > 0 && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">

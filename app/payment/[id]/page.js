@@ -33,10 +33,22 @@ export default function PaymentPage() {
   const [paymentType, setPaymentType] = useState("partial"); // partial (25%) or full (100%)
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
+  const [useWallet, setUseWallet] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
     loadBookingDetails();
     loadRazorpayScript();
+    const fetchWallet = async () => {
+      try {
+        const profileRes = await apiService.getUserProfile();
+        const profile = profileRes?.data || profileRes;
+        setWalletBalance(profile?.walletBalance ?? 0);
+      } catch (err) {
+        console.error("Failed to load wallet balance:", err);
+      }
+    };
+    fetchWallet();
   }, []);
 
   const loadRazorpayScript = () => {
@@ -201,11 +213,17 @@ export default function PaymentPage() {
         const orderResponse = await apiService.createBookingPayment(
           bookingId,
           apiPaymentType,
+          useWallet,
         );
 
         console.log("🔔 Backend Order Response:", orderResponse);
 
         if (!orderResponse?.data?.id) {
+          if (orderResponse?.data?.paymentAmount === 0) {
+            toast.success("Payment Successful", "Wallet covered the full amount");
+            router.push(`/booking/confirmed/${bookingId}`);
+            return;
+          }
           throw new Error("Failed to create payment order");
         }
 
@@ -226,6 +244,7 @@ export default function PaymentPage() {
       const userData = apiService.safeLocalStorageGet("user", {});
 
       // Razorpay options - Use backend's amount
+      // console.log("Initializing Razorpay with options:",process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID)
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: backendAmount || expectedAmountInPaise, // Use backend's amount (already in paise)
@@ -978,6 +997,22 @@ export default function PaymentPage() {
                         </Label>
                       </div>
                     </div>
+
+                    {/* Use Wallet */}
+                    {walletBalance > 0 && (
+                      <div className="flex items-start gap-3 border border-[#F47B20]/30 rounded-lg p-3 mb-4 cursor-pointer hover:bg-orange-50 transition-colors">
+                        <input
+                          type="checkbox"
+                          id="useWallet"
+                          checked={useWallet}
+                          onChange={(e) => setUseWallet(e.target.checked)}
+                          className="mt-1 h-4 w-4 text-[#F47B20] border-gray-300 rounded focus:ring-[#F47B20]"
+                        />
+                        <label htmlFor="useWallet" className="text-sm text-gray-700 cursor-pointer flex-1">
+                          Use wallet balance: <span className="font-semibold text-[#F47B20]">₹{walletBalance.toLocaleString()}</span>
+                        </label>
+                      </div>
+                    )}
 
                     {/* Pay Now Button */}
                     <Button

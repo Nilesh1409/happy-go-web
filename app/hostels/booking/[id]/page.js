@@ -37,6 +37,8 @@ export default function HostelBookingSummaryPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [useWallet, setUseWallet] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
   
   const [guestDetails, setGuestDetails] = useState({
     name: "",
@@ -90,6 +92,15 @@ export default function HostelBookingSummaryPage() {
           email: userData.email || "",
           mobile: userData.mobile || "",
         }));
+      }
+
+      // Load wallet balance from user profile
+      try {
+        const profileRes = await apiService.getUserProfile();
+        const profile = profileRes?.data || profileRes;
+        setWalletBalance(profile?.walletBalance ?? 0);
+      } catch (profileError) {
+        console.error("Failed to load wallet balance:", profileError);
       }
     } catch (error) {
       console.error("Failed to load data:", error);
@@ -225,6 +236,7 @@ export default function HostelBookingSummaryPage() {
         },
         specialRequests: guestDetails.specialRequests || "",
         partialPaymentPercentage: 25, // Can be changed to 100 for full payment
+        useWallet,
       };
 
       const response = await apiService.createCartBooking(checkoutData);
@@ -250,6 +262,13 @@ export default function HostelBookingSummaryPage() {
         
         console.log("💾 Storing cartPaymentData:", JSON.stringify(paymentData, null, 2));
         sessionStorage.setItem("cartPaymentData", JSON.stringify(paymentData));
+
+        // Wallet fully covered the booking - no Razorpay needed
+        if (!response.data.razorpay || !response.data.razorpay.orderId) {
+          const firstBooking = response.data.bookings?.[0];
+          router.push(`/booking/confirmed/${firstBooking?.bookingId ?? firstBooking?._id ?? response.data.paymentGroupId}`);
+          return;
+        }
         
         // Navigate to a unified payment/confirmation page
         // For now, navigate to the first hostel booking's payment page
@@ -770,6 +789,22 @@ export default function HostelBookingSummaryPage() {
                     <p className="text-red-500 text-xs mt-1 ml-6">{errors.terms}</p>
                   )}
                 </div>
+
+                {/* Use Wallet */}
+                {walletBalance > 0 && (
+                  <div className="flex items-start gap-3 border border-[#F47B20]/30 rounded-lg p-3 mb-4 cursor-pointer hover:bg-orange-50 transition-colors">
+                    <input
+                      type="checkbox"
+                      id="useWallet"
+                      checked={useWallet}
+                      onChange={(e) => setUseWallet(e.target.checked)}
+                      className="mt-1 h-4 w-4 text-[#F47B20] border-gray-300 rounded focus:ring-[#F47B20]"
+                    />
+                    <label htmlFor="useWallet" className="text-sm text-gray-700 cursor-pointer flex-1">
+                      Use wallet balance: <span className="font-semibold text-[#F47B20]">₹{walletBalance.toLocaleString()}</span>
+                    </label>
+                  </div>
+                )}
 
                 {/* Proceed to Pay Button */}
                 <Button
