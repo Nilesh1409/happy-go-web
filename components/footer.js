@@ -58,6 +58,7 @@ export default function Footer() {
               <li><Link href="/hostels" className="hover:text-[#F47B20] transition-colors">Hostels</Link></li>
               <li><Link href="/refer-earn" className="hover:text-[#F47B20] transition-colors">Refer & Earn</Link></li>
               <li><Link href="/privacy" className="hover:text-[#F47B20] transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/delete" className="hover:text-[#F47B20] transition-colors">Request Data Deletion</Link></li>
               <li><Link href="/terms" className="hover:text-[#F47B20] transition-colors">Terms & Conditions</Link></li>
             </ul>
           </div>
