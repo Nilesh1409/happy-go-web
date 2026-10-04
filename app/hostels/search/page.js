@@ -47,29 +47,194 @@ import { toast } from "@/lib/toast";
 // First image will be shown as large image, next 4 as small grid
 const STATIC_HIGHLIGHT_IMAGES = [
   {
-    url: "/assets/hostel.webp",
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/a50d7172-9a4c-4f45-980d-dbd97192a718-thumbnail-18.jpg",
     title: "Happy Go Hostels — Coming Soon",
     subtitle: "Chikkamagaluru"
   },
   {
-    url: "/hostel.jpg",
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/1bc2257c-19ae-4c19-897a-95d606514e5a-thumbnail-19.jpg",
     title: "Cozy Stays, Great Vibes",
     subtitle: "Happy Go Hospitality"
   },
   {
-    url: "/assets/hostel.webp",
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/13afabfc-2a9c-4853-97ed-b5b2fd6bf059-thumbnail-20.jpg",
     title: "Your Home Away From Home",
     subtitle: "Comfort & Community"
   },
   {
-    url: "/hostel.jpg",
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/76a82f73-cd5f-4fbd-8733-eed370d6d701-thumbnail-21.jpg",
     title: "Explore More, Spend Less",
     subtitle: "Budget-Friendly Stays"
   },
   {
-    url: "/assets/hostel.webp",
-    title: "More Hostels Coming Soon",
-    subtitle: "Stay Tuned"
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/7eaf7592-e8bd-484e-86ae-d04eb6d6d5fe-thumbnail-22.jpg",
+    title: "Scenic Misty Mountains",
+    subtitle: "Chikkamagaluru Awaits"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/5a9a2e99-0734-4c4d-85b8-b4d4c7ca2eca-thumbnail-43.jpg",
+    title: "Adventure Starts Here",
+    subtitle: "Trek, Explore, Discover"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/fcac6681-c5b9-4082-8b23-58a7e647910c-thumbnail-48 (1).jpg",
+    title: "Breathtaking Landscapes",
+    subtitle: "Karnataka's Hill Paradise"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/09a4e811-50b0-4f71-bffc-bb89660ec036-thumbnail-56.jpg",
+    title: "Community & Connection",
+    subtitle: "Meet Travelers Worldwide"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/8652e09d-af53-4052-8295-a6b3bc6437ba-thumbnail-62.jpg",
+    title: "Refreshing Stays",
+    subtitle: "Rejuvenate Your Soul"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/e045cb77-94d1-41e3-a729-07e8eb336f8c-thumbnail-65.jpg",
+    title: "Hidden Gem Locations",
+    subtitle: "Off the Beaten Path"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/f0caa6d1-2ac4-408f-9497-3b2891af8208-thumbnail-66.jpg",
+    title: "Peaceful Getaways",
+    subtitle: "Escape the City Rush"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/e18ea1b9-d793-4f4b-8251-357730cc1662-thumbnail-67.jpg",
+    title: "Affordable Luxury",
+    subtitle: "Premium Feels, Budget Price"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/3feb5597-b5ea-4a1a-925a-569348e7c181-thumbnail-68.jpg",
+    title: "Unforgettable Journeys",
+    subtitle: "Stories Worth Telling"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/e967796f-3a36-4097-9535-84fbcc32ed0a-thumbnail-hostel-balcony-mountain-view.jpg",
+    title: "Scenic Mountain Views",
+    subtitle: "Sip coffee with a view"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/8da4a949-b7be-4f2d-b2a8-1be34797c25e-thumbnail-hostel-balcony-seating.jpg",
+    title: "Relax on the Balcony",
+    subtitle: "Unwind in style"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/b72d80f6-3ecc-41c9-b4dc-56aab67c2181-thumbnail-hostel-bonfire-couples.jpg",
+    title: "Bonfire Nights",
+    subtitle: "Memories under the stars"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/6bd40867-7958-4868-b5cc-4fd282de0ff1-thumbnail-hostel-bunk-balcony-view.jpg",
+    title: "Bunk Beds with a View",
+    subtitle: "Wake up to nature"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/12f99266-74c6-4de2-a6b9-65b62d3117d4-thumbnail-hostel-bunk-bed-single.jpg",
+    title: "Comfortable Bunk Beds",
+    subtitle: "Rest well, travel more"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/c81dd0e4-7ade-4d7c-95d4-a590bc0b0924-thumbnail-hostel-bunk-privacy.jpg",
+    title: "Privacy When You Need It",
+    subtitle: "Your own cozy corner"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/425ec68b-f9f2-46c5-b1d1-edf5fe749ea8-thumbnail-hostel-community-sunset-view.jpg",
+    title: "Sunset with the Community",
+    subtitle: "Make lifelong friends"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/67306030-2c61-4230-91ca-8b33e98c76a7-thumbnail-hostel-dorm-bunk-orange.jpg",
+    title: "Vibrant Dorm Rooms",
+    subtitle: "Fun & Energetic Stays"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/dde935e4-ab3e-4244-8211-b9c101434523-thumbnail-hostel-dorm-games-friends.jpg",
+    title: "Game Nights & Friendships",
+    subtitle: "Never a dull moment"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/3097cbaf-bd70-4ef3-b4e9-effcaa17f52c-thumbnail-hostel-dorm-interior-wide.jpg",
+    title: "Spacious Dorm Interiors",
+    subtitle: "Room to breathe"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/10c64f80-95fe-4f06-841f-87db2a9fb477-thumbnail-hostel-dorm-room-2.jpg",
+    title: "Well-Designed Dorm Rooms",
+    subtitle: "Comfort meets community"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/d0199dbb-3cbc-4cd8-8a6d-9bd7a7fb01b0-thumbnail-hostel-dorm-spacious.jpg",
+    title: "Spacious & Airy Rooms",
+    subtitle: "Sleep in comfort"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/3e378a87-d9e5-4f75-a1bb-5c9312f0dff8-thumbnail-hostel-games-carrom-terrace.jpg",
+    title: "Games on the Terrace",
+    subtitle: "Fun in the open air"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/9bf0ed84-71c6-4da7-ae68-0d3158d8e431-thumbnail-hostel-mixed-room.jpg",
+    title: "Mixed Dorm Rooms",
+    subtitle: "Meet fellow travelers"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/6afd0f36-4509-45cc-b78a-8a9c75974d4f-thumbnail-hostel-night-bonfire.jpg",
+    title: "Bonfire Under the Stars",
+    subtitle: "Magical evenings await"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/8c0460d3-6b55-4e49-8fbe-d0366c596f7f-thumbnail-hostel-night-campfire-music.jpg",
+    title: "Campfire & Music Nights",
+    subtitle: "Guitars & good vibes"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/a25416eb-6e7c-435f-b7ff-b563749f47a7-thumbnail-hostel-plantation-nature-walk.jpg",
+    title: "Plantation Nature Walks",
+    subtitle: "Explore Chikkamagaluru"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/80a8ff4b-30a5-496f-b427-b1d040160274-thumbnail-hostel-private-room-1.jpg",
+    title: "Private Rooms Available",
+    subtitle: "Your own sanctuary"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/a48291fe-a065-4554-8251-f56ce55c17be-thumbnail-hostel-private-room-2.jpg",
+    title: "Cozy Private Rooms",
+    subtitle: "Comfort & privacy"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/9b326b78-8f2e-4215-9402-6d165c63db2f-thumbnail-hostel-rooftop-coffee.jpg",
+    title: "Rooftop Coffee Mornings",
+    subtitle: "Start your day right"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/28d32119-8916-45bd-af5e-45072ced653f-thumbnail-hostel-sports-volleyball.jpg",
+    title: "Sports & Activities",
+    subtitle: "Stay active, stay happy"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/77ff87a1-8e56-4ff6-bb9c-8ab299702b52-thumbnail-hostel-workation-laptop-view.jpg",
+    title: "Work from Paradise",
+    subtitle: "Workation-friendly stays"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/330b0ce9-0575-4616-a241-965b821fb66a-thumbnail-IMG-20260818-WA0018.jpg",
+    title: "Authentic Hostel Vibes",
+    subtitle: "Real moments, real stays"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/3bf9755a-2d2c-4ca4-9dfa-a3c913013d7c-thumbnail-IMG-20260929-WA0011.jpg",
+    title: "Happy Go Community",
+    subtitle: "Join the adventure"
+  },
+  {
+    url: "https://alka-jewellery-files.s3.amazonaws.com/products/6416a0a6-ebbd-415c-93da-98c749c1e625-thumbnail-plantation-trail-walk.jpg",
+    title: "Plantation Trail Walks",
+    subtitle: "Into the coffee country"
   }
 ];
 
@@ -92,13 +257,13 @@ function HostelSearchContent() {
   const stayType = searchParams.get("stayType") || "hostel"; // Get stayType from URL
 
   // Calculate nights
-  const nights = checkIn && checkOut 
+  const nights = checkIn && checkOut
     ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24))
     : 0;
 
   useEffect(() => {
     if (checkIn && checkOut) {
-    loadHostels();
+      loadHostels();
       loadCart();
     }
   }, [checkIn, checkOut, people, stayType]); // Add stayType to dependencies
@@ -169,7 +334,7 @@ function HostelSearchContent() {
   const getRemainingAvailableBeds = (hostelId, roomType, currentMealOption, totalAvailable) => {
     const totalInCart = getTotalRoomQuantityInCart(hostelId, roomType);
     const currentOptionQuantity = getRoomQuantityInCart(hostelId, roomType, currentMealOption);
-    
+
     // Available beds = total available - (total in cart - current option quantity)
     // This allows increasing current option by moving from total pool
     return totalAvailable - (totalInCart - currentOptionQuantity);
@@ -187,7 +352,7 @@ function HostelSearchContent() {
     const totalInCart = getTotalRoomQuantityInCart(hostel._id, room.type);
     if (totalInCart >= room.availableBeds) {
       toast.warning(
-        "Limit Reached", 
+        "Limit Reached",
         `Only ${room.availableBeds} bed(s) available. You have already added ${totalInCart} bed(s) across all meal options.`
       );
       return;
@@ -268,7 +433,7 @@ function HostelSearchContent() {
 
   const nextImage = () => {
     if (selectedImageGallery) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev === selectedImageGallery.images.length - 1 ? 0 : prev + 1
       );
     }
@@ -276,7 +441,7 @@ function HostelSearchContent() {
 
   const prevImage = () => {
     if (selectedImageGallery) {
-      setCurrentImageIndex((prev) => 
+      setCurrentImageIndex((prev) =>
         prev === 0 ? selectedImageGallery.images.length - 1 : prev - 1
       );
     }
@@ -317,8 +482,8 @@ function HostelSearchContent() {
     }
 
     const firstItem = cart[0];
-    const hostelId = typeof firstItem.hostel === "object" 
-      ? firstItem.hostel._id 
+    const hostelId = typeof firstItem.hostel === "object"
+      ? firstItem.hostel._id
       : firstItem.hostel;
 
     if (!hostelId) {
@@ -463,7 +628,7 @@ function HostelSearchContent() {
         <div className="mb-6 relative">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
             {/* Large Image - Left Side */}
-            <div 
+            <div
               className="relative aspect-[4/3] md:row-span-2 rounded-xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all"
               onClick={() => {
                 // Open modal with all static images
@@ -490,7 +655,7 @@ function HostelSearchContent() {
             {/* Small Images Grid - Right Side */}
             <div className="grid grid-cols-2 gap-2 md:gap-3">
               {STATIC_HIGHLIGHT_IMAGES.slice(1, 5).map((image, idx) => (
-                <div 
+                <div
                   key={idx}
                   className="relative aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer shadow-md hover:shadow-xl transition-all"
                   onClick={() => {
@@ -539,9 +704,9 @@ function HostelSearchContent() {
             {location}
           </h1>
           <p className="text-base text-gray-700 leading-relaxed">
-            The perfect place to unwind and explore Chikkamagaluru's scenic beauty and serene atmosphere. 
-            Surrounded by lush coffee plantations, misty mountains, and breathtaking waterfalls, our hostel 
-            is ideally located for nature lovers and adventure seekers. Enjoy trekking, plantation tours, 
+            The perfect place to unwind and explore Chikkamagaluru's scenic beauty and serene atmosphere.
+            Surrounded by lush coffee plantations, misty mountains, and breathtaking waterfalls, our hostel
+            is ideally located for nature lovers and adventure seekers. Enjoy trekking, plantation tours,
             and the tranquil charm of Karnataka's hill station paradise.
           </p>
         </div>
@@ -561,278 +726,277 @@ function HostelSearchContent() {
           {/* Left Column - Hostels List */}
           <div className="lg:col-span-2">
             {hostels.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
+              <Card>
+                <CardContent className="p-12 text-center">
                   <BedDouble className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2">No Hostels Available</h3>
-              <p className="text-gray-600 mb-6">
+                  <p className="text-gray-600 mb-6">
                     Try adjusting your search dates or location
-              </p>
-              <Button
-                className="bg-[#F47B20] hover:bg-[#E06A0F]"
-                onClick={() => router.push("/hostels")}
-              >
+                  </p>
+                  <Button
+                    className="bg-[#F47B20] hover:bg-[#E06A0F]"
+                    onClick={() => router.push("/hostels")}
+                  >
                     New Search
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
               <>
                 {/* All Rooms Flattened */}
                 <div className="space-y-6">
                   {hostels.flatMap((hostel) =>
                     hostel.rooms?.map((room, roomIdx) => (
                       <Card key={`${hostel._id}-${roomIdx}`} className="border-2 hover:border-[#F47B20] transition-all shadow-md hover:shadow-lg rounded-xl overflow-hidden">
-                  <CardContent className="p-0">
-                                <div className="flex flex-col lg:flex-row">
-                                  {/* Room Image Carousel */}
-                                  <div className="flex-shrink-0 w-full lg:w-96 relative group">
-                                    <div 
-                                      className="relative h-64 lg:h-full cursor-pointer rounded-xl lg:rounded-l-xl lg:rounded-r-none overflow-hidden"
-                                      onClick={() => {
-                                        const roomImages = room.images?.length > 0 ? room.images : hostel.images || [];
-                                        const currentIndex = getRoomImageIndex(hostel._id, roomIdx);
-                                        const roomGalleryData = {
-                                          images: roomImages,
-                                          name: room.type
-                                        };
-                                        openImageGallery(roomGalleryData, currentIndex);
-                                      }}
-                                    >
-                                      {(() => {
-                                        const roomImages = room.images?.length > 0 ? room.images : hostel.images || [];
-                                        const currentIndex = getRoomImageIndex(hostel._id, roomIdx);
-                                        const currentImage = roomImages[currentIndex] || "/assets/happygo.jpeg";
-                                        const hasMultipleImages = roomImages.length > 1;
+                        <CardContent className="p-0">
+                          <div className="flex flex-col lg:flex-row">
+                            {/* Room Image Carousel */}
+                            <div className="flex-shrink-0 w-full lg:w-96 relative group">
+                              <div
+                                className="relative h-64 lg:h-full cursor-pointer rounded-xl lg:rounded-l-xl lg:rounded-r-none overflow-hidden"
+                                onClick={() => {
+                                  const roomImages = room.images?.length > 0 ? room.images : hostel.images || [];
+                                  const currentIndex = getRoomImageIndex(hostel._id, roomIdx);
+                                  const roomGalleryData = {
+                                    images: roomImages,
+                                    name: room.type
+                                  };
+                                  openImageGallery(roomGalleryData, currentIndex);
+                                }}
+                              >
+                                {(() => {
+                                  const roomImages = room.images?.length > 0 ? room.images : hostel.images || [];
+                                  const currentIndex = getRoomImageIndex(hostel._id, roomIdx);
+                                  const currentImage = roomImages[currentIndex] || "/assets/happygo.jpeg";
+                                  const hasMultipleImages = roomImages.length > 1;
 
-                                        return (
-                                          <>
-                                            <img
-                                              src={currentImage}
-                                              alt={room.type}
-                                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                            />
+                                  return (
+                                    <>
+                                      <img
+                                        src={currentImage}
+                                        alt={room.type}
+                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                      />
 
-                                            {/* Hover Overlay */}
-                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                              <div className="bg-white/90 text-gray-800 px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                                                <Maximize2 className="w-4 h-4" />
-                                                <span className="text-sm font-medium">View Larger</span>
-                                              </div>
-                                            </div>
-
-                                            {/* Image Counter */}
-                                            {hasMultipleImages && (
-                                              <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2.5 py-1 rounded-full font-medium">
-                                                {currentIndex + 1}/{roomImages.length}
-                                              </div>
-                                            )}
-
-                                            {/* Navigation Arrows */}
-                                            {hasMultipleImages && (
-                                              <>
-                                                <button
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    prevRoomImage(hostel._id, roomIdx, room, hostel);
-                                                  }}
-                                                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-gray-800 p-2 rounded-full shadow-xl transition-all z-10"
-                                                  aria-label="Previous image"
-                                                >
-                                                  <ChevronLeft className="w-5 h-5" />
-                                                </button>
-
-                                                <button
-                                                  onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    nextRoomImage(hostel._id, roomIdx, room, hostel);
-                                                  }}
-                                                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-gray-800 p-2 rounded-full shadow-xl transition-all z-10"
-                                                  aria-label="Next image"
-                                                >
-                                                  <ChevronRight className="w-5 h-5" />
-                                                </button>
-                                              </>
-                                            )}
-                                          </>
-                                        );
-                                      })()}
-                                    </div>
-                                  </div>
-
-                                  {/* Room Details */}
-                                  <div className="flex-1 p-4 lg:p-5">
-                                    {/* Room Header */}
-                                    <div className="mb-4">
-                                      <div className="flex items-start justify-between gap-3 mb-3">
-                                        <h4 className="font-bold text-base lg:text-lg flex-1">{room.type}</h4>
-                                        {(() => {
-                                          const totalInCart = getTotalRoomQuantityInCart(hostel._id, room.type);
-                                          const actualRemaining = room.availableBeds - totalInCart;
-                                          return (
-                                            <Badge className={`whitespace-nowrap ${
-                                              actualRemaining === 0 
-                                                ? "bg-red-100 text-red-700 border-red-300" 
-                                                : actualRemaining <= 2
-                                                ? "bg-orange-100 text-orange-700 border-orange-300"
-                                                : "bg-green-100 text-green-700 border-green-300"
-                                            }`}>
-                                              {actualRemaining} of {room.availableBeds} beds left
-                                            </Badge>
-                                          );
-                                        })()}
+                                      {/* Hover Overlay */}
+                                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                        <div className="bg-white/90 text-gray-800 px-3 py-2 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                                          <Maximize2 className="w-4 h-4" />
+                                          <span className="text-sm font-medium">View Larger</span>
+                                        </div>
                                       </div>
-                                      
-                                      {/* Capacity Info */}
-                                      {/* <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
+
+                                      {/* Image Counter */}
+                                      {hasMultipleImages && (
+                                        <div className="absolute top-3 left-3 bg-black/70 text-white text-xs px-2.5 py-1 rounded-full font-medium">
+                                          {currentIndex + 1}/{roomImages.length}
+                                        </div>
+                                      )}
+
+                                      {/* Navigation Arrows */}
+                                      {hasMultipleImages && (
+                                        <>
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              prevRoomImage(hostel._id, roomIdx, room, hostel);
+                                            }}
+                                            className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-gray-800 p-2 rounded-full shadow-xl transition-all z-10"
+                                            aria-label="Previous image"
+                                          >
+                                            <ChevronLeft className="w-5 h-5" />
+                                          </button>
+
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              nextRoomImage(hostel._id, roomIdx, room, hostel);
+                                            }}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/95 hover:bg-white text-gray-800 p-2 rounded-full shadow-xl transition-all z-10"
+                                            aria-label="Next image"
+                                          >
+                                            <ChevronRight className="w-5 h-5" />
+                                          </button>
+                                        </>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            </div>
+
+                            {/* Room Details */}
+                            <div className="flex-1 p-4 lg:p-5">
+                              {/* Room Header */}
+                              <div className="mb-4">
+                                <div className="flex items-start justify-between gap-3 mb-3">
+                                  <h4 className="font-bold text-base lg:text-lg flex-1">{room.type}</h4>
+                                  {(() => {
+                                    const totalInCart = getTotalRoomQuantityInCart(hostel._id, room.type);
+                                    const actualRemaining = room.availableBeds - totalInCart;
+                                    return (
+                                      <Badge className={`whitespace-nowrap ${actualRemaining === 0
+                                        ? "bg-red-100 text-red-700 border-red-300"
+                                        : actualRemaining <= 2
+                                          ? "bg-orange-100 text-orange-700 border-orange-300"
+                                          : "bg-green-100 text-green-700 border-green-300"
+                                        }`}>
+                                        {actualRemaining} of {room.availableBeds} beds left
+                                      </Badge>
+                                    );
+                                  })()}
+                                </div>
+
+                                {/* Capacity Info */}
+                                {/* <div className="flex items-center gap-1 text-sm text-gray-600 mb-3">
                                         <Users className="w-4 h-4" />
                                         <span>{room.capacity === 1 ? "1 Adult" : `${room.capacity} Adults`}</span>
                                       </div> */}
 
-                                      {/* Amenities Grid */}
-                                      <div className="flex flex-wrap gap-3 mb-3">
-                                        {room.amenities?.slice(0, 6).map((amenity, idx) => (
-                                          <div key={idx} className="flex items-center gap-1.5 text-xs text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded-md">
-                                            {getAmenityIcon(amenity)}
-                                            <span>{amenity}</span>
-                                          </div>
-                                        ))}
-                                        {room.amenities?.length > 6 && (
-                                          <div className="text-xs text-[#F47B20] font-medium px-2.5 py-1.5">
-                                            +{room.amenities.length - 6} more
-                                          </div>
-                                        )}
-                                      </div>
+                                {/* Amenities Grid */}
+                                <div className="flex flex-wrap gap-3 mb-3">
+                                  {room.amenities?.slice(0, 6).map((amenity, idx) => (
+                                    <div key={idx} className="flex items-center gap-1.5 text-xs text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded-md">
+                                      {getAmenityIcon(amenity)}
+                                      <span>{amenity}</span>
                                     </div>
+                                  ))}
+                                  {room.amenities?.length > 6 && (
+                                    <div className="text-xs text-[#F47B20] font-medium px-2.5 py-1.5">
+                                      +{room.amenities.length - 6} more
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
 
-                                    <Separator className="my-4" />
+                              <Separator className="my-4" />
 
-                                    {/* Meal Options */}
-                              
-                                    <div className="space-y-3">
-                                      {/* Bed Only */}
-                                      {room.calculatedPricing?.bedOnly && (
-                                        <div className="border border-gray-200 rounded-lg p-3 bg-white hover:border-[#F47B20] transition-colors">
-                                          <div className="flex items-center justify-between gap-4">
-                                            <div className="flex-1 min-w-0">
-                                              <div className="flex items-center gap-2 mb-2">
-                                                <BedDouble className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                                                <span className="font-semibold text-sm">Bed Only</span>
-                                              </div>
-                                              <div className="flex items-baseline gap-2">
-                                                {room.calculatedPricing.bedOnly.discountApplied && (
-                                                  <span className="text-xs text-gray-400 line-through">
-                                                    ₹{room.calculatedPricing.bedOnly.originalPrice?.toFixed(0)}
-                                                  </span>
-                                                )}
-                                                <span className="text-xl font-bold text-[#F47B20]">
-                                                  ₹{room.calculatedPricing.bedOnly.totalPrice?.toFixed(0)}
-                                                </span>
-                                                <span className="text-xs text-gray-500">
-                                                  /night
-                                                </span>
-                                              </div>
-                                             
-                                            </div>
-                                              <QuantityControl
-                                                quantity={getRoomQuantityInCart(hostel._id, room.type, "bedOnly")}
-                                                onAdd={() => addToCart(hostel, room, "bedOnly")}
-                                              onRemove={() => decrementFromCart(hostel._id, room.type, "bedOnly")}
-                                              maxAvailable={getRemainingAvailableBeds(hostel._id, room.type, "bedOnly", room.availableBeds)}
-                                              disabled={addingToCart}
-                                            />
-                                          </div>
+                              {/* Meal Options */}
+
+                              <div className="space-y-3">
+                                {/* Bed Only */}
+                                {room.calculatedPricing?.bedOnly && (
+                                  <div className="border border-gray-200 rounded-lg p-3 bg-white hover:border-[#F47B20] transition-colors">
+                                    <div className="flex items-center justify-between gap-4">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <BedDouble className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                                          <span className="font-semibold text-sm">Bed Only</span>
                                         </div>
-                                      )}
+                                        <div className="flex items-baseline gap-2">
+                                          {room.calculatedPricing.bedOnly.discountApplied && (
+                                            <span className="text-xs text-gray-400 line-through">
+                                              ₹{room.calculatedPricing.bedOnly.originalPrice?.toFixed(0)}
+                                            </span>
+                                          )}
+                                          <span className="text-xl font-bold text-[#F47B20]">
+                                            ₹{room.calculatedPricing.bedOnly.totalPrice?.toFixed(0)}
+                                          </span>
+                                          <span className="text-xs text-gray-500">
+                                            /night
+                                          </span>
+                                        </div>
 
-                                      {/* Bed & Breakfast */}
-                                      {room.calculatedPricing?.bedAndBreakfast && (
-                                        <div className="relative border-2 border-[#F47B20] rounded-lg p-3 bg-orange-50">
-                                          <Badge className="absolute -top-2.5 left-3 bg-[#F47B20] text-white text-[10px] px-2 py-0.5 shadow-sm">
-                                            Recommended
-                                          </Badge>
-                                          <div className="flex items-center justify-between gap-4">
-                                            <div className="flex-1 min-w-0">
-                                              <div className="flex items-center gap-2 mb-2">
-                                                <Coffee className="w-4 h-4 text-[#F47B20] flex-shrink-0" />
-                                                <span className="font-semibold text-sm">Bed & Breakfast</span>
-                                              </div>
-                                              <div className="flex items-baseline gap-2">
-                                                {room.calculatedPricing.bedAndBreakfast.discountApplied && (
-                                                  <span className="text-xs text-gray-400 line-through">
-                                                    ₹{room.calculatedPricing.bedAndBreakfast.originalPrice?.toFixed(0)}
-                                                  </span>
-                                                )}
-                                                <span className="text-xl font-bold text-[#F47B20]">
-                                                  ₹{room.calculatedPricing.bedAndBreakfast.totalPrice?.toFixed(0)}
-                                                </span>
-                                                <span className="text-xs text-gray-500">
-                                                  /night
-                                                </span>
-                                              </div>
-                                              {/* {room.calculatedPricing.bedAndBreakfast.discountApplied && (
+                                      </div>
+                                      <QuantityControl
+                                        quantity={getRoomQuantityInCart(hostel._id, room.type, "bedOnly")}
+                                        onAdd={() => addToCart(hostel, room, "bedOnly")}
+                                        onRemove={() => decrementFromCart(hostel._id, room.type, "bedOnly")}
+                                        maxAvailable={getRemainingAvailableBeds(hostel._id, room.type, "bedOnly", room.availableBeds)}
+                                        disabled={addingToCart}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Bed & Breakfast */}
+                                {room.calculatedPricing?.bedAndBreakfast && (
+                                  <div className="relative border-2 border-[#F47B20] rounded-lg p-3 bg-orange-50">
+                                    <Badge className="absolute -top-2.5 left-3 bg-[#F47B20] text-white text-[10px] px-2 py-0.5 shadow-sm">
+                                      Recommended
+                                    </Badge>
+                                    <div className="flex items-center justify-between gap-4">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <Coffee className="w-4 h-4 text-[#F47B20] flex-shrink-0" />
+                                          <span className="font-semibold text-sm">Bed & Breakfast</span>
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                          {room.calculatedPricing.bedAndBreakfast.discountApplied && (
+                                            <span className="text-xs text-gray-400 line-through">
+                                              ₹{room.calculatedPricing.bedAndBreakfast.originalPrice?.toFixed(0)}
+                                            </span>
+                                          )}
+                                          <span className="text-xl font-bold text-[#F47B20]">
+                                            ₹{room.calculatedPricing.bedAndBreakfast.totalPrice?.toFixed(0)}
+                                          </span>
+                                          <span className="text-xs text-gray-500">
+                                            /night
+                                          </span>
+                                        </div>
+                                        {/* {room.calculatedPricing.bedAndBreakfast.discountApplied && (
                                                 <Badge className="mt-1.5 bg-green-100 text-green-700 text-[10px] border-green-300">
                                                   Save ₹{room.calculatedPricing.bedAndBreakfast.savings?.toFixed(0)}
                                                 </Badge>
                                               )} */}
-                                            </div>
-                                              <QuantityControl
-                                                quantity={getRoomQuantityInCart(hostel._id, room.type, "bedAndBreakfast")}
-                                                onAdd={() => addToCart(hostel, room, "bedAndBreakfast")}
-                                              onRemove={() => decrementFromCart(hostel._id, room.type, "bedAndBreakfast")}
-                                              maxAvailable={getRemainingAvailableBeds(hostel._id, room.type, "bedAndBreakfast", room.availableBeds)}
-                                              disabled={addingToCart}
-                                            />
-                                          </div>
-                                        </div>
-                                      )}
+                                      </div>
+                                      <QuantityControl
+                                        quantity={getRoomQuantityInCart(hostel._id, room.type, "bedAndBreakfast")}
+                                        onAdd={() => addToCart(hostel, room, "bedAndBreakfast")}
+                                        onRemove={() => decrementFromCart(hostel._id, room.type, "bedAndBreakfast")}
+                                        maxAvailable={getRemainingAvailableBeds(hostel._id, room.type, "bedAndBreakfast", room.availableBeds)}
+                                        disabled={addingToCart}
+                                      />
+                                    </div>
+                                  </div>
+                                )}
 
-                                      {/* Bed + Breakfast + Dinner */}
-                                      {room.calculatedPricing?.bedBreakfastAndDinner && (
-                                        <div className="border border-gray-200 rounded-lg p-3 bg-white hover:border-[#F47B20] transition-colors">
-                                          <div className="flex items-center justify-between gap-4">
-                                            <div className="flex-1 min-w-0">
-                                              <div className="flex items-center gap-2 mb-2">
-                                                <Utensils className="w-4 h-4 text-gray-600 flex-shrink-0" />
-                                                <span className="font-semibold text-sm">Bed + Breakfast + Dinner</span>
-                                              </div>
-                                              <div className="flex items-baseline gap-2">
-                                                {room.calculatedPricing.bedBreakfastAndDinner.discountApplied && (
-                                                  <span className="text-xs text-gray-400 line-through">
-                                                    ₹{room.calculatedPricing.bedBreakfastAndDinner.originalPrice?.toFixed(0)}
-                                                  </span>
-                                                )}
-                                                <span className="text-xl font-bold text-[#F47B20]">
-                                                  ₹{room.calculatedPricing.bedBreakfastAndDinner.totalPrice?.toFixed(0)}
-                                                </span>
-                                                <span className="text-xs text-gray-500">
-                                                  /night
-                                                </span>
-                                              </div>
-                                              {/* {room.calculatedPricing.bedBreakfastAndDinner.discountApplied && (
+                                {/* Bed + Breakfast + Dinner */}
+                                {room.calculatedPricing?.bedBreakfastAndDinner && (
+                                  <div className="border border-gray-200 rounded-lg p-3 bg-white hover:border-[#F47B20] transition-colors">
+                                    <div className="flex items-center justify-between gap-4">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <Utensils className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                                          <span className="font-semibold text-sm">Bed + Breakfast + Dinner</span>
+                                        </div>
+                                        <div className="flex items-baseline gap-2">
+                                          {room.calculatedPricing.bedBreakfastAndDinner.discountApplied && (
+                                            <span className="text-xs text-gray-400 line-through">
+                                              ₹{room.calculatedPricing.bedBreakfastAndDinner.originalPrice?.toFixed(0)}
+                                            </span>
+                                          )}
+                                          <span className="text-xl font-bold text-[#F47B20]">
+                                            ₹{room.calculatedPricing.bedBreakfastAndDinner.totalPrice?.toFixed(0)}
+                                          </span>
+                                          <span className="text-xs text-gray-500">
+                                            /night
+                                          </span>
+                                        </div>
+                                        {/* {room.calculatedPricing.bedBreakfastAndDinner.discountApplied && (
                                                 <Badge className="mt-1.5 bg-green-100 text-green-700 text-[10px] border-green-300">
                                                   Save ₹{room.calculatedPricing.bedBreakfastAndDinner.savings?.toFixed(0)}
                                                 </Badge>
                                               )} */}
-                                            </div>
-                                              <QuantityControl
-                                                quantity={getRoomQuantityInCart(hostel._id, room.type, "bedBreakfastAndDinner")}
-                                                onAdd={() => addToCart(hostel, room, "bedBreakfastAndDinner")}
-                                              onRemove={() => decrementFromCart(hostel._id, room.type, "bedBreakfastAndDinner")}
-                                              maxAvailable={getRemainingAvailableBeds(hostel._id, room.type, "bedBreakfastAndDinner", room.availableBeds)}
-                                              disabled={addingToCart}
-                                            />
-                                          </div>
-                                        </div>
-                                      )}
+                                      </div>
+                                      <QuantityControl
+                                        quantity={getRoomQuantityInCart(hostel._id, room.type, "bedBreakfastAndDinner")}
+                                        onAdd={() => addToCart(hostel, room, "bedBreakfastAndDinner")}
+                                        onRemove={() => decrementFromCart(hostel._id, room.type, "bedBreakfastAndDinner")}
+                                        maxAvailable={getRemainingAvailableBeds(hostel._id, room.type, "bedBreakfastAndDinner", room.availableBeds)}
+                                        disabled={addingToCart}
+                                      />
                                     </div>
                                   </div>
-                                </div>
-                              </CardContent>
-                            </Card>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))
                   ) || []}
-                      </div>
+                </div>
 
                 {/* Single Amenities Section at the End */}
                 {hostels.length > 0 && hostels[0]?.amenities && hostels[0].amenities.length > 0 && (
@@ -842,11 +1006,11 @@ function HostelSearchContent() {
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                         {hostels[0].amenities.map((amenity, idx) => (
                           <div key={idx} className="flex items-center gap-2.5 text-sm text-gray-700 bg-gray-50 px-3 py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
-                                  {getAmenityIcon(amenity.name || amenity)}
+                            {getAmenityIcon(amenity.name || amenity)}
                             <span className="font-medium">{amenity.name || amenity}</span>
-                                </div>
-                              ))}
-                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </CardContent>
                   </Card>
                 )}
@@ -856,7 +1020,7 @@ function HostelSearchContent() {
                   <Card className="mt-8 shadow-lg rounded-xl overflow-hidden">
                     <CardContent className="p-6">
                       <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Guidelines</h3>
-                      
+
                       {/* Check-in/Check-out Times */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 bg-gray-100 rounded-xl p-4">
                         <div className="flex items-center gap-3">
@@ -864,7 +1028,7 @@ function HostelSearchContent() {
                             <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                             </svg>
-                    </div>
+                          </div>
                           <div>
                             <p className="text-sm text-gray-600">Check in:</p>
                             <p className="text-xl font-bold text-gray-900">1:00 PM</p>
@@ -918,8 +1082,8 @@ function HostelSearchContent() {
                           <span className="text-gray-700">No refunds for early departures.</span>
                         </li>
                       </ul>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
                 )}
               </>
             )}
@@ -947,10 +1111,10 @@ function HostelSearchContent() {
                       <div className="space-y-3 mb-4 max-h-[400px] overflow-y-auto">
                         {cart.map((item, idx) => {
                           const hostelName = typeof item.hostel === "object" ? item.hostel?.name : "";
-                            return (
+                          return (
                             <div key={idx} className="bg-gray-50 p-3 rounded-lg">
-                                <div className="flex items-start justify-between mb-2">
-                                  <div className="flex-1">
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex-1">
                                   {hostelName && (
                                     <p className="text-xs font-semibold text-[#F47B20] mb-1">
                                       {hostelName}
@@ -961,8 +1125,8 @@ function HostelSearchContent() {
                                   </h4>
                                   <p className="text-xs text-gray-600 mb-1">
                                     {item.mealOption === "bedOnly" ? "Bed Only" :
-                                     item.mealOption === "bedAndBreakfast" ? "Bed & Breakfast" :
-                                     "Bed + Breakfast + Dinner"}
+                                      item.mealOption === "bedAndBreakfast" ? "Bed & Breakfast" :
+                                        "Bed + Breakfast + Dinner"}
                                   </p>
                                   <p className="text-xs text-gray-500">
                                     ₹{item.pricePerNight} × {item.quantity} bed × {item.numberOfNights} night
@@ -981,8 +1145,8 @@ function HostelSearchContent() {
                                 <span>Subtotal:</span>
                                 <span className="text-[#F47B20]">₹{item.totalPrice?.toFixed(2)}</span>
                               </div>
-                              </div>
-                            );
+                            </div>
+                          );
                         })}
                       </div>
 
@@ -990,20 +1154,20 @@ function HostelSearchContent() {
 
                       {/* Price Breakdown */}
                       <div className="space-y-2 mb-4">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-gray-600">Base price</span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">Base price</span>
                           <span className="font-medium">₹{summary.subtotal.toFixed(2)}</span>
-                            </div>
-                              <div className="flex justify-between text-sm">
+                        </div>
+                        <div className="flex justify-between text-sm">
                           <span className="text-gray-600">Taxes (5%)</span>
                           <span className="font-medium">+ ₹{summary.gst.toFixed(2)}</span>
-                              </div>
+                        </div>
                         <Separator className="my-2" />
                         <div className="flex justify-between text-lg font-bold">
-                              <span>Total price</span>
+                          <span>Total price</span>
                           <span className="text-[#F47B20]">₹{summary.total.toFixed(2)}</span>
-                            </div>
-                          </div>
+                        </div>
+                      </div>
 
                       {/* Proceed Button */}
                       <Button
@@ -1020,8 +1184,8 @@ function HostelSearchContent() {
                   )}
                 </CardContent>
               </Card>
-                              </div>
-                            </div>
+            </div>
+          </div>
 
           {/* Mobile-specific sticky bottom summary */}
           <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-40">
@@ -1030,7 +1194,7 @@ function HostelSearchContent() {
                 <div className="flex items-center justify-center py-2 text-gray-500 text-sm">
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   <span>Your cart is empty</span>
-                                </div>
+                </div>
               ) : (
                 <div className="flex items-center justify-between gap-4">
                   {/* Total Price */}
@@ -1040,7 +1204,7 @@ function HostelSearchContent() {
                       ₹{summary.total.toFixed(2)}
                     </p>
                     <p className="text-xs text-gray-500">incl. taxes</p>
-                                </div>
+                  </div>
 
                   {/* Proceed Button */}
                   <Button
@@ -1049,73 +1213,72 @@ function HostelSearchContent() {
                   >
                     Proceed to book
                   </Button>
-                                        </div>
-                                          )}
-                                        </div>
-                                      </div>
-      {/* Image Gallery Modal */}
-      {selectedImageGallery && (
-        <Dialog open={!!selectedImageGallery} onOpenChange={closeImageGallery}>
-          <DialogContent className="max-w-5xl w-full p-0 bg-black">
-            <div className="relative w-full h-[80vh]">
-              {/* Close Button */}
-              <button
-                onClick={closeImageGallery}
-                className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
-              >
-                <X className="w-6 h-6" />
-                                    </button>
-
-              {/* Previous Button */}
-                                            <button
-                onClick={prevImage}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
-                                            >
-                <ChevronLeft className="w-6 h-6" />
-                                            </button>
-
-              {/* Image */}
-              <img
-                src={selectedImageGallery.images[currentImageIndex]}
-                alt={`${selectedImageGallery.name} ${currentImageIndex + 1}`}
-                className="w-full h-full object-contain"
-              />
-
-              {/* Next Button */}
-                                            <button
-                onClick={nextImage}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
-                                            >
-                <ChevronRight className="w-6 h-6" />
-                                            </button>
-
-              {/* Image Counter */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm">
-                {currentImageIndex + 1} / {selectedImageGallery.images.length}
-                                      </div>
-
-              {/* Thumbnail Strip */}
-              <div className="absolute bottom-16 left-0 right-0 flex justify-center gap-2 px-4 overflow-x-auto">
-                {selectedImageGallery.images.map((image, idx) => (
-                                            <button
-                    key={idx}
-                    onClick={() => setCurrentImageIndex(idx)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                      idx === currentImageIndex ? "border-[#F47B20] scale-110" : "border-white/50"
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`Thumbnail ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                                            </button>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
-          </DialogContent>
-        </Dialog>
-        )}
+          </div>
+          {/* Image Gallery Modal */}
+          {selectedImageGallery && (
+            <Dialog open={!!selectedImageGallery} onOpenChange={closeImageGallery}>
+              <DialogContent className="max-w-5xl w-full p-0 bg-black">
+                <div className="relative w-full h-[80vh]">
+                  {/* Close Button */}
+                  <button
+                    onClick={closeImageGallery}
+                    className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+
+                  {/* Previous Button */}
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+
+                  {/* Image */}
+                  <img
+                    src={selectedImageGallery.images[currentImageIndex]}
+                    alt={`${selectedImageGallery.name} ${currentImageIndex + 1}`}
+                    className="w-full h-full object-contain"
+                  />
+
+                  {/* Next Button */}
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-10 p-3 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+
+                  {/* Image Counter */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm">
+                    {currentImageIndex + 1} / {selectedImageGallery.images.length}
+                  </div>
+
+                  {/* Thumbnail Strip */}
+                  <div className="absolute bottom-16 left-0 right-0 flex justify-center gap-2 px-4 overflow-x-auto">
+                    {selectedImageGallery.images.map((image, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${idx === currentImageIndex ? "border-[#F47B20] scale-110" : "border-white/50"
+                          }`}
+                      >
+                        <img
+                          src={image}
+                          alt={`Thumbnail ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
 
         </div>
       </div>
