@@ -142,7 +142,7 @@ export default function HostelsPage() {
       <div 
         className="relative bg-gradient-to-r from-[#F47B20]/90 to-[#FF8C3A]/90 text-white"
         style={{
-          backgroundImage: "url('https://alka-jewellery-files.s3.amazonaws.com/products/3feb5597-b5ea-4a1a-925a-569348e7c181-thumbnail-68.jpg')",
+          backgroundImage: "url('https://alka-jewellery-files.s3.amazonaws.com/products/f0caa6d1-2ac4-408f-9497-3b2891af8208-thumbnail-66.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundBlendMode: "multiply",
