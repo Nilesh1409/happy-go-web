@@ -272,7 +272,7 @@ export default function HomePage() {
         className="relative bg-[#F47B20] text-white overflow-hidden"
         style={{
           backgroundImage:
-            "url('https://lokeshshah.wordpress.com/wp-content/uploads/2015/12/bikeridejawadihills_001.jpg?w=1024&h=573')",
+            "url('https://alka-jewellery-files.s3.amazonaws.com/4b31ec10-b379-434c-a935-941fa56b7abf.webp')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
